@@ -272,6 +272,48 @@
     return space(id, Object.assign({ xmin: -n - 0.5, xmax: n + 0.5, ymin: -n - 0.5, ymax: n + 0.5 }, o, { vectors: vecs, lines: lines.concat(o.lines || []), grid: o.grid === undefined ? false : o.grid }));
   }
 
+  /* ---- V.pipeline: a chain of matrices/values transformed stage by stage, arrows in ONE picture ---- */
+  function pipeline(id, o) {
+    o = o || {};
+    const S = (o.stages || []).map((st) => Object.assign({}, st, { M: Array.isArray(st.M) ? st.M.map((r) => (Array.isArray(r) ? r : [r])) : null }));
+    const n = Math.max(1, S.length), gap = 104, top = o.title ? 34 : 12, labH = 26;
+    const dims = S.map((st) => (st.M ? [st.M.length, Math.max(1, ...st.M.map((r) => r.length))] : [1, 1]));
+    const totCols = dims.reduce((a, d) => a + d[1], 0), maxRows = Math.max(1, ...dims.map((d) => d[0]));
+    const cs = clamp(Math.floor(Math.min((860 - 40 - gap * (n - 1)) / Math.max(1, totCols), 300 / maxRows)), 14, 56);
+    const W = o.w || Math.max(520, totCols * cs + gap * (n - 1) + 40 + (S.some((st) => !st.M) ? cs : 0));
+    const H = o.h || top + labH + maxRows * cs + 40;
+    const d = diagram(id, W, H);
+    if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    const used = dims.reduce((a, dm) => a + dm[1] * cs, 0) + gap * (n - 1);
+    let x = (W - used) / 2;
+    const midY = top + labH + (maxRows * cs) / 2;
+    S.forEach((st, k) => {
+      const [R, C] = dims[k], w = C * cs, y0 = midY - (R * cs) / 2;
+      d.text("sl" + k, x + w / 2, y0 - 9, st.label || "", { textAnchor: "middle", fontWeight: 650, fill: st.color || GOLD, fontSize: 13 });
+      if (st.M) {
+        let mx = st.max; if (mx === undefined) { mx = 0; st.M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); }
+        st.M.forEach((r, i) => r.forEach((v, j) => {
+          const t = fin(v) ? clamp(Math.abs(v) / (mx || 1), 0, 1) : 0;
+          d.rect("c" + k + "_" + i + "_" + j, { x: x + j * cs, y: y0 + i * cs, width: cs - 2, height: cs - 2, rx: 3, fill: !fin(v) ? "#5c2323" : (v < 0 ? "rgba(224,122,95," : "rgba(79,179,191,") + (0.07 + 0.85 * t).toFixed(3) + ")" });
+          if (cs >= 22) d.text("t" + k + "_" + i + "_" + j, x + j * cs + cs / 2 - 1, y0 + i * cs + cs / 2 + 4, num(v, st.digits === undefined ? (Number.isInteger(v) ? 0 : 2) : st.digits), { textAnchor: "middle", fontSize: Math.min(12, cs * 0.34), fill: t > 0.6 ? "#071014" : INK });
+        }));
+        (st.windows || (st.window ? [st.window] : [])).forEach((wn, q) => d.rect("w" + k + "_" + q, { x: x + wn.c * cs - 2, y: y0 + wn.r * cs - 2, width: (wn.w || 1) * cs + 2, height: (wn.h || 1) * cs + 2, fill: "none", stroke: wn.color || GOLD, strokeWidth: 3, rx: 4 }));
+      } else {
+        d.rect("c" + k, { x, y: midY - cs / 2, width: cs * 1.6, height: cs, rx: 8, fill: "#171e29", stroke: st.color || TEAL });
+        d.text("t" + k, x + cs * 0.8, midY + 5, typeof st.value === "number" ? num(st.value, 3) : String(st.value === undefined ? "" : st.value), { textAnchor: "middle", fill: INK, fontSize: 13 });
+      }
+      if (st.note) d.text("sn" + k, x + w / 2, y0 + R * cs + 16, st.note, { textAnchor: "middle", fill: MUTED, fontSize: 11 });
+      if (k + 1 < n) {
+        d.arrow("a" + k, x + w + 8, midY, x + w + gap - 8, midY, { stroke: o.active === k + 1 ? GOLD : MUTED, strokeWidth: 2, head: 9 });
+        const al = o.arrows && o.arrows[k];
+        if (al) { const nl = Math.ceil(String(al).length / 16); d.text("al" + k, x + w + gap / 2, midY - 12 - 14 * (nl - 1), al, { textAnchor: "middle", fill: MUTED, fontSize: 11, wrap: 16 }); }
+      }
+      x += w + gap;
+    });
+    d.end();
+    return d;
+  }
+
   /* write into an editable grid cell (for drag callbacks) */
   function setCell(gridId, i, j, v) {
     const h = host(gridId); if (!h) return;
@@ -279,5 +321,5 @@
     if (inp) inp.value = +(+v).toFixed(3);
   }
 
-  Object.assign(V, { space, network, graph, flow, pixels, curve, waffle, transform, setCell });
+  Object.assign(V, { space, network, graph, flow, pixels, curve, waffle, transform, pipeline, setCell });
 })();

@@ -52,7 +52,8 @@ HTML: <div class="grid2"><div class="card from-paper"><h3>Stated in the paper</h
 - Vectors, embeddings, similarity, dot products, attention geometry -> V.space: arrows in a 2-D space; similar items land close (show clusters with regions), angle arcs, projections as dashed lines; make the key vector draggable.
 - Neural networks, layers, perceptrons, backprop -> V.network: nodes = units (fill = activation), edges = weights (width = |w|, teal +, coral −); highlight the active layer.
 - Graphs, PageRank, Markov chains, message passing -> V.graph: node size = value, weighted arrows; animate values with the Run loop.
-- Multi-stage algorithms / data flow -> V.flow with live values in each stage and the current stage active.
+- A chain of matrices transformed step by step (input -> feature map -> pooled; QKᵀ -> scaled -> softmax -> output) -> V.pipeline: all stages and the arrows between them in ONE picture (arrows can never connect separate V.split panels).
+- Multi-stage algorithms with scalar values -> V.flow with live values in each stage and the current stage active.
 - Images, convolution, receptive fields, pooling -> V.pixels with a window that moves with a control.
 - Optimisation, loss landscapes, gradients, calculus -> V.curve with a ball at the current parameter, its tangent and the trail of past steps.
 - Probability, base rates, Bayes, sampling -> V.waffle (a population of dots) plus bars.
@@ -71,6 +72,7 @@ V.space(id, {vectors:[{x,y,label,color,from:[x0,y0],opacity,drag:(x,y)=>{…}}],
 V.network(id, {layers:[2,3,1], values:[[…],[…],[…]] (activations per layer), weights:[W0 (n1×n0), W1 …], labels:[[…],[],[…]], layerNames:[…], active: layerIndex, edgeLabels:true, title})
 V.graph(id, {nodes:[{id,label,value,color,x?,y?,active}], edges:[{from,to,w,label,color}], title, digits}) — circular layout unless x,y in [0,1] given.
 V.flow(id, {steps:[{label, value, note, color}], active: i, arrowLabels:[…], title})
+V.pipeline(id, {stages:[{label, M: matrix (or value), digits, window:{r,c,h,w}, note}], arrows:["conv", "pool"], active: i, title}) — matrices side by side with labelled arrows; window highlights a receptive field.
 V.pixels(id, M, {window:{r,c,h,w,label} or windows:[…], values:true, gray:false, max, title})
 V.curve(id, {f: x => y, xmin, xmax, ball:{x,label}, tangent:{x}, trail:[x…], title, xlabel, ylabel})
 V.waffle(id, {groups:[{n, label, color}], cols, title})

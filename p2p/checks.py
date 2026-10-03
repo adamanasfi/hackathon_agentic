@@ -269,10 +269,15 @@ var V = (function(){
   function transform(id, o){ __need(id, 'V.transform'); o = o || {}; var M = o.M;
     if (!Array.isArray(M) || M.length !== 2 || !M.every(function(r){ return Array.isArray(r) && r.length === 2 && r.every(function(v){ return typeof v === 'number' && isFinite(v); }); })) __err("V.transform('" + id + "'): M must be a finite 2x2 matrix");
     return {X: function(v){ return v; }, Y: function(v){ return v; }, scale: 1}; }
+  function pipeline(id, o){ __need(id, 'V.pipeline'); o = o || {}; var f = "V.pipeline('" + id + "')";
+    if (!Array.isArray(o.stages) || !o.stages.length) { __err(f + ': stages must be a non-empty array of {label, M (matrix) or value}'); return {}; }
+    o.stages.forEach(function(st, k){ if (!st) return; if (st.M !== undefined) { if (!Array.isArray(st.M)) __err(f + ': stages[' + k + '].M must be an array');
+      else st.M.forEach(function(r, i){ (Array.isArray(r) ? r : [r]).forEach(function(v, j){ if (typeof v !== 'number' || !isFinite(v)) __err(f + ': stages[' + k + '].M[' + i + '][' + j + '] is ' + v); }); }); }
+      else if (typeof st.value === 'number' && !isFinite(st.value)) __err(f + ': stages[' + k + '].value is ' + st.value); }); return {}; }
   var api = {ink: '#e6edf3', muted: '#8b949e', bg: '#131922', $: $, $$: function(){ return []; }, fmt: fmt, num: num, val: val, set: set, clamp: function(x, a, b){ return Math.min(b, Math.max(a, x)); }, color: function(){ return '#000'; },
-    diagram: diagram, bars: bars, line: line, matrix: matrix, editGrid: editGrid, readGrid: readGrid, table: table, ticks: function(){ return [0, 1]; }, resize: resize, split: split, space: space, network: network, graph: graph, flow: flow, pixels: pixels, curve: curve, waffle: waffle, transform: transform, setCell: function(){}, scale: function(d0, d1, r0, r1){ return function(v){ return r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0); }; }, stage: Infinity, syncOut: function(){}, update: function(){}, apply: function(){} };
+    diagram: diagram, bars: bars, line: line, matrix: matrix, editGrid: editGrid, readGrid: readGrid, table: table, ticks: function(){ return [0, 1]; }, resize: resize, split: split, space: space, network: network, graph: graph, flow: flow, pixels: pixels, curve: curve, waffle: waffle, transform: transform, pipeline: pipeline, setCell: function(){}, scale: function(d0, d1, r0, r1){ return function(v){ return r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0); }; }, stage: Infinity, syncOut: function(){}, update: function(){}, apply: function(){} };
   return new Proxy(api, {get: function(t, k){ if (k in t || typeof k === 'symbol') return t[k];
-    __err('V.' + String(k) + ' does not exist in the helper library (available: ink, muted, bg, $, $$, fmt, num, val, set, clamp, color, resize, split, scale, bars, line, matrix, editGrid, readGrid, table, diagram, space, network, graph, flow, pixels, curve, waffle, transform, setCell). The template already shows invariants() and TESTS; do not render them yourself.');
+    __err('V.' + String(k) + ' does not exist in the helper library (available: ink, muted, bg, $, $$, fmt, num, val, set, clamp, color, resize, split, scale, bars, line, matrix, editGrid, readGrid, table, diagram, space, network, graph, flow, pixels, curve, waffle, transform, pipeline, setCell). The template already shows invariants() and TESTS; do not render them yourself.');
     return function(){ return ''; }; }});
 })();
 """
