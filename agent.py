@@ -65,12 +65,18 @@ def blocks_for(errors, blocks):
     return [b for b in prompts.BLOCKS if b in need]
 
 
-FATAL = re.compile(r"block failed to load|is not defined|compute\(DEFAULT_STATE\) threw|render\(DEFAULT_STATE\) threw|block \w+ is missing")
+FATAL = re.compile(r"block failed to load|is not defined|compute\(DEFAULT_STATE\) threw|render\(DEFAULT_STATE\) threw|block \w+ is missing"
+                   r"|readState\(\) after DEFAULT_STATE threw|setState\(DEFAULT_STATE\) threw|readState\(\) must return|compute\(DEFAULT_STATE\) gives non-finite"
+                   r"|harness aborted|UI: SLIDES array is not defined")
+
+
+def weight(e):
+    return 100 if FATAL.search(e) else 1 if re.match(r'(TEST "|invariant ")', e) else 20 if re.match(r"SLIDES\[\d+\]\.draw threw at DEFAULT", e) else 5
 
 
 def severity(errors):
     """Weighted error score: anything that kills the page counts far more than cosmetic or expectation issues."""
-    return sum(100 if FATAL.search(e) else 1 if re.match(r'(TEST "|invariant ")', e) else 5 for e in errors)
+    return sum(weight(e) for e in errors)
 
 
 def model_summary(blocks, info):
@@ -144,7 +150,7 @@ def run(args, trace):
 
     # ---- check / repair loop
     best, best_n, prev_errors = None, None, set()
-    for rnd in range(args.max_repairs + 1):
+    for rnd in range(args.max_repairs + 2):
         fixes = checks.sanitize(blocks)
         if fixes:
             trace("check", "sanitize", "fixed", fixes=fixes, round=rnd)
@@ -158,8 +164,8 @@ def run(args, trace):
         else:
             trace("revise", "rollback", "kept_previous", reason=f"revision error score {n_err} vs {best_n} (fatal errors weigh 100)", round=rnd)
             blocks = dict(best)
-        if best_n == 0 or rnd == args.max_repairs:
-            break
+        if best_n == 0 or (rnd >= args.max_repairs and not (rnd == args.max_repairs and best_n >= 100 and llm.requests < 8)):
+            break  # one extra round is allowed only while a fatal error survives
         if all(re.match(r'TEST "', e) or (re.match(r'invariant "', e) and " for control #" not in e) for e in res["errors"]):
             trace("revise", "stop", "expectations_only", round=rnd,
                   reason="only model-proposed test/invariant expectations disagree with the executed computation; pruning them instead of spending tokens")
@@ -182,7 +188,8 @@ def run(args, trace):
             if "MODEL" not in context and blocks.get("MODEL"):
                 context.append("MODEL")
                 shown["MODEL"] = model_summary(blocks, res["report"].get("info") or {})
-        msg = prompts.REPAIR.format(problems="\n".join("- " + e for e in res["errors"][:25]) + ("\nAlso (warnings):\n" + "\n".join("- " + w for w in res["warnings"][:8]) if res["warnings"] else ""),
+        ranked = sorted(res["errors"], key=lambda e: -weight(e))
+        msg = prompts.REPAIR.format(problems="\n".join(("- [FATAL: page is dead until fixed] " if weight(e) >= 100 else "- ") + e for e in ranked[:25]) + ("\nAlso (warnings):\n" + "\n".join("- " + w for w in res["warnings"][:8]) if res["warnings"] else ""),
                                     blocks=fmt_blocks(shown, [b for b in prompts.BLOCKS if b in context]), names=", ".join(names))
         est = sum(len(blocks[n]) // 2 if blocks.get(n) else 3000 for n in names) + 2500
         trace("revise", "request", "started", round=rnd + 1, blocks=names, n_errors=n_err)
