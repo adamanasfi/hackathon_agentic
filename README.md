@@ -1,194 +1,223 @@
 # Paper to Playground
 
-An agent that turns a focused research-paper excerpt and a learning brief into a single, self-contained,
-interactive HTML explanation for an engineering undergraduate. It adds a trace of everything it did.
+An agent that turns a focused research-paper excerpt and a learning brief into a self-contained, interactive
+**slide-deck lesson** (one HTML file) for an engineering undergraduate. It also writes a trace of everything it
+did.
 
-**Team:** Ismail Abou Zeid, Ghina Daoud
+**Team:** Adam Manasfi, Ismail Abou Zeid, Ghina Daoud
 
 ## Run
 
 ```bash
 python -m pip install -r requirements.txt
-export OPENROUTER_API_KEY=...            # never committed; read from the environment
+export OPENROUTER_API_KEY=...            # read from the environment; never committed or written to outputs
 python agent.py --input case.json --output out --model google/gemini-2.5-flash
 ```
 
-- **MODEL_ID:** `google/gemini-2.5-flash` is the model we developed and tested with. Any OpenRouter chat model
+- **MODEL_ID:** `google/gemini-2.5-flash`, the model we developed and tested with. Any OpenRouter chat model
   works; nothing in the code is model-specific.
-- **Input:** `case.json` must contain `source_url`, `focus` and `audience`. All other fields, such as `excerpt`,
+- **Input:** `case.json` must contain `source_url`, `focus` and `audience`. Any other fields, such as `excerpt`,
   `title` or `section`, are passed to the model verbatim.
-- **Output:** `out/index.html` is one file with all CSS and JS inline. It needs no network, CDN, fonts or API key.
-  `out/trace.jsonl` holds one JSON event per stage.
+- **Output:** `out/index.html` is a single file with all CSS, JS and visuals inline. It needs no network, CDN,
+  fonts or API key. `out/trace.jsonl` holds one JSON event per stage, LLM call, check and revision.
 - **Exit code:** `0` when a usable page was written, nonzero otherwise.
-- **Requirements:** Python 3.11 and the three pinned pure-pip dependencies. No GPU, browser or system packages.
+- **Requirements:** Python 3.11 and three pinned pure-pip packages. No GPU, browser or system packages.
+- **Optional flags** (all have defaults; the command above is all you need): `--web-search`, `--max-repairs`,
+  `--gen-max-tokens`, `--effort`.
 
-## Architecture
+## Pipeline
 
 ```
 case.json
-  │ 1. SOURCE    use the excerpt in the case; only if it has none, try a 6 s fetch of source_url (HTML or PDF)
-  │              and keep the window most relevant to the brief. A failed fetch is logged and the run continues.
-  │ 2. GENERATE  ONE streamed LLM call returns labelled blocks, in this order:
-  │              PLAN · META · MODEL (pure JS math) · PLAYGROUND (controls HTML) · UI (DOM JS)
-  │              · INTRO · EXPLORE · GROUNDING
-  │ 3. SANITIZE  deterministic fixes that cost no tokens: LaTeX → HTML math, strip external tags,
-  │              create missing display containers, remove UI re-declarations of MODEL names
-  │ 4. CHECK     static checks + EXECUTION of the generated JS in QuickJS against a stub DOM built from
-  │              the generated HTML (see below)
-  │ 5. REVISE    if checks fail: send only the failing blocks and the error list, and receive search/replace
-  │              EDITs (or whole blocks if missing). One round by default (`--max-repairs`). Skipped when only
-  │              model-proposed expectations disagree. Keeps the best version seen.
-  │ 6. WRITE     assemble into the generic template → index.html. The trace records every stage.
+ │ 1. SOURCE    use the excerpt in the case; only if there is none, try a 6 s fetch of source_url (HTML or PDF)
+ │              and keep the most relevant window. A failed fetch is logged and the run continues.
+ │ 2. GENERATE  ONE streamed LLM call returns labelled blocks:
+ │              PLAN (incl. a per-slide VISUAL PLAN) · META · MODEL (pure JS maths) · PLAYGROUND (controls)
+ │              · UI (slides + drawing code) · INTRO · EXPLORE · GROUNDING
+ │ 3. SANITIZE  zero-token deterministic fixes: LaTeX → HTML, strip external tags, create missing containers,
+ │              drop UI re-declarations of MODEL names, remove live-state references inside scenario literals
+ │ 4. CHECK     static checks + EXECUTION of all generated JS in QuickJS against a stub DOM built from the
+ │              generated HTML (details below)
+ │ 5. REVISE    if checks fail: send only the failing blocks and a severity-ranked error list (with the
+ │              offending source line quoted); apply search/replace EDITs. One round by default, plus one extra
+ │              round only while a page-killing (fatal) error survives. The best version seen is kept.
+ │ 6. WRITE     assemble into the generic template → index.html; disclose any pruned self-checks
 ```
 
-**Why one generation call?** Prompt and completion tokens are both scored. Running separate plan and write
-calls would send the excerpt twice. The plan is still produced explicitly as the first block and logged in the
-trace.
+**Why one generation call?** Prompt and completion tokens are both scored. Separate plan and write calls would
+send the excerpt twice. The plan is still written explicitly, as the first block, and logged in the trace.
 
-**The template is generic and paper-agnostic** ([p2p/template.html](p2p/template.html)). Every page is a
-horizontal **slide-deck lesson** with a progress bar, ←/→ keys and a "View as page" toggle that stacks all the
-slides. The deck runs in this order:
-1. A title slide: idea, why it matters, key equation, symbols.
-2. **4–7 concept slides** written by the model as `SLIDES = [{title, text, draw(id, s, r), controls}]`. Each
-   introduces one primitive with its own large live visual; later slides integrate the primitives into the full
-   mechanism. A slide's controls are moved next to its visual while it is shown.
-3. A playground slide with all the controls, an optional ▶ Run/Step loop for iterative mechanisms, and live
-   invariants.
-4. One slide per guided exploration and one for the limitation. Each shows a slide visual rendered at its preset,
-   with a "Try it in the playground" button.
-5. A sources-and-checks slide: from the paper vs. our simplifications, plus the built-in calculation checks.
+## What a generated lesson looks like
 
-**Visual design step.** Before writing code, the model writes a **VISUAL PLAN** in its plan block, one line per
-slide: *object → mathematical structure → picture → what changes between scenarios*. The structure decides the
-picture: points with distances, units with weighted links, quantities propagating along edges, grids with local
-operations, functions of a parameter, population proportions, chains of transformations, or physical geometry.
-The choice is never driven by topic names, so it generalises to unseen papers. An optional `--web-search` flag
-(off by default) adds one small call using OpenRouter's server-side web plugin to research how a concept is usually
-visualised. In our tests it cost about 2k tokens and 7 s.
+The template ([p2p/template.html](p2p/template.html)) is generic and paper-agnostic. Every page is a horizontal
+slide deck in a dark lecture style: gold headings, teal accents, monospace numbers. It has a progress bar, ←/→
+navigation, and a **View as page** toggle that stacks all slides for reading or inspection.
 
-The template provides a **visual vocabulary** ([p2p/vizlib.js](p2p/vizlib.js)) of 3Blue1Brown-style semantic
-primitives:
+1. **Title slide:** the idea as a plain-words analogy, why it matters, the key equation, and a symbol table.
+2. **4–7 concept slides** (`SLIDES = [{title, text, draw(id, s, r), choices, controls}]`). Each slide adds exactly
+   one new idea with its own large live visual. Primitives come first; the full equation is revealed last and
+   mapped to pieces already seen. Learners explore through **scenario chips**: 2–4 named one-click situations
+   that animate the visual to a meaningfully different outcome. A slide can also borrow up to 2 sliders.
+3. **Playground:** a scenario bar built from all presets, every control the brief asks for (matrix editors are
+   folded under "Fine-tune"), an optional ▶ Run/Step loop for iterative mechanisms, and live invariant checks.
+4. **Two guided explorations and one limitation**, each on its own slide in Try / Watch / Why form. Each shows a
+   slide visual rendered at its own preset, with a "Try it in the playground" button.
+5. **Sources and checks:** what is stated in the paper (with section/equation) vs. our simplifications, a
+   disclaimer that the toy demo does not reproduce the paper's results, and a built-in calculation-check table.
 
-| Primitive | Used for |
+**Every number shown is computed.** `compute(state)` is the single source of numbers. Values quoted in the prose
+are `<span class="calc" data-at="preset" data-get="…">` placeholders evaluated from `compute()`, never typed by the
+model.
+
+## Visual design: reasoning, not a lookup table
+
+The prompt does not map topics to pictures. Before writing code, the model answers four questions for each slide
+and records them in its VISUAL PLAN:
+
+1. What one thing changes in this step, and what causes it?
+2. If you sketched it on a whiteboard for a friend, what would you draw?
+3. Which visual property carries the key quantity (position, length, angle, area, size, colour), so the cause and
+   effect is *seen* rather than read?
+4. Only then: which drawing tool matches the sketch? Or draw it directly with diagram primitives.
+
+General perception rules also apply: big marks, direct labels, the picture fills its panel, every scenario must
+look visibly different, and the picture must make sense with the text hidden. An optional `--web-search` flag
+(off by default) adds one small call through OpenRouter's server-side web plugin to research how a concept is
+usually visualised. In our tests it added about 2k tokens and 7 s.
+
+The template provides a library of 3Blue1Brown-style drawing tools ([p2p/vizlib.js](p2p/vizlib.js)). The prompt
+describes each one only by what it draws:
+
+| Tool | Draws |
 |---|---|
-| `V.space` | Vectors and embeddings in a 2-D space: similar items cluster, angle arcs, projections, **draggable** vectors |
-| `V.network` | Neural networks: edge width and colour = weight, node fill = activation |
-| `V.graph` | PageRank, Markov chains, message passing: node size = value, weighted arrows |
-| `V.flow` | Multi-stage algorithms, with live values per stage |
-| `V.pipeline` | A chain of matrix transformations, with connecting arrows and receptive-field windows |
-| `V.pixels` | Images, convolution, pooling, with an animated sliding window |
-| `V.curve` | Optimisation and calculus: a ball on the curve, its tangent, and the trail of past steps |
-| `V.waffle` | Probability and base rates: a population of dots |
-| `V.transform` | Linear maps: the plane's grid warped by a 2×2 matrix |
+| `V.space` | Points and arrows in an equal-aspect 2-D plane, with angle arcs, projections, regions and **draggable** handles |
+| `V.network` | Columns of nodes joined by weighted edges (edge width/colour = weight, node fill = value) |
+| `V.graph` | Nodes sized by value, joined by weighted directed arrows |
+| `V.numberline` | One axis with big labelled markers and labelled brackets for distances between positions |
+| `V.curve` | y = f(x) with a ball on it, its tangent, and a trail of earlier points |
+| `V.pixels` | A grid of shaded cells with movable highlight windows |
+| `V.pipeline` | Arrays side by side as shaded grids, joined by labelled arrows |
+| `V.flow` | A row of boxes with live values, joined by arrows |
+| `V.waffle` | A population of dots coloured by group |
+| `V.transform` | The plane's grid and basis vectors warped by a 2×2 matrix |
+| `V.bars`, `V.line`, `V.matrix`, `V.diagram` | Charts, heatmaps, and free-form keyed primitives (rect, circle, line, path, arrow, text) |
 
-Everything is SVG generated live from `compute()`, with no video or canned images. We considered Manim, but it
-renders videos and needs ffmpeg/LaTeX system packages, which the rules exclude.
+Engine properties that make the visuals robust without prompt rules:
+- **Animated:** every element is keyed and tweens to its new geometry, Manim-style, when a value changes.
+- **Stable scales:** an axis stays fixed while the new data still fills at least 40% of it, so switching scenarios
+  visibly moves the data instead of re-zooming; it re-fits when the data would shrink to a speck.
+- **Responsive:** charts lay themselves out at their container's real pixel width, so labels stay full size in
+  split panels.
+- **Composable:** each tool cleans up only its own elements and returns an annotatable context with X/Y maps.
+- **Safe text:** SVG labels are cleaned of HTML and wrapped; diagram viewBoxes auto-fit their contents within a
+  cap, so nothing is clipped.
+- `L` ([p2p/mathlib.js](p2p/mathlib.js)) provides small, tested numeric helpers such as matmul, softmax, xlogx,
+  normalize and seeded random numbers.
 
-The template also provides two helper libraries:
-- `V`: animated SVG bar, line and scatter charts, heatmaps, editable matrices, multi-panel splits, and keyed
-  diagram primitives that tween smoothly between states. A diagram's viewBox auto-fits its contents, so nothing is
-  clipped.
-- `L` ([p2p/mathlib.js](p2p/mathlib.js)): small numeric helpers such as matmul, softmax and xlogx.
+We considered [Manim](https://github.com/3b1b/manim). It renders non-interactive videos and needs
+OpenGL/ffmpeg/LaTeX system packages, so we built the same ideas (keyed objects that transform smoothly, scenes as
+slides) as live, interactive SVG instead.
 
-The model writes only the paper-specific blocks, which keeps output tokens low and the visuals consistent.
-
-**Every number shown is computed.** `compute(state)` is the only source of the numbers on the page. Values
-quoted in the explanations are `<span class="calc" data-at="preset" data-get="r.H">` placeholders, evaluated
-from `compute()` at load time, never typed by the model.
-
-### Checks (in [p2p/checks.py](p2p/checks.py), no LLM involved)
+## Checks ([p2p/checks.py](p2p/checks.py), no LLM involved)
 
 | Check | What it catches |
 |---|---|
-| Block presence; META fields; symbol table; 2 explorations + 1 limitation card; grounding cards | Missing required content |
-| No external URLs, `fetch`, imports, `<link>` or remote media | Page would not work offline |
-| LaTeX leaks | Formulas that would show as raw `$…$` |
-| Ids the UI touches exist; no duplicate ids; at least 2 controls | Dead controls |
-| `compute(DEFAULT_STATE)`, every preset and every test state give finite results | NaN / ∞ / crashes |
-| `TESTS`: canonical cases from the brief, compared with tolerance | Wrong mechanism maths |
-| `invariants()` hold for every preset and every control extreme | Broken properties (e.g. rows sum to 1) |
-| Control sweep: each slider and number input at its min and max, each select option, each checkbox | Edge-case crashes |
-| `setState` → `readState` round-trip for presets | Presets outside slider ranges or not applied |
-| Chart and diagram calls get finite data; shapes and labels stay inside the viewBox | Clipped or NaN visuals |
-| Every slide's `draw()` runs for the default state and every preset, draws something, and borrows only existing controls | Broken or empty slides |
-| Calc spans and exploration slides reference real presets, slides and finite expressions | Wrong numbers in prose |
-| Helper calls exist in `V` / `L` | Hallucinated APIs |
+| Block presence; META fields; symbol table; 2 explorations + 1 limitation; grounding cards | Missing required content |
+| No external URLs, `fetch`, imports, `<link>` or remote media; no LaTeX leaks | Pages that fail offline or show raw `$…$` |
+| Ids the UI touches exist; no duplicate ids; ≥ 2 controls, including every control the brief requires | Dead controls |
+| `compute()` finite for the default state, every preset, every scenario and every control extreme | NaN / ∞ / crashes |
+| `TESTS` (canonical cases from the brief) and `invariants()` | Wrong mechanism maths |
+| Control sweep (each slider/number at min and max, each select option, each checkbox) | Edge-case crashes |
+| `setState` → `readState` round trip for presets; each slide's scenarios give *different* results | Scenario buttons that do nothing |
+| Every slide's `draw()` runs for the default state, every preset and every scenario, and **visible shapes survive** | Broken or blank slides |
+| Chart data finite; diagram content and labels stay inside their frame | NaN visuals, clipped or shrunken diagrams |
+| Calc spans, exploration slides and presets reference real things | Wrong numbers in the prose |
+| Every `V`/`L` call exists (with the list of real names in the message) | Hallucinated APIs |
 | `step()` stays finite for 60 iterations | Diverging iterative demos |
 
-A model-proposed test or invariant whose hand-derived expectation still disagrees with the executed computation
-is removed from the page. The page discloses this and the trace logs it, so a visible ✓ always means a passing
-calculation.
+Errors are weighted by severity. Page-killing errors (a block fails to load, `compute`/`readState` throws on the
+default state, missing slides) weigh 100; broken scenarios weigh 40; cosmetic issues weigh 5; and the model's own
+self-check expectations weigh 1. This weighting drives repair priority and the keep-best rollback. A model-written
+test or invariant whose hand-derived expectation disagrees with the executed computation is not "fixed" with
+tokens: it is removed from the page, and the page and the trace say so. A visible ✓ therefore always means a
+passing calculation.
 
 ### Budget guards
-- The client enforces ≤ 10 requests, ≤ 30,000 completion tokens and a 9-minute deadline, capping `max_tokens`
-  by what remains.
-- Responses are streamed. A degenerate repetition loop (e.g. endless `0000…`) is detected and the call is cut
-  short; the unfinished block is dropped and regenerated.
-- A 402 "can only afford N tokens" error is retried once with a smaller ceiling. A 429 is retried with backoff.
-- The trace logs per-call prompt, completion, reasoning and cached tokens, elapsed seconds, finish reason and
-  the OpenRouter generation id, so usage can be verified against API records. No credentials or hidden
-  reasoning are logged.
+- The client enforces ≤ 10 requests, ≤ 30,000 completion tokens and a 9-minute deadline, capping `max_tokens` by
+  what remains.
+- Responses are streamed. A degenerate repetition loop (e.g. endless `0000…`) is detected and cut short.
+- A 402 "can only afford N tokens" error is retried with a smaller ceiling. A 429 is retried with backoff.
+- The trace logs per-call prompt, completion, reasoning and cached tokens, elapsed seconds, finish reason and the
+  OpenRouter generation id, so usage can be verified against API records. No credentials or hidden reasoning are
+  logged.
 
-## Measured results (development runs, `google/gemini-2.5-flash`, final code)
+## Measured results
 
-| Practice case | LLM calls | Total tokens | Wall time | Visual primitives the agent chose | Remaining issues |
+All runs used `google/gemini-2.5-flash` with the final prompt. Error counts were re-checked with the final library.
+Every run stays inside 10 requests, 30k completion tokens and 10 minutes, and every page loads and runs in
+Chromium without JavaScript errors.
+
+**Held-out cases**, written after the prompt was finalised and never referenced by it:
+
+| Case | Calls | Total tokens | Time | Visuals the agent chose | Remaining issues |
 |---|---|---|---|---|---|
-| Bayes' rule, base-rate fallacy | 1 | 12.7k | 31 s | `waffle` (1000-person population) | none |
-| Scaled dot-product attention (Sec. 3.2.1) | 1 | 16.0k | 44 s | diagram, matrices | 1 minor |
-| MLP forward pass (Rumelhart et al., Eq. 1–2) | 2 | 29.8k | 58 s | `network`, `curve` (sigmoid) | none |
-| Adam bias correction (Alg. 1, iterative) | 2 | 29.4k | 65 s | bars, diagram | 2 minor |
-| Batch Normalization (Alg. 1) | 2 | 31.6k | 62 s | bars, `pipeline` | model-proposed invariants pruned |
-| word2vec analogies (Sec. 1, 5) | 2 | 34.4k | 64 s | `space` (draggable word vectors) | several minor |
-| Shannon entropy (Sec. 6) | 3 | 39.3k | 58 s | bars, diagram | none |
-| PageRank (Sec. 2.4, 2.6, iterative ▶ Run) | 2 | 41.3k | 92 s | `graph` | 3 minor |
-| Convolution + sub-sampling (LeCun et al., Sec. II.A) | 3 | 57.8k | 105 s | `pixels`, diagram, matrices | 2 minor |
+| Scalar Kalman update (Kalman 1960) | 1 | 14.1k | 38 s | prior/likelihood/posterior bell curves, `numberline` for the gain, variance bars | none |
+| Sampling and aliasing (Shannon 1949, Thm 1) | 3 | 44.4k | 73 s | sinusoid and sample plots, `numberline` | none (after a library fix) |
+| Huffman construction (Huffman 1952) | 2 | 35.3k | 81 s | tree built merge by merge, bars | 1 minor |
 
-**Held-out cases.** These were written after the prompt was frozen, from domains the prompt never mentions. The
-default agent (no web search) produced fully clean pages for all three:
+**Practice cases** (the two public examples plus seven of our own):
 
-| Held-out case | LLM calls | Total tokens | Wall time | Visuals chosen |
+| Case | Calls | Total tokens | Time | Remaining issues |
 |---|---|---|---|---|
-| Sampling and aliasing (Shannon 1949, Thm 1) | 2 | 26.9k | 54 s | sinusoid and sample plots, bars |
-| Scalar Kalman measurement update (Kalman 1960) | 2 | 23.4k | 41 s | prior, likelihood and posterior bell curves; gain flow |
-| Huffman code construction (Huffman 1952) | 1 | 18.0k | 59 s | tree built merge by merge (`graph`), codeword table, bars |
+| Bayes' rule, base-rate fallacy (showcase example below) | 1 | 14.8k | 38 s | none |
+| MLP forward pass (Rumelhart et al. 1986, Eq. 1–2) | 1 | 18.1k | 55 s | minor |
+| Shannon entropy (Sec. 6) | 2 | 27.5k | 45 s | none |
+| Scaled dot-product attention (Sec. 3.2.1) | 2 | 31.8k | 58 s | none |
+| Convolution + sub-sampling (LeCun et al. 1998, Sec. II.A) | 2 | 31.8k | 55 s | 3 minor |
+| Batch Normalization (Alg. 1) | 2 | 33.1k | 57 s | minor |
+| word2vec analogies (Sec. 1, 5) | 2 | 34.2k | 63 s | model-proposed self-checks pruned |
+| Adam bias correction (Alg. 1, iterative) | 2 | 52.8k | 104 s | minor |
+| PageRank (Sec. 2.4, 2.6, iterative) | 3 | 56.4k | 93 s | edge cases (e.g. changing the page count) |
 
-In the final practice batch, all nine pages load and run in Chromium. Across earlier development batches,
-the occasional failure was always a model-written code error that the repair round could not fix. Such errors are
-logged in the trace, and every recurring pattern was turned into a deterministic library fix.
+We also verified:
+- a clean-room install (fresh clone, fresh venv, exact command above);
+- a run where every network request except OpenRouter was blocked (the source fetch failed in 0.05 s and
+  generation completed from the case text);
+- a second model family (`openai/gpt-4.1-mini`: entropy in 1 call, 10.8k tokens, clean).
 
-Every run stays well inside 10 requests, 30k completion tokens and 10 minutes. We also tested
-`openai/gpt-4.1-mini` (entropy: 1 call, 10.8k tokens, clean) and a run where every network request except
-OpenRouter was blocked: the source fetch failed in 0.05 s, the failure was logged, and generation completed from
-the case text.
+Failures we observed during development were always model-written code errors the repair round could not fix.
+Each recurring pattern was turned into a deterministic library fix rather than a prompt rule.
 
-**Example input/output pair:** [examples/output/bayes/](examples/output/bayes/) holds `case.json`, `index.html`
-and `trace.jsonl`, exactly as the agent wrote them.
+**Example input/output pair:** [examples/output/bayes/](examples/output/bayes/) holds `case.json`, `index.html` and
+`trace.jsonl`, exactly as the agent wrote them.
 
 ## Files
 
 | Path | Purpose |
 |---|---|
-| `agent.py` | CLI entry point and orchestration loop |
-| `p2p/prompts.py` | System, user and repair prompts (generic page contract) |
-| `p2p/llm.py` | OpenRouter streaming client with budget enforcement and tracing |
-| `p2p/checks.py` | Static checks, sanitizers and the QuickJS execution harness |
-| `p2p/latex.py` | Deterministic LaTeX → HTML converter |
+| `agent.py` | CLI entry point and orchestration loop (generate → check → revise → write) |
+| `p2p/prompts.py` | System, user and repair prompts: the generic page contract and teaching/visual-design guidance |
+| `p2p/llm.py` | OpenRouter streaming client with budget enforcement, loop detection and tracing |
+| `p2p/checks.py` | Static checks, sanitizers and the QuickJS execution harness (stub DOM) |
 | `p2p/assemble.py` | Block parser, search/replace edit applier, template assembly |
+| `p2p/latex.py` | Deterministic LaTeX → HTML converter |
 | `p2p/source.py` | Excerpt handling and best-effort source fetch |
-| `p2p/template.html`, `p2p/vizlib.js`, `p2p/mathlib.js` | Generic slide-deck template, semantic visual primitives, numeric helpers |
-| `examples/*.json` | Practice inputs written by us (the two public examples plus seven others) |
-| `examples/heldout/*.json` | Held-out inputs, written after the prompt was frozen and used only for testing |
-| `examples/output/bayes/` | One example input/output pair with its trace |
-| `tools/` | Development-only scripts (browser smoke test, re-assembly); not used by the agent |
+| `p2p/template.html` | Slide-deck template: layout, theme, navigation, scenarios, run loop, self-tests, `V` core |
+| `p2p/vizlib.js`, `p2p/mathlib.js` | Drawing tools and numeric helpers embedded in every page |
+| `examples/*.json` | Practice inputs (the two public examples plus seven of ours) |
+| `examples/heldout/*.json` | Held-out inputs, used only for testing |
+| `examples/output/bayes/` | Example input/output pair with its trace |
+| `tools/` | Development-only scripts, not used by the agent: browser smoke test, slide screenshots and contact sheets, re-assembly of saved blocks, and an A/B script for comparing a one-shot prompt |
 
 ## Credits and reuse
-- No third-party code is vendored. The template, helper libraries, checks and prompts were written for this
-  project, with help from an AI coding assistant (Claude Code), as the hackathon rules allow.
+- No third-party code is vendored. The template, drawing and maths libraries, checks and prompts were written for
+  this project, with help from an AI coding assistant (Claude Code), as the hackathon rules allow. The visual
+  style is inspired by 3Blue1Brown/Manim; no Manim code is used.
 - Runtime dependencies:
   - [`requests`](https://pypi.org/project/requests/) (Apache-2.0) for HTTP;
   - [`quickjs`](https://pypi.org/project/quickjs/) (MIT) for Python bindings to Fabrice Bellard's QuickJS, used to
     execute generated JS during checks;
   - [`pypdf`](https://pypi.org/project/pypdf/) (BSD) for PDF text extraction during the optional fetch.
-- Development only: [Playwright](https://playwright.dev/) for the browser smoke test in `tools/`. It is not in
-  `requirements.txt`.
-- Practice cases paraphrase short excerpts from the cited papers. They are used only as test inputs.
+- Development only: [Playwright](https://playwright.dev/) (browser smoke tests in `tools/`) and Pillow (contact
+  sheets). Neither is in `requirements.txt`.
+- Practice and held-out cases paraphrase short excerpts from the cited papers and are used only as test inputs.

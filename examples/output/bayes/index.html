@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bayes&#x27; Rule &amp; Diagnostic Tests</title>
+<title>Bayes&#x27; Theorem in Diagnostics</title>
 <style>
 :root{--bg:#0d1117;--panel:#131922;--panel2:#171e29;--ink:#e6edf3;--ink2:#c3ccd6;--muted:#8b949e;--line:#262e3a;--gold:#e2b86b;--teal:#4fb3bf;--coral:#e07a5f;--ok:#7fb77e;--bad:#e5534b;--warn:#e2b86b;--hl:#e2b86b;--r:12px;--mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;--sans:"DM Sans","Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
 *{box-sizing:border-box}
@@ -149,39 +149,40 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 </style>
 </head>
 <body>
-<header class="top"><div class="row"><div class="logo"></div><h1>Bayes&#x27; Rule &amp; Diagnostic Tests</h1><div class="cite">Source: Bayes (1763). An Essay towards solving a Problem in the Doctrine of Chances · Proposition 3 and 5 (modern statement) · <a href="https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053" target="_blank" rel="noopener">https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053</a> · Audience: Engineering undergraduate with basic probability.</div>
+<header class="top"><div class="row"><div class="logo"></div><h1>Bayes&#x27; Theorem in Diagnostics</h1><div class="cite">Source: Bayes (1763). An Essay towards solving a Problem in the Doctrine of Chances · Proposition 3 and 5 (conditional probability), stated in modern notation · <a href="https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053" target="_blank" rel="noopener">https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053</a> · Audience: Engineering undergraduate with basic probability.</div>
 <div class="tools"><button class="ghost" id="flowbtn" title="Show all slides as one scrolling page">View as page</button></div></div>
 <div class="prog"><div id="bar"></div></div></header>
 <div id="errors"></div>
 <main id="deck"><div id="track">
 <section class="slide" data-title="The idea"><div class="in">
-<div class="hero"><span class="kicker">Interactive lesson</span><h2>Bayes&#x27; Rule &amp; Diagnostic Tests</h2><p class="sum">Learners will understand how prior probability, sensitivity, and false positive rates combine to determine the posterior probability of a condition given a positive test result.</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
+<div class="hero"><span class="kicker">Interactive lesson</span><h2>Bayes&#x27; Theorem in Diagnostics</h2><p class="sum">Learners will see how prior probability, test sensitivity, and false positive rate combine to determine the probability of disease after a positive test, using a population-based visual.</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
 <div id="intro-cards">
 <div class="card">
   <h3>The idea</h3>
-  Imagine you're trying to figure out if you have a rare disease after getting a positive test result. Bayes' Rule helps you combine your initial suspicion (how common the disease is) with the test's accuracy to get a more realistic probability. It's like updating your detective's notebook with new evidence.
-  <br><br>
-  This lesson focuses on how the prevalence of a disease, the test's sensitivity, and its false positive rate interact to determine the actual probability of having the disease after a positive test.
+  <p>Imagine you get a positive result from a medical test. How likely is it that you actually have the disease? Bayes' Theorem helps us answer this by combining what we already know (the disease's prevalence) with new evidence (the test result).</p>
+  <p>It's a way to update our beliefs about an event based on new information.</p>
 </div>
 <div class="card">
   <h3>Why it matters</h3>
-  In medicine, Bayes' Rule is crucial for interpreting diagnostic test results, especially for rare conditions. It helps avoid the "base-rate fallacy," where people overestimate the probability of disease after a positive test, ignoring how rare the disease truly is. Beyond medicine, Bayes' Rule is fundamental in machine learning (e.g., Naive Bayes classifiers), spam filtering, and any field requiring probabilistic inference and belief updating.
+  <p>Bayes' Theorem is fundamental in many fields, from medical diagnostics and spam filtering to machine learning and artificial intelligence. In medicine, it helps patients and doctors interpret test results accurately, especially for rare conditions where intuition can be misleading (the "base-rate fallacy").</p>
 </div>
 <div class="card">
   <h3>The key equation</h3>
-  <div class="eq">P(D|+) = <span class="frac"><span>P(+|D)P(D)</span><span>P(+)</span></span></div>
-  <div class="eq">where P(+) = P(+|D)P(D) + P(+|not D)P(not D)</div>
-  This equation computes the <b>posterior probability</b> of having the disease (D) given a positive test result (+).
+  <div class="eq">P(D|+) = <span class="frac"><span>P(+|D) P(D)</span><span>P(+)</span></span></div>
+  <p>This computes the <b>posterior probability</b> of having the Disease (D) given a positive test (+).</p>
+  <p>Where P(+) is the total probability of a positive test:</p>
+  <div class="eq">P(+) = P(+|D) P(D) + P(+|~D) P(~D)</div>
 </div>
 <div class="card">
   <h3>Symbols</h3>
   <table class="sym">
-    <tr><td>P(D)</td><td>Prior probability of disease</td><td>[0, 1]</td></tr>
-    <tr><td>P(not D)</td><td>Prior probability of no disease</td><td>[0, 1]</td></tr>
-    <tr><td>P(+|D)</td><td>Probability of positive test given disease (Sensitivity)</td><td>[0, 1]</td></tr>
-    <tr><td>P(+|not D)</td><td>Probability of positive test given no disease (False Positive Rate)</td><td>[0, 1]</td></tr>
-    <tr><td>P(+)</td><td>Total probability of a positive test</td><td>[0, 1]</td></tr>
-    <tr><td>P(D|+)</td><td>Posterior probability of disease given positive test</td><td>[0, 1]</td></tr>
+    <tr><td>P(D)</td><td>Prior probability of having the Disease</td><td>[0, 1]</td></tr>
+    <tr><td>P(~D)</td><td>Prior probability of NOT having the Disease</td><td>[0, 1]</td></tr>
+    <tr><td>P(+)</td><td>Total probability of a positive test result</td><td>[0, 1]</td></tr>
+    <tr><td>P(-)&nbsp;</td><td>Total probability of a negative test result</td><td>[0, 1]</td></tr>
+    <tr><td>P(+|D)</td><td>Sensitivity: P(positive test | Disease)</td><td>[0, 1]</td></tr>
+    <tr><td>P(+|~D)</td><td>False Positive Rate: P(positive test | NO Disease)</td><td>[0, 1]</td></tr>
+    <tr><td>P(D|+)</td><td>Posterior probability: P(Disease | positive test)</td><td>[0, 1]</td></tr>
   </table>
 </div>
 </div></div></section>
@@ -191,30 +192,29 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 <div class="play">
   <div class="card">
     <div class="ctrl">
-      <label for="pD">P(D): Prior Probability of Disease</label>
-      <input type="range" id="pD" min="0" max="1" step="0.01" value="0.1">
-      <div class="hint">The proportion of the population that has the disease.</div>
+      <label for="p_disease">P(Disease)</label>
+      <input type="range" id="p_disease" min="0" max="1" step="0.01" value="0.1">
+      <div class="hint">Prior probability of having the disease.</div>
     </div>
     <div class="ctrl">
-      <label for="p_plus_D">P(+|D): Test Sensitivity</label>
-      <input type="range" id="p_plus_D" min="0" max="1" step="0.01" value="0.9">
-      <div class="hint">Probability of a positive test given the disease (True Positive Rate).</div>
+      <label for="p_pos_given_disease">P(+|Disease)</label>
+      <input type="range" id="p_pos_given_disease" min="0" max="1" step="0.01" value="0.95">
+      <div class="hint">Sensitivity: Probability of a positive test given disease.</div>
     </div>
     <div class="ctrl">
-      <label for="p_plus_notD">P(+|not D): False Positive Rate</label>
-      <input type="range" id="p_plus_notD" min="0" max="1" step="0.01" value="0.05">
-      <div class="hint">Probability of a positive test given no disease.</div>
+      <label for="p_pos_given_no_disease">P(+|No Disease)</label>
+      <input type="range" id="p_pos_given_no_disease" min="0" max="1" step="0.01" value="0.05">
+      <div class="hint">False Positive Rate: Probability of a positive test given no disease.</div>
     </div>
     <div class="ctrl">
       <label for="population">Population Size</label>
       <input type="number" id="population" min="100" max="10000" step="100" value="1000">
-      <div class="hint">Total number of individuals in our hypothetical population.</div>
+      <div class="hint">Total number of people in our hypothetical population.</div>
     </div>
   </div>
   <div class="card">
-    <div class="viz" id="waffleChart"></div>
-    <div class="readout" id="probabilities"></div>
-    <div class="readout" id="counts"></div>
+    <div class="viz" id="bayes_waffle"></div>
+    <div class="readout" id="bayes_readouts"></div>
   </div>
 </div>
 <div class="card" id="livebox" hidden><h3>Live checks (recomputed on every change)</h3><ul class="checks" id="live"></ul></div>
@@ -225,18 +225,19 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
   <div class="card from-paper">
     <h3>Stated in the paper</h3>
     <ul>
-      <li>"The probability that two subsequent events will both happen is a ratio compounded of the probability of the 1st, and the probability of the 2nd on supposition the 1st happens." (Proposition 3, modern: P(A and B) = P(A)P(B|A))</li>
+      <li>"The probability that two subsequent events will both happen is a ratio compounded of the probability of the 1st, and the probability of the 2nd on supposition the 1st happens." (Proposition 3, modern: P(A and B) = P(A) P(B|A))</li>
       <li>"If there be two subsequent events, the probability of the 2nd b/N and the probability of both together P/N, and it being first discovered that the 2nd event has happened, from hence I guess that the 1st event has also happened, the probability I am in the right is P/b." (Proposition 5, modern: P(A|B) = P(A and B) / P(B))</li>
-      <li>The modern statement of Bayes' Rule P(A|B) = P(B|A)P(A) / P(B) is derived from these propositions.</li>
+      <li>The modern statement of Bayes' Theorem, P(A|B) = P(B|A) P(A) / P(B), is derived directly from these propositions.</li>
     </ul>
   </div>
   <div class="card ours">
     <h3>Our simplifications &amp; examples</h3>
     <ul>
-      <li>We use a diagnostic test scenario (Disease D, Positive test +) to illustrate Bayes' Rule, which is a common and intuitive application.</li>
-      <li>We use a fixed population size (e.g., 1000 individuals) and waffle charts to visually represent probabilities as counts, making the concepts more concrete.</li>
-      <li>The terms "sensitivity" and "false positive rate" are modern epidemiological terms used to describe P(+|D) and P(+|not D) respectively.</li>
-      <li>The "base-rate fallacy" is a cognitive bias that Bayes' Rule helps to correct, and we demonstrate it with a specific example.</li>
+      <li>We use a medical diagnostic test as a concrete example (Disease D, Positive test +).</li>
+      <li>We fix the population size at 1000 for the waffle chart visualization to make counts intuitive.</li>
+      <li>The waffle chart is an analogy to represent probabilities as proportions of a total population.</li>
+      <li>We use modern notation P(D), P(+|D), etc., which is a restatement of Bayes' original work in contemporary probabilistic language.</li>
+      <li>The specific values for prevalence, sensitivity, and false positive rates are chosen for illustrative purposes.</li>
     </ul>
   </div>
 </div>
@@ -246,26 +247,26 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 </div></section>
 </div></main>
 <div id="explore-src" hidden>
-<div class="card explore" data-show-slide="4" data-show-preset="highPrevalence">
-  <h3>Exploration 1: High Prevalence, High Posterior</h3>
-  <p><b>Try:</b> Set P(D) to <span class="calc" data-at="highPrevalence" data-get="s.pD"></span> (high), P(+|D) to <span class="calc" data-at="highPrevalence" data-get="s.p_plus_D"></span> (high), and P(+|not D) to <span class="calc" data-at="highPrevalence" data-get="s.p_plus_notD"></span> (low).</p>
-  <p><b>Watch:</b> The waffle chart will show a large proportion of the population with the disease. The number of True Positives (dark teal) will be much larger than False Positives (orange). The posterior probability P(D|+) will be high, around <span class="calc" data-at="highPrevalence" data-get="r.pD_plus" data-d="3"></span>.</p>
-  <p><b>Why:</b> When the disease is common, and the test is good, a positive result is a strong indicator of the disease. Most positive tests are true positives.</p>
+<div class="card explore" data-show-slide="3" data-show-preset="highPrevalence">
+  <h3>Exploration 1: High Prevalence, Good Test</h3>
+  <p><b>Try:</b> Set P(Disease) to <b>0.5</b>, P(+|Disease) to <b>0.95</b>, and P(+|No Disease) to <b>0.05</b>.</p>
+  <p><b>Watch:</b> Observe the "Diseased & Test +" group (color <span style="color:${V.color(0)}">■</span>) and "Healthy & Test +" group (color <span style="color:${V.color(2)}">■</span>). The total number of positive tests is <span class="calc" data-at="highPrevalence" data-get="r.n_pos_total"></span>. The posterior probability P(D|+) is <span class="calc" data-at="highPrevalence" data-get="r.p_disease_given_pos" data-d="3"></span>.</p>
+  <p><b>Why:</b> With a high prevalence and a reasonably accurate test, most positive results genuinely indicate disease. The large number of diseased individuals means even a small false negative rate doesn't hide the true positives much.</p>
   <button data-preset="highPrevalence">Try it in the playground</button>
 </div>
 
-<div class="card explore" data-show-slide="4" data-show-preset="lowPrevalence">
-  <h3>Exploration 2: Base-Rate Fallacy</h3>
-  <p><b>Try:</b> Set P(D) to <span class="calc" data-at="lowPrevalence" data-get="s.pD"></span> (very low), P(+|D) to <span class="calc" data-at="lowPrevalence" data-get="s.p_plus_D"></span> (high sensitivity), and P(+|not D) to <span class="calc" data-at="lowPrevalence" data-get="s.p_plus_notD"></span> (low false positive rate).</p>
-  <p><b>Watch:</b> Despite the test being "accurate" (high sensitivity, low false positive rate), the posterior probability P(D|+) will be surprisingly low, around <span class="calc" data-at="lowPrevalence" data-get="r.pD_plus" data-d="3"></span>. The waffle chart will show that even a small false positive rate can lead to more False Positives (orange) than True Positives (dark teal) when the disease is rare.</p>
-  <p><b>Why:</b> When a disease is very rare, even a small false positive rate applied to the large "not diseased" population can generate more false positives than true positives. This dilutes the confidence in a positive test result.</p>
-  <button data-preset="lowPrevalence">Try it in the playground</button>
+<div class="card explore" data-show-slide="3" data-show-preset="rareDisease">
+  <h3>Exploration 2: Rare Disease, Good Test (Base-Rate Fallacy)</h3>
+  <p><b>Try:</b> Set P(Disease) to <b>0.01</b>, P(+|Disease) to <b>0.99</b>, and P(+|No Disease) to <b>0.01</b>.</p>
+  <p><b>Watch:</b> Notice how many people are in the "Diseased & Test +" group (<span class="calc" data-at="rareDisease" data-get="r.n_D_pos"></span>) versus the "Healthy & Test +" group (<span class="calc" data-at="rareDisease" data-get="r.n_nD_pos"></span>). Even though the test is 99% accurate, the posterior P(D|+) is only <span class="calc" data-at="rareDisease" data-get="r.p_disease_given_pos" data-d="3"></span>.</p>
+  <p><b>Why:</b> When a disease is very rare, even a low false positive rate can lead to many healthy people testing positive. These "false alarms" can outnumber the true positives, making a positive test less indicative of actual disease than one might intuitively expect.</p>
+  <button data-preset="rareDisease">Try it in the playground</button>
 </div>
 
-<div class="card caution" data-show-slide="4" data-show-preset="lowPrevalence">
-  <h3>Limitation / common misunderstanding</h3>
-  <p>A common misconception is that a highly accurate test (e.g., 99% sensitive and 95% specific, meaning 5% false positive rate) guarantees a high probability of disease if you test positive. As shown in Exploration 2, this is not true for rare conditions.</p>
-  <p>The <b>base-rate fallacy</b> is the tendency to ignore the prior probability (base rate) of an event when assessing its likelihood. In diagnostic testing, this means overlooking the disease's prevalence and focusing solely on test accuracy, leading to an overestimation of P(D|+).</p>
+<div class="card caution" data-show-slide="3" data-show-preset="rareDisease">
+  <h3>Limitation / common misunderstanding: The Base-Rate Fallacy</h3>
+  <p>A common mistake is to assume that a highly accurate test (high sensitivity, low false positive rate) automatically means a high probability of disease after a positive result. This is the <b>base-rate fallacy</b>.</p>
+  <p>As shown in Exploration 2, if the disease is rare (low base rate or prior probability), the number of healthy individuals who falsely test positive can be substantial, even with a very good test. This dilutes the meaning of a positive test, leading to a much lower posterior probability of disease than many people expect.</p>
 </div>
 </div>
 <nav class="nav"><button class="ghost" id="prev">← Back</button><div class="dots" id="dots"></div><span id="counter"></span><button id="next">Next →</button></nav>
@@ -360,7 +361,9 @@ const V = (function () {
   }
 
   /* --- keyed, animated SVG drawing context --- */
-  function diagram(id, w, h) {
+  /* ns: helpers draw in their own namespace so a user's d.end() never deletes another helper's elements */
+  function diagram(id, w, h, ns) {
+    ns = ns || "";
     w = w || 640; h = h || 360;
     const host = $(id);
     if (!host) throw new Error("V.diagram: no element with id '" + id + "'");
@@ -392,6 +395,7 @@ const V = (function () {
       return out.filter((x, i) => x !== "" || i === 0);
     }
     function el(tag, key, attrs, text) {
+      key = ns + key;
       let ls = null;
       if (tag === "text" && text !== undefined) { ls = lines(text, attrs); text = ls.join(" "); }
       try { extent(tag, attrs || {}, ls && ls.length > 1 ? ls.reduce((a, b) => (b.length > a.length ? b : a), "") : text); if (ls && ls.length > 1) { const a = attrs || {}; extent("text", Object.assign({}, a, { y: +a.y + 15 * (ls.length - 1) }), ls[ls.length - 1]); } } catch (e) {}
@@ -425,12 +429,34 @@ const V = (function () {
         return el("path", k, Object.assign({ d: p, fill: "none", stroke: INK, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, b));
       },
       end() {
-        for (const [k, e] of svg._keys) if (!seen.has(k)) { e.remove(); svg._keys.delete(k); anims.delete(e); }
+        for (const [k, e] of svg._keys) if (!seen.has(k) && (ns ? k.startsWith(ns) : k.charAt(0) !== "\u0001")) { e.remove(); svg._keys.delete(k); anims.delete(e); }
         ext.x0 = Math.max(ext.x0, -0.2 * w); ext.x1 = Math.min(ext.x1, 1.2 * w); ext.y0 = Math.max(ext.y0, -0.2 * h); ext.y1 = Math.min(ext.y1, 1.2 * h);
         if (ext.x0 < 0 || ext.y0 < 0 || ext.x1 > w || ext.y1 > h) svg.setAttribute("viewBox", (ext.x0 - 6) + " " + (ext.y0 - 6) + " " + (ext.x1 - ext.x0 + 12) + " " + (ext.y1 - ext.y0 + 12));
       },
     };
     return d;
+  }
+
+  /* responsive canvas: lay a chart out at its container's real pixel width (labels stay full size in narrow panels) */
+  function fitW(id, def) {
+    const h = $(id), cw = h ? h.clientWidth : 0;
+    return cw > 120 ? Math.max(300, Math.min(def, Math.round(cw - 8))) : def;
+  }
+
+  /* stable scales: a chart's range only grows across re-renders, so switching scenarios moves the data
+     against fixed axes instead of silently re-zooming (which would hide the change) */
+  function sticky(id, key, lo, hi) {
+    const h = $(id);
+    if (!h || !isFinite(lo) || !isFinite(hi)) return [lo, hi];
+    const m = h._sticky || (h._sticky = {}), p = m[key];
+    if (p) {
+      const ulo = Math.min(lo, p[0]), uhi = Math.max(hi, p[1]);
+      /* keep the previous frame while the new data still fills >= 40% of it (so changes are visible as motion);
+         otherwise re-fit, so data never shrinks to a speck after visiting an extreme case */
+      if ((hi - lo) >= 0.4 * (uhi - ulo)) { lo = ulo; hi = uhi; }
+    }
+    m[key] = [lo, hi];
+    return [lo, hi];
   }
 
   function ticks(a, b, n) {
@@ -455,13 +481,14 @@ const V = (function () {
   /* --- bar chart --- */
   function bars(id, items, o) {
     o = o || {};
-    const W = o.w || 640, H = o.h || 300, m = { l: 52, r: 16, t: o.title ? 30 : 14, b: 46 };
-    const d = diagram(id, W, H);
+    const W = o.w || fitW(id, 640), H = o.h || 300, m = { l: 52, r: 16, t: o.title ? 30 : 14, b: 46 };
+    const d = diagram(id, W, H, "\u0001bars\u0001");
     const vals = items.map((it) => (isFinite(it.value) ? it.value : 0));
     const refs = o.ref || [];
     let lo = o.min !== undefined ? o.min : Math.min(0, ...vals, ...refs.map((r) => r.value));
     let hi = o.max !== undefined ? o.max : Math.max(0, ...vals, ...refs.map((r) => r.value));
     if (!(hi > lo)) hi = lo + 1;
+    if (o.sticky !== false) [lo, hi] = sticky(id, "y", lo, hi);
     const pw = W - m.l - m.r, ph = H - m.t - m.b;
     const Y = (v) => m.t + ph * (1 - (clamp(v, lo, hi) - lo) / (hi - lo));
     if (o.title) d.text("title", W / 2, 18, o.title, { "text-anchor": "middle", "font-weight": 600 });
@@ -481,14 +508,15 @@ const V = (function () {
     });
     if (o.xlabel) d.text("xl", m.l + pw / 2, H - 8, o.xlabel, { "text-anchor": "middle", "font-size": 12 });
     d.end();
+    d.Y = Y; d.X = (i) => m.l + slot * i + slot / 2;
     return d;
   }
 
   /* --- line / scatter plot --- */
   function line(id, series, o) {
     o = o || {};
-    const W = o.w || 640, H = o.h || 340, m = { l: 56, r: 18, t: o.title ? 30 : 14, b: 46 };
-    const d = diagram(id, W, H);
+    const W = o.w || fitW(id, 640), H = o.h || 340, m = { l: 56, r: 18, t: o.title ? 30 : 14, b: 46 };
+    const d = diagram(id, W, H, "\u0001line\u0001");
     const xs = [], ys = [];
     series.forEach((s) => (s.pts || []).forEach((p) => { if (isFinite(p[0]) && isFinite(p[1])) { xs.push(p[0]); ys.push(p[1]); } }));
     (o.points || []).forEach((p) => { if (isFinite(p.x) && isFinite(p.y)) { xs.push(p.x); ys.push(p.y); } });
@@ -499,6 +527,7 @@ const V = (function () {
     if (x1 <= x0) x1 = x0 + 1;
     if (y1 <= y0) { y0 -= 0.5; y1 += 0.5; }
     if (o.ymin === undefined && o.ymax === undefined) { const pad = (y1 - y0) * 0.06; y0 -= pad; y1 += pad; }
+    if (o.sticky !== false) { [x0, x1] = sticky(id, "x", x0, x1); [y0, y1] = sticky(id, "y", y0, y1); }
     const pw = W - m.l - m.r, ph = H - m.t - m.b;
     const X = (v) => m.l + pw * (v - x0) / (x1 - x0), Y = (v) => m.t + ph * (1 - (v - y0) / (y1 - y0));
     const cx = (v) => clamp(X(v), m.l - 4, W - m.r + 4), cy = (v) => clamp(Y(v), m.t - 4, H - m.b + 4);
@@ -510,7 +539,7 @@ const V = (function () {
     if (o.xlabel) d.text("xl", m.l + pw / 2, H - 8, o.xlabel, { "text-anchor": "middle", "font-size": 12 });
     if (o.ylabel) d.text("yl", 14, m.t + ph / 2, o.ylabel, { transform: "rotate(-90 14 " + (m.t + ph / 2) + ")", "text-anchor": "middle", "font-size": 12 });
     (o.hlines || []).forEach((l, i) => { d.line("hl" + i, { x1: m.l, x2: W - m.r, y1: cy(l.y), y2: cy(l.y), stroke: l.color || MUTED, "stroke-dasharray": "6 4" }); if (l.label) d.text("hlt" + i, W - m.r - 4, cy(l.y) - 5, l.label, { "text-anchor": "end", "font-size": 11 }); });
-    (o.vlines || []).forEach((l, i) => { d.line("vl" + i, { x1: cx(l.x), x2: cx(l.x), y1: m.t, y2: H - m.b, stroke: l.color || MUTED, "stroke-dasharray": "6 4" }); if (l.label) { const R = cx(l.x) > W * 0.7; d.text("vlt" + i, cx(l.x) + (R ? -4 : 4), m.t + 12 + 14 * (i % 2), l.label, { "font-size": 11, "text-anchor": R ? "end" : "start" }); } });
+    (o.vlines || []).forEach((l, i) => { d.line("vl" + i, { x1: cx(l.x), x2: cx(l.x), y1: m.t, y2: H - m.b, stroke: l.color || MUTED, "stroke-dasharray": "6 4" }); if (l.label) { const R = cx(l.x) > W * 0.7; d.text("vlt" + i, cx(l.x) + (R ? -4 : 4), m.t + 12 + 14 * i, l.label, { "font-size": 11, "text-anchor": R ? "end" : "start" }); } });
     series.forEach((s, si) => {
       const c = s.color || color(si), pts = (s.pts || []).filter((p) => isFinite(p[0]) && isFinite(p[1]));
       if (s.line !== false && pts.length > 1) d.path("s" + si, { d: "M" + pts.map((p) => cx(p[0]).toFixed(2) + " " + cy(p[1]).toFixed(2)).join(" L"), stroke: c, "stroke-width": s.width || 2.5, "stroke-dasharray": s.dash ? "7 5" : "none" });
@@ -521,7 +550,7 @@ const V = (function () {
       if (p.label) { const R = cx(p.x) > W * 0.7; d.text("ptl" + i, cx(p.x) + (R ? -9 : 9), cy(p.y) - 8, p.label, { "font-size": 12, "font-weight": 600, "text-anchor": R ? "end" : "start" }); }
     });
     d.end();
-    legend($(id), series.filter((s) => s.name).map((s) => ({ name: s.name, color: s.color || color(series.indexOf(s)), dash: s.dash })));
+    legend($(id), series.filter((s) => s.name || s.label).map((s) => ({ name: s.name || s.label, color: s.color || color(series.indexOf(s)), dash: s.dash })));
     d.X = X; d.Y = Y;
     return d;
   }
@@ -544,7 +573,7 @@ const V = (function () {
     if (!host) throw new Error("V.matrix: no element with id '" + id + "'");
     const R = M.length, C = R ? M[0].length : 0, dg = o.digits === undefined ? 2 : o.digits;
     let mx = o.max;
-    if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (isFinite(v)) mx = Math.max(mx, Math.abs(v)); })); }
+    if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (isFinite(v)) mx = Math.max(mx, Math.abs(v)); })); if (o.sticky !== false) mx = sticky(id, "c", 0, mx)[1]; }
     let t = host.querySelector("table.mx");
     const shape = R + "x" + C + "|" + (o.rows || []).join(",") + "|" + (o.cols || []).join(",") + "|" + (o.title || "");
     if (!t || t._shape !== shape) {
@@ -643,7 +672,7 @@ const V = (function () {
   /* linear map from data domain [d0,d1] to pixel range [r0,r1] */
   const scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-  const api = { ink: INK, muted: MUTED, bg: BG, $, $$, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
+  const api = { fitW, sticky, ink: INK, muted: MUTED, bg: BG, $, $$, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
   const warned = new Set();
   /* unknown helpers degrade to no-ops instead of breaking the page */
   return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; if (!warned.has(k)) { warned.add(k); console.warn("V." + String(k) + " is not a helper"); } return () => ""; } });
@@ -653,7 +682,7 @@ const V = (function () {
 /* ---------- Semantic visual primitives (template, paper-agnostic) ----------
    3Blue1Brown-style building blocks on top of V.diagram: every element is keyed, so re-rendering animates. */
 (function () {
-  const { diagram, color, fmt, ticks, clamp, line } = V;
+  const { diagram, color, fmt, ticks, clamp, line, sticky, fitW } = V;
   const INK = V.ink, MUTED = V.muted, BG = V.bg, GOLD = "#e2b86b", TEAL = "#4fb3bf", CORAL = "#e07a5f";
   const fin = (v) => typeof v === "number" && isFinite(v);
   const num = (v, d) => (fin(v) ? fmt(v, d === undefined ? 2 : d) : String(v === undefined ? "" : v));
@@ -679,8 +708,8 @@ const V = (function () {
   /* ---- V.space: 2-D vector space (embeddings, similarity, attention geometry, linear algebra) ---- */
   function space(id, o) {
     o = o || {};
-    const W = o.w || 640, H = o.h || 440, top = o.title ? 26 : 8, m = 26;
-    const d = diagram(id, W, H), svg = d.svg;
+    const W = o.w || fitW(id, 640), H = o.h || Math.round(W * 0.69), top = o.title ? 26 : 8, m = 26;
+    const d = diagram(id, W, H, "\u0001space\u0001"), svg = d.svg;
     const vs = o.vectors || [], ps = o.points || [], ls = o.lines || [];
     const xs = [0], ys = [0];
     vs.forEach((v) => { const f = v.from || [0, 0]; xs.push(v.x, f[0]); ys.push(v.y, f[1]); });
@@ -690,9 +719,8 @@ const V = (function () {
     let rng = { x0: Math.min(...fx), x1: Math.max(...fx), y0: Math.min(...fy), y1: Math.max(...fy) };
     const pad = (a, b) => { const s = Math.max(b - a, 1e-9) * 0.18 + 0.4; return [a - s, b + s]; };
     [rng.x0, rng.x1] = pad(rng.x0, rng.x1); [rng.y0, rng.y1] = pad(rng.y0, rng.y1);
-    const dragging = vs.concat(ps).some((q) => q.drag);
     if (o.xmin !== undefined) { rng = { x0: o.xmin, x1: o.xmax, y0: o.ymin, y1: o.ymax }; }
-    else if (dragging) { if (!svg._frozen) svg._frozen = rng; else { const f = svg._frozen; rng = { x0: Math.min(f.x0, rng.x0), x1: Math.max(f.x1, rng.x1), y0: Math.min(f.y0, rng.y0), y1: Math.max(f.y1, rng.y1) }; svg._frozen = rng; } }
+    if (o.sticky !== false) { [rng.x0, rng.x1] = sticky(id, "x", rng.x0, rng.x1); [rng.y0, rng.y1] = sticky(id, "y", rng.y0, rng.y1); }
     const s = Math.min((W - 2 * m) / (rng.x1 - rng.x0), (H - top - 2 * m) / (rng.y1 - rng.y0));
     const cx = W / 2 - s * (rng.x0 + rng.x1) / 2, cy = top + (H - top) / 2 + s * (rng.y0 + rng.y1) / 2;
     const X = (x) => cx + s * x, Y = (y) => cy - s * y;
@@ -748,16 +776,16 @@ const V = (function () {
       if (p.drag) draggable(e, svg, p.drag);
     });
     d.end();
-    return { X, Y, scale: s };
+    return Object.assign(d, { X, Y, scale: s });
   }
 
   /* ---- V.network: layered neural network graph ---- */
   function network(id, o) {
     o = o || {};
     const layers = (o.layers || []).map((n) => Math.max(1, n | 0)), Lc = layers.length;
-    const maxN = Math.max(1, ...layers), W = o.w || 640, top = o.title ? 28 : 10;
+    const maxN = Math.max(1, ...layers), W = o.w || fitW(id, 640), top = o.title ? 28 : 10;
     const gap = clamp(300 / maxN, 34, 70), H = o.h || Math.max(260, top + 50 + gap * maxN);
-    const d = diagram(id, W, H), m = 60;
+    const d = diagram(id, W, H, "\u0001network\u0001"), m = 60;
     const nx = (l) => (Lc === 1 ? W / 2 : m + ((W - 2 * m) * l) / (Lc - 1));
     const ny = (l, i) => top + (H - top - 30) / 2 + (i - (layers[l] - 1) / 2) * gap;
     const rN = clamp(gap * 0.32, 10, 20);
@@ -765,6 +793,7 @@ const V = (function () {
     const Wt = o.weights || [];
     let wmax = 0;
     Wt.forEach((M) => (M || []).forEach((r) => (r || []).forEach((v) => { if (fin(v)) wmax = Math.max(wmax, Math.abs(v)); })));
+    wmax = sticky(id, "w", 0, wmax)[1];
     const wAt = (l, i, j) => { const M = Wt[l]; if (!M) return undefined; if (M.length === layers[l + 1] && M[0] && M[0].length === layers[l]) return M[j][i]; if (M.length === layers[l] && M[0] && M[0].length === layers[l + 1]) return M[i][j]; return undefined; };
     let ne = 0;
     for (let l = 0; l + 1 < Lc; l++) for (let i = 0; i < layers[l]; i++) for (let j = 0; j < layers[l + 1]; j++) {
@@ -775,6 +804,7 @@ const V = (function () {
     const A = o.values || [];
     let amax = 0;
     A.forEach((r) => (r || []).forEach((v) => { if (fin(v)) amax = Math.max(amax, Math.abs(v)); }));
+    amax = sticky(id, "a", 0, amax)[1];
     for (let l = 0; l < Lc; l++) {
       for (let i = 0; i < layers[l]; i++) {
         const v = A[l] ? A[l][i] : undefined, t = fin(v) && amax ? Math.abs(v) / amax : 0;
@@ -788,21 +818,23 @@ const V = (function () {
       if (ln) d.text("ln" + l, nx(l), H - 8, ln, { textAnchor: "middle", fontSize: 12, fill: o.active === l ? GOLD : MUTED });
     }
     d.end();
+    if (!d.X) { d.X = (v) => v; d.Y = (v) => v; }
     return d;
   }
 
   /* ---- V.graph: weighted directed graph (PageRank, Markov chains, message passing) ---- */
   function graph(id, o) {
     o = o || {};
-    const N = o.nodes || [], E = o.edges || [], W = o.w || 640, H = o.h || 420, top = o.title ? 28 : 6;
-    const d = diagram(id, W, H);
+    const N = o.nodes || [], E = o.edges || [], W = o.w || fitW(id, 640), H = o.h || Math.round(W * 0.66), top = o.title ? 28 : 6;
+    const d = diagram(id, W, H, "\u0001graph\u0001");
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const idx = new Map(N.map((n, i) => [n.id === undefined ? i : n.id, i]));
-    const vmax = Math.max(1e-9, ...N.map((n) => (fin(n.value) ? Math.abs(n.value) : 0)));
+    const vmax = sticky(id, "v", 0, Math.max(1e-9, ...N.map((n) => (fin(n.value) ? Math.abs(n.value) : 0))))[1];
     const R0 = Math.min(W, H - top) * 0.36, ccx = W / 2, ccy = top + (H - top) / 2;
-    const pos = N.map((n, i) => fin(n.x) && fin(n.y) ? [40 + n.x * (W - 80), top + 30 + n.y * (H - top - 60)] : [ccx + R0 * Math.cos(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length)), ccy + R0 * Math.sin(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length))]);
+    const px = N.some((n) => (fin(n.x) && Math.abs(n.x) > 1.5) || (fin(n.y) && Math.abs(n.y) > 1.5)); // pixel coordinates given
+    const pos = N.map((n, i) => fin(n.x) && fin(n.y) ? (px ? [n.x, n.y] : [40 + n.x * (W - 80), top + 30 + n.y * (H - top - 60)]) : [ccx + R0 * Math.cos(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length)), ccy + R0 * Math.sin(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length))]);
     const rad = N.map((n) => (fin(n.value) ? 14 + 22 * Math.sqrt(Math.abs(n.value) / vmax) : 22));
-    const wmax = Math.max(1e-9, ...E.map((e) => (fin(e.w) ? Math.abs(e.w) : 1)));
+    const wmax = sticky(id, "w", 0, Math.max(1e-9, ...E.map((e) => (fin(e.w) ? Math.abs(e.w) : 1))))[1];
     const has = new Set(E.map((e) => idx.get(e.from) + ">" + idx.get(e.to)));
     E.forEach((e, k) => {
       const a = idx.get(e.from), b = idx.get(e.to); if (a === undefined || b === undefined) return;
@@ -820,7 +852,7 @@ const V = (function () {
       if (fin(n.value)) d.text("nv" + i, pos[i][0], pos[i][1] + rad[i] + 15, num(n.value, o.digits === undefined ? 3 : o.digits), { textAnchor: "middle", fontSize: 12, fill: INK });
     });
     d.end();
-    return { pos };
+    return Object.assign(d, { pos, X: (v) => v, Y: (v) => v });
   }
 
   /* ---- V.flow: stages of an algorithm / pipeline with live values ---- */
@@ -829,7 +861,7 @@ const V = (function () {
     const S = o.steps || [], n = Math.max(1, S.length), gap = 34, m = 16;
     const bw = clamp(o.boxWidth || 130, 80, 200), W = o.w || Math.max(640, 2 * m + n * bw + (n - 1) * gap), top = o.title ? 30 : 8;
     const bh = 70, H = o.h || top + bh + 46, y0 = top + 8;
-    const d = diagram(id, W, H);
+    const d = diagram(id, W, H, "\u0001flow\u0001");
     const x0 = (W - (n * bw + (n - 1) * gap)) / 2;
     if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     S.forEach((st, i) => {
@@ -845,6 +877,7 @@ const V = (function () {
       }
     });
     d.end();
+    if (!d.X) { d.X = (v) => v; d.Y = (v) => v; }
     return d;
   }
 
@@ -855,8 +888,8 @@ const V = (function () {
     const R = M.length, C = R ? Math.max(...M.map((r) => r.length)) : 0, top = o.title ? 28 : 6, m = 20;
     const cs = o.cell || clamp(Math.floor(Math.min(340 / Math.max(R, 1), 560 / Math.max(C, 1))), 10, 52);
     const W = o.w || Math.max(240, C * cs + 2 * m), H = top + R * cs + 2 * m;
-    const d = diagram(id, W, H), x0 = (W - C * cs) / 2, y0 = top + m;
-    let mx = o.max; if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); }
+    const d = diagram(id, W, H, "\u0001pixels\u0001"), x0 = (W - C * cs) / 2, y0 = top + m;
+    let mx = o.max; if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); mx = sticky(id, "c", 0, mx)[1]; }
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const showV = o.values !== false && cs >= 24;
     M.forEach((r, i) => r.forEach((v, j) => {
@@ -870,7 +903,7 @@ const V = (function () {
       if (w.label) d.text("wl" + k, x0 + w.c * cs, y0 + w.r * cs - 7, w.label, { fill: w.color || GOLD, fontSize: 12, fontWeight: 650 });
     });
     d.end();
-    return { cell: cs, x0, y0, X: (j) => x0 + j * cs + cs / 2, Y: (i) => y0 + i * cs + cs / 2 };
+    return Object.assign(d, { cell: cs, x0, y0, X: (j) => x0 + j * cs + cs / 2, Y: (i) => y0 + i * cs + cs / 2 });
   }
 
   /* ---- V.curve: function curve with a ball, tangent and trail (optimisation, calculus, losses) ---- */
@@ -898,7 +931,7 @@ const V = (function () {
     const G = o.groups || [], tot = Math.min(2000, G.reduce((a, g) => a + Math.max(0, Math.round(g.n || 0)), 0));
     const cols = o.cols || (tot > 400 ? 40 : tot > 100 ? 20 : 10), rows = Math.ceil(tot / cols) || 1;
     const top = o.title ? 28 : 6, cs = clamp(Math.floor(600 / cols), 6, 30), W = o.w || Math.max(320, cols * cs + 40), H = top + rows * cs + 24 + 22 * Math.ceil(G.length / 2);
-    const d = diagram(id, W, H), x0 = (W - cols * cs) / 2;
+    const d = diagram(id, W, H, "\u0001waffle\u0001"), x0 = (W - cols * cs) / 2;
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     let k = 0;
     G.forEach((g, gi) => { for (let q = 0; q < Math.round(g.n || 0) && k < tot; q++, k++) d.circle("d" + k, { cx: x0 + (k % cols) * cs + cs / 2, cy: top + 8 + Math.floor(k / cols) * cs + cs / 2, r: cs * 0.38, fill: g.color || color(gi) }); });
@@ -908,6 +941,7 @@ const V = (function () {
       d.text("lgt" + gi, lx + 12, ly, (g.label || "group " + (gi + 1)) + ": " + Math.round(g.n || 0), { fontSize: 13, fill: INK });
     });
     d.end();
+    if (!d.X) { d.X = (v) => v; d.Y = (v) => v; }
     return d;
   }
 
@@ -934,7 +968,7 @@ const V = (function () {
     const cs = clamp(Math.floor(Math.min((860 - 40 - gap * (n - 1)) / Math.max(1, totCols), 300 / maxRows)), 14, 56);
     const W = o.w || Math.max(520, totCols * cs + gap * (n - 1) + 40 + (S.some((st) => !st.M) ? cs : 0));
     const H = o.h || top + labH + maxRows * cs + 40;
-    const d = diagram(id, W, H);
+    const d = diagram(id, W, H, "\u0001pipeline\u0001");
     if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const used = dims.reduce((a, dm) => a + dm[1] * cs, 0) + gap * (n - 1);
     let x = (W - used) / 2;
@@ -943,7 +977,7 @@ const V = (function () {
       const [R, C] = dims[k], w = C * cs, y0 = midY - (R * cs) / 2;
       d.text("sl" + k, x + w / 2, y0 - 9, st.label || "", { textAnchor: "middle", fontWeight: 650, fill: st.color || GOLD, fontSize: 13 });
       if (st.M) {
-        let mx = st.max; if (mx === undefined) { mx = 0; st.M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); }
+        let mx = st.max; if (mx === undefined) { mx = 0; st.M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); mx = sticky(id, "c" + k, 0, mx)[1]; }
         st.M.forEach((r, i) => r.forEach((v, j) => {
           const t = fin(v) ? clamp(Math.abs(v) / (mx || 1), 0, 1) : 0;
           d.rect("c" + k + "_" + i + "_" + j, { x: x + j * cs, y: y0 + i * cs, width: cs - 2, height: cs - 2, rx: 3, fill: !fin(v) ? "#5c2323" : (v < 0 ? "rgba(224,122,95," : "rgba(79,179,191,") + (0.07 + 0.85 * t).toFixed(3) + ")" });
@@ -963,7 +997,47 @@ const V = (function () {
       x += w + gap;
     });
     d.end();
+    if (!d.X) { d.X = (v) => v; d.Y = (v) => v; }
     return d;
+  }
+
+  /* ---- V.numberline: positions, intervals and distances on one axis ---- */
+  function numberline(id, o) {
+    o = o || {};
+    const P = (o.points || []).filter((p) => fin(p.x)), S = (o.spans || []).filter((q) => fin(q.from) && fin(q.to));
+    const xs = P.map((p) => p.x).concat(...S.map((q) => [q.from, q.to]), fin(o.min) ? [o.min] : [], fin(o.max) ? [o.max] : []);
+    let lo = fin(o.min) ? o.min : Math.min(...xs), hi = fin(o.max) ? o.max : Math.max(...xs);
+    if (!(hi > lo)) { lo -= 1; hi += 1; }
+    if (!fin(o.min) || !fin(o.max)) { const pad = (hi - lo) * 0.12; if (!fin(o.min)) lo -= pad; if (!fin(o.max)) hi += pad; }
+    if (o.sticky !== false) [lo, hi] = sticky(id, "x", lo, hi);
+    const above = S.filter((q) => q.side !== "below"), below = S.filter((q) => q.side === "below");
+    const W = o.w || fitW(id, 600), m = 44, top = (o.title ? 34 : 10) + 32 * above.length, axisY = top + 92, H = o.h || axisY + 58 + 34 * below.length + (o.xlabel ? 26 : 0);
+    const d = diagram(id, W, H, "\u0001numberline\u0001");
+    const X = (v) => m + ((W - 2 * m) * (v - lo)) / (hi - lo);
+    if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    d.line("axis", { x1: m - 10, y1: axisY, x2: W - m + 10, y2: axisY, stroke: "#4b5563", strokeWidth: 2 });
+    ticks(lo, hi, 8).forEach((t, i) => { d.line("tk" + i, { x1: X(t), y1: axisY, x2: X(t), y2: axisY + 6, stroke: "#4b5563" }); d.text("tl" + i, X(t), axisY + 30, String(+t.toPrecision(6)), { textAnchor: "middle", fontSize: 13, fill: MUTED }); });
+    if (o.xlabel) d.text("xl", W / 2, H - 8, o.xlabel, { textAnchor: "middle", fill: MUTED, fontSize: 13 });
+    const bracket = (q, k, y, dir) => {
+      const a = X(Math.min(q.from, q.to)), b = X(Math.max(q.from, q.to)), c = q.color || MUTED;
+      d.path("sp" + k, { d: "M" + a + " " + (y + 7 * dir) + " L" + a + " " + y + " L" + b + " " + y + " L" + b + " " + (y + 7 * dir), stroke: c, strokeWidth: 2 });
+      if (q.label) d.text("spl" + k, (a + b) / 2, y - (dir > 0 ? 8 : -20), q.label, { textAnchor: "middle", fill: c, fontSize: 14, fontWeight: 600 });
+    };
+    above.forEach((q, i) => bracket(q, "a" + i, axisY - 74 - 32 * i, 1));
+    below.forEach((q, i) => bracket(q, "b" + i, axisY + 50 + 34 * i, -1));
+    const order = P.map((p, i) => i).sort((a, b) => P[a].x - P[b].x), rows = [];
+    order.forEach((i) => {
+      const p = P[i], c = p.color || color(i), x = X(p.x), r = p.r || 13, lab = p.label || "", w = String(lab).length * 8;
+      let row = 0; while (rows[row] !== undefined && rows[row] > x - w / 2 - 6) row++; rows[row] = x + w / 2;
+      const ly = axisY - r - 10 - 20 * row;
+      if (row) d.line("pk" + i, { x1: x, y1: axisY - r, x2: x, y2: ly + 4, stroke: c, strokeWidth: 1, opacity: 0.6 });
+      d.circle("p" + i, { cx: x, cy: axisY, r, fill: c, stroke: BG, strokeWidth: 2, opacity: p.opacity === undefined ? 1 : p.opacity });
+      if (lab) d.text("pl" + i, x, ly, lab, { textAnchor: "middle", fill: c, fontSize: 14, fontWeight: 650 });
+      if (p.drag) draggable(d.circle("ph" + i, { cx: x, cy: axisY, r: r + 6, fill: c, fillOpacity: 0.15 }), d.svg, (vx) => p.drag(vx));
+    });
+    d.svg._map = { ix: (px) => lo + ((px - m) * (hi - lo)) / (W - 2 * m), iy: () => 0, snap: o.snap };
+    d.end();
+    return Object.assign(d, { X, Y: () => axisY });
   }
 
   /* write into an editable grid cell (for drag callbacks) */
@@ -973,7 +1047,7 @@ const V = (function () {
     if (inp) inp.value = +(+v).toFixed(3);
   }
 
-  Object.assign(V, { space, network, graph, flow, pixels, curve, waffle, transform, pipeline, setCell });
+  Object.assign(V, { space, network, graph, flow, pixels, curve, waffle, transform, pipeline, numberline, setCell });
 })();
 
 </script>
@@ -1040,84 +1114,128 @@ const L = (function () {
 <script>
 /* ---------- MODEL (generated) ---------- */
 const DEFAULT_STATE = {
-  pD: 0.1,    // P(D): prior probability of disease
-  p_plus_D: 0.9, // P(+|D): sensitivity (true positive rate)
-  p_plus_notD: 0.05, // P(+|not D): false positive rate
   population: 1000,
+  p_disease: 0.1, // P(D)
+  p_pos_given_disease: 0.95, // P(+|D) (sensitivity)
+  p_pos_given_no_disease: 0.05, // P(+|~D) (false positive rate)
 };
 
 function compute(s) {
-  const pD = s.pD;
-  const p_plus_D = s.p_plus_D;
-  const p_plus_notD = s.p_plus_notD;
-  const population = s.population;
+  const N = s.population;
+  const pD = s.p_disease;
+  const p_pos_D = s.p_pos_given_disease;
+  const p_pos_nD = s.p_pos_given_no_disease;
 
   // Derived probabilities
-  const p_notD = 1 - pD; // P(not D)
-  const p_plus = p_plus_D * pD + p_plus_notD * p_notD; // P(+)
-  const pD_plus = (p_plus_D * pD) / p_plus; // P(D|+)
+  const p_no_disease = 1 - pD; // P(~D)
+  const p_neg_D = 1 - p_pos_D; // P(-|D) (false negative rate)
+  const p_neg_nD = 1 - p_pos_nD; // P(-|~D) (specificity)
+
+  // Joint probabilities
+  const p_D_pos = pD * p_pos_D; // P(D and +)
+  const p_nD_pos = p_no_disease * p_pos_nD; // P(~D and +)
+  const p_D_neg = pD * p_neg_D; // P(D and -)
+  const p_nD_neg = p_no_disease * p_neg_nD; // P(~D and -)
+
+  // Evidence (total probability of positive test)
+  const p_pos = p_D_pos + p_nD_pos; // P(+)
+
+  // Posterior probability
+  let p_disease_given_pos = 0;
+  if (p_pos > 1e-9) { // Guard against division by zero
+    p_disease_given_pos = p_D_pos / p_pos; // P(D|+)
+  } else if (pD > 0 && p_pos_D > 0) { // If P(+) is zero but P(D and +) is not, something is wrong
+    p_disease_given_pos = 1; // This case should ideally not happen with valid inputs
+  }
 
   // Population counts
-  const numD = Math.round(pD * population);
-  const num_notD = population - numD;
+  const n_D = Math.round(N * pD);
+  const n_nD = N - n_D;
 
-  const num_plus_D = Math.round(p_plus_D * numD); // True Positives
-  const num_minus_D = numD - num_plus_D; // False Negatives
+  const n_D_pos = Math.round(n_D * p_pos_D);
+  const n_nD_pos = Math.round(n_nD * p_pos_nD);
+  const n_D_neg = n_D - n_D_pos;
+  const n_nD_neg = n_nD - n_nD_pos;
 
-  const num_plus_notD = Math.round(p_plus_notD * num_notD); // False Positives
-  const num_minus_notD = num_notD - num_plus_notD; // True Negatives
-
-  const num_plus = num_plus_D + num_plus_notD;
-  const num_minus = num_minus_D + num_minus_notD;
+  const n_pos_total = n_D_pos + n_nD_pos;
+  const n_neg_total = n_D_neg + n_nD_neg;
 
   return {
-    p_notD,
-    p_plus,
-    pD_plus,
-
-    numD,
-    num_notD,
-    num_plus_D,
-    num_minus_D,
-    num_plus_notD,
-    num_minus_notD,
-    num_plus,
-    num_minus,
+    p_no_disease, p_neg_D, p_neg_nD,
+    p_D_pos, p_nD_pos, p_D_neg, p_nD_neg,
+    p_pos,
+    p_disease_given_pos,
+    n_D, n_nD, n_D_pos, n_nD_pos, n_D_neg, n_nD_neg,
+    n_pos_total, n_neg_total,
   };
 }
 
 function invariants(s, r) {
-  return [
-    {
-      label: "Total population",
-      ok: Math.abs(r.numD + r.num_notD - s.population) < 1e-9,
-      detail: `Diseased + Not Diseased = ${r.numD + r.num_notD} (expected ${s.population})`,
-    },
-    {
-      label: "All test outcomes",
-      ok: Math.abs(r.num_plus_D + r.num_minus_D + r.num_plus_notD + r.num_minus_notD - s.population) < 1e-9,
-      detail: `TP + FN + FP + TN = ${r.num_plus_D + r.num_minus_D + r.num_plus_notD + r.num_minus_notD} (expected ${s.population})`,
-    },
-    {
-      label: "P(D|+) is valid",
-      ok: r.pD_plus >= 0 && r.pD_plus <= 1,
-      detail: `P(D|+) = ${V.fmt(r.pD_plus)}`,
-    },
-    {
-      label: "P(+) is valid",
-      ok: r.p_plus >= 0 && r.p_plus <= 1,
-      detail: `P(+) = ${V.fmt(r.p_plus)}`,
-    },
-  ];
+  const checks = [];
+  // Check that all population groups sum to the total population
+  const total_pop_calculated = r.n_D_pos + r.n_nD_pos + r.n_D_neg + r.n_nD_neg;
+  checks.push({
+    label: "Total population",
+    ok: Math.abs(total_pop_calculated - s.population) < 1, // Allow for rounding
+    detail: `Sum of groups: ${total_pop_calculated}, Expected: ${s.population}`
+  });
+
+  // Check that P(D|+) is 0 if P(D) is 0
+  if (s.p_disease < 1e-9) {
+    checks.push({
+      label: "P(D)=0 implies P(D|+)=0",
+      ok: r.p_disease_given_pos < 1e-9,
+      detail: `P(D)=${V.fmt(s.p_disease)}, P(D|+)=${V.fmt(r.p_disease_given_pos)}`
+    });
+  }
+
+  // Check that P(D|+) is 1 if P(D) is 1 and test is positive
+  if (s.p_disease > 1 - 1e-9 && s.p_pos_given_disease > 1e-9) {
+    checks.push({
+      label: "P(D)=1 implies P(D|+)=1",
+      ok: Math.abs(r.p_disease_given_pos - 1) < 1e-9,
+      detail: `P(D)=${V.fmt(s.p_disease)}, P(D|+)=${V.fmt(r.p_disease_given_pos)}`
+    });
+  }
+
+  // Check that P(+) is sum of P(D and +) and P(~D and +)
+  checks.push({
+    label: "P(+) consistency",
+    ok: Math.abs(r.p_pos - (r.p_D_pos + r.p_nD_pos)) < 1e-9,
+    detail: `P(+)=${V.fmt(r.p_pos)}, P(D and +) + P(~D and +)=${V.fmt(r.p_D_pos + r.p_nD_pos)}`
+  });
+
+  return checks;
 }
 
 
 
 const PRESETS = {
-  highPrevalence: { pD: 0.5, p_plus_D: 0.95, p_plus_notD: 0.05 },
-  lowPrevalence: { pD: 0.01, p_plus_D: 0.99, p_plus_notD: 0.05 },
-  perfectTest: { pD: 0.1, p_plus_D: 1, p_plus_notD: 0 },
-  uselessTest: { pD: 0.1, p_plus_D: 0.5, p_plus_notD: 0.5 },
+  typicalCase: {
+    p_disease: 0.1,
+    p_pos_given_disease: 0.95,
+    p_pos_given_no_disease: 0.05,
+  },
+  highPrevalence: {
+    p_disease: 0.5,
+    p_pos_given_disease: 0.95,
+    p_pos_given_no_disease: 0.05,
+  },
+  rareDisease: {
+    p_disease: 0.01,
+    p_pos_given_disease: 0.99,
+    p_pos_given_no_disease: 0.01,
+  },
+  uselessTest: {
+    p_disease: 0.1,
+    p_pos_given_disease: 0.5,
+    p_pos_given_no_disease: 0.5,
+  },
+  perfectTest: {
+    p_disease: 0.1,
+    p_pos_given_disease: 1.0,
+    p_pos_given_no_disease: 0.0,
+  },
 };
 </script>
 <script>
@@ -1125,216 +1243,262 @@ const PRESETS = {
 var TESTS = [], __TESTS_ERROR = null;
 try { TESTS = [
   {
-    name: "P(D)=0",
-    state: { pD: 0, p_plus_D: 0.9, p_plus_notD: 0.05 },
-    get: (r) => r.pD_plus,
+    name: "Prior is 0",
+    state: { p_disease: 0 },
+    get: (r) => r.p_disease_given_pos,
     expect: 0,
-    tol: 1e-9,
+    tol: 1e-9
   },
   {
-    name: "P(D)=1",
-    state: { pD: 1, p_plus_D: 0.9, p_plus_notD: 0.05 },
-    get: (r) => r.pD_plus,
+    name: "Prior is 1",
+    state: { p_disease: 1 },
+    get: (r) => r.p_disease_given_pos,
     expect: 1,
-    tol: 1e-9,
+    tol: 1e-9
   },
   {
-    name: "P(+|D)=0",
-    state: { pD: 0.1, p_plus_D: 0, p_plus_notD: 0.05 },
-    get: (r) => r.pD_plus,
-    expect: 0,
-    tol: 1e-9,
-  },
-  {
-    name: "P(+|not D)=0, P(D)>0",
-    state: { pD: 0.1, p_plus_D: 0.9, p_plus_notD: 0 },
-    get: (r) => r.pD_plus,
+    name: "Perfect test, P(D)=0.5",
+    state: { p_disease: 0.5, p_pos_given_disease: 1, p_pos_given_no_disease: 0 },
+    get: (r) => r.p_disease_given_pos,
     expect: 1,
-    tol: 1e-9,
+    tol: 1e-9
   },
   {
-    name: "Symmetric case",
-    state: { pD: 0.5, p_plus_D: 0.5, p_plus_notD: 0.5 },
-    get: (r) => r.pD_plus,
-    expect: 0.5,
-    tol: 1e-9,
+    name: "Useless test, P(D)=0.3",
+    state: { p_disease: 0.3, p_pos_given_disease: 0.5, p_pos_given_no_disease: 0.5 },
+    get: (r) => r.p_disease_given_pos,
+    expect: 0.3,
+    tol: 1e-9
+  },
+  {
+    name: "Population sum",
+    state: { population: 100, p_disease: 0.2, p_pos_given_disease: 0.8, p_pos_given_no_disease: 0.1 },
+    get: (r, s) => r.n_D_pos + r.n_nD_pos + r.n_D_neg + r.n_nD_neg,
+    expect: 100,
+    tol: 1
   },
   {
     name: "Base-rate fallacy example",
-    state: { pD: 0.01, p_plus_D: 0.99, p_plus_notD: 0.05 },
-    get: (r) => r.pD_plus,
-    expect: 0.165, // (0.99 * 0.01) / (0.99 * 0.01 + 0.05 * 0.99) = 0.0099 / (0.0099 + 0.0495) = 0.0099 / 0.0594 = 0.1666...
-    tol: 1e-2, // Due to rounding in population counts, allow some tolerance.
-  },
+    state: { p_disease: 0.01, p_pos_given_disease: 0.99, p_pos_given_no_disease: 0.01 },
+    get: (r) => r.p_disease_given_pos,
+    expect: 0.5, // P(D|+) = (0.99 * 0.01) / (0.99 * 0.01 + 0.01 * 0.99) = 0.0099 / (0.0099 + 0.0099) = 0.5
+    tol: 1e-3
+  }
 ]; } catch (e) { __TESTS_ERROR = String(e && e.message || e); }
 </script>
 <script>
 /* ---------- UI (generated) ---------- */
 function readState() {
   return {
-    pD: V.num("pD"),
-    p_plus_D: V.num("p_plus_D"),
-    p_plus_notD: V.num("p_plus_notD"),
     population: V.num("population"),
+    p_disease: V.num("p_disease"),
+    p_pos_given_disease: V.num("p_pos_given_disease"),
+    p_pos_given_no_disease: V.num("p_pos_given_no_disease"),
   };
 }
 
 function setState(s) {
-  V.set("pD", s.pD);
-  V.set("p_plus_D", s.p_plus_D);
-  V.set("p_plus_notD", s.p_plus_notD);
   V.set("population", s.population);
+  V.set("p_disease", s.p_disease);
+  V.set("p_pos_given_disease", s.p_pos_given_disease);
+  V.set("p_pos_given_no_disease", s.p_pos_given_no_disease);
 }
 
 function render(s, r) {
+  const N = s.population;
+
   const groups = [
-    { n: r.num_plus_D, label: "True Positives (D, +)", color: V.color(0) },
-    { n: r.num_minus_D, label: "False Negatives (D, -)", color: V.color(1) },
-    { n: r.num_plus_notD, label: "False Positives (not D, +)", color: V.color(2) },
-    { n: r.num_minus_notD, label: "True Negatives (not D, -)", color: V.color(3) },
+    { n: r.n_D_pos, label: "Diseased & Test +", color: V.color(0) },
+    { n: r.n_nD_pos, label: "Healthy & Test +", color: V.color(2) },
+    { n: r.n_D_neg, label: "Diseased & Test -", color: V.color(1) },
+    { n: r.n_nD_neg, label: "Healthy & Test -", color: V.color(3) },
   ];
-  V.waffle("waffleChart", {
+
+  V.waffle("bayes_waffle", {
     groups: groups,
-    cols: 50,
-    title: `Population of ${s.population} individuals`,
+    cols: Math.round(Math.sqrt(N)), // Make it roughly square
+    title: `Population of ${N} people`
   });
 
-  V.$("probabilities").innerHTML = `
-    <h3>Probabilities</h3>
-    <p>P(D) = ${V.fmt(s.pD)}</p>
-    <p>P(not D) = ${V.fmt(r.p_notD)}</p>
-    <p>P(+|D) = ${V.fmt(s.p_plus_D)}</p>
-    <p>P(+|not D) = ${V.fmt(s.p_plus_notD)}</p>
-    <p>P(+) = <span class="calc" data-get="r.p_plus" data-d="3"></span></p>
-    <p>P(D|+) = <span class="calc" data-get="r.pD_plus" data-d="3"></span></p>
-  `;
-
-  V.$("counts").innerHTML = `
-    <h3>Counts (out of ${s.population})</h3>
-    <p>Diseased (D): ${r.numD}</p>
-    <p>Not Diseased (not D): ${r.num_notD}</p>
-    <p style="color:${V.color(0)}">True Positives (D, +): ${r.num_plus_D}</p>
-    <p style="color:${V.color(1)}">False Negatives (D, -): ${r.num_minus_D}</p>
-    <p style="color:${V.color(2)}">False Positives (not D, +): ${r.num_plus_notD}</p>
-    <p style="color:${V.color(3)}">True Negatives (not D, -): ${r.num_minus_notD}</p>
-    <p>Total Positive Tests (+): ${r.num_plus}</p>
-    <p>Total Negative Tests (-): ${r.num_minus}</p>
+  V.$("bayes_readouts").innerHTML = `
+    <div>
+      <h3>Probabilities:</h3>
+      <p>P(Disease) = <b>${V.fmt(s.p_disease)}</b></p>
+      <p>P(+|Disease) = <b>${V.fmt(s.p_pos_given_disease)}</b> (Sensitivity)</p>
+      <p>P(+|No Disease) = <b>${V.fmt(s.p_pos_given_no_disease)}</b> (False Positive Rate)</p>
+      <p>P(+) = <b>${V.fmt(r.p_pos)}</b> (Total positive tests)</p>
+      <p>P(Disease|+) = <b>${V.fmt(r.p_disease_given_pos)}</b> (Posterior probability)</p>
+    </div>
+    <div>
+      <h3>Counts (out of ${N}):</h3>
+      <p>Diseased: <b>${r.n_D}</b></p>
+      <p>Healthy: <b>${r.n_nD}</b></p>
+      <p>Diseased & Test +: <b>${r.n_D_pos}</b></p>
+      <p>Healthy & Test +: <b>${r.n_nD_pos}</b></p>
+      <p>Diseased & Test -: <b>${r.n_D_neg}</b></p>
+      <p>Healthy & Test -: <b>${r.n_nD_neg}</b></p>
+      <p>Total Test +: <b>${r.n_pos_total}</b></p>
+      <p>Total Test -: <b>${r.n_neg_total}</b></p>
+    </div>
   `;
 }
 
 const SLIDES = [
   {
-    title: "Prior Probability of Disease: P(D)",
-    text: `Before any testing, we have a <b>prior belief</b> about the likelihood of a condition. This is the <b>prevalence</b> of the disease in the population, P(D).`,
+    title: "How many people have the disease?",
+    text: `Imagine a population of <b>${DEFAULT_STATE.population}</b> people. We want to know the probability that someone has a certain disease, <b>P(D)</b>. This is called the <i>prior probability</i> or <i>prevalence</i>.`,
+    choices: [
+      { label: "Low Prevalence", preset: "rareDisease" },
+      { label: "Typical Prevalence", preset: "typicalCase" },
+      { label: "High Prevalence", preset: "highPrevalence" },
+    ],
+    controls: ["p_disease"],
     draw: (id, s, r) => {
+      const N = s.population;
       const groups = [
-        { n: r.numD, label: "Diseased (D)", color: V.color(0) },
-        { n: r.num_notD, label: "Not Diseased (not D)", color: V.color(3) },
+        { n: r.n_D, label: "Diseased", color: V.color(0) },
+        { n: r.n_nD, label: "Healthy", color: V.color(3) },
       ];
       V.waffle(id, {
         groups: groups,
-        cols: 50,
-        title: `Population of ${s.population} individuals`,
+        cols: Math.round(Math.sqrt(N)),
+        title: `Population of ${N} people`,
+        note: `P(D) = ${V.fmt(s.p_disease)}`
       });
-    },
-    choices: [
-      { label: "Low Prevalence", state: { pD: 0.05 } },
-      { label: "Medium Prevalence", state: { pD: 0.2 } },
-      { label: "High Prevalence", state: { pD: 0.5 } },
-    ],
-    controls: ["pD"],
+    }
   },
   {
-    title: "Test Sensitivity: P(+|D)",
-    text: `A diagnostic test's <b>sensitivity</b>, P(+|D), is the probability of a positive result given that the person actually has the disease. These are the <b>True Positives</b>.`,
-    draw: (id, s, r) => {
-      const groups = [
-        { n: r.num_plus_D, label: "True Positives (D, +)", color: V.color(0) },
-        { n: r.num_minus_D, label: "False Negatives (D, -)", color: V.color(1) },
-        { n: r.num_notD, label: "Not Diseased (not D)", color: V.color(3) },
-      ];
-      V.waffle(id, {
-        groups: groups,
-        cols: 50,
-        title: `Population of ${s.population} individuals`,
-      });
-    },
+    title: "How accurate is the test?",
+    text: `Now, let's introduce a diagnostic test. Its accuracy is defined by two probabilities:
+           <ul>
+             <li><b>P(+|D)</b>: The probability of a positive test given the person <b>has</b> the disease (<i>sensitivity</i>).</li>
+             <li><b>P(+|~D)</b>: The probability of a positive test given the person <b>does not</b> have the disease (<i>false positive rate</i>).</li>
+           </ul>
+           These probabilities tell us how many people in each group (diseased or healthy) will test positive.`,
     choices: [
-      { label: "Low Sensitivity", state: { p_plus_D: 0.5 } },
-      { label: "High Sensitivity", state: { p_plus_D: 0.95 } },
-      { label: "Perfect Sensitivity", state: { p_plus_D: 1 } },
-    ],
-    controls: ["p_plus_D"],
-  },
-  {
-    title: "False Positive Rate: P(+|not D)",
-    text: `The <b>false positive rate</b>, P(+|not D), is the probability of a positive test result given that the person does NOT have the disease. These are the <b>False Positives</b>.`,
-    draw: (id, s, r) => {
-      const groups = [
-        { n: r.num_plus_D, label: "True Positives (D, +)", color: V.color(0) },
-        { n: r.num_minus_D, label: "False Negatives (D, -)", color: V.color(1) },
-        { n: r.num_plus_notD, label: "False Positives (not D, +)", color: V.color(2) },
-        { n: r.num_minus_notD, label: "True Negatives (not D, -)", color: V.color(3) },
-      ];
-      V.waffle(id, {
-        groups: groups,
-        cols: 50,
-        title: `Population of ${s.population} individuals`,
-      });
-    },
-    choices: [
-      { label: "Low False Positives", state: { p_plus_notD: 0.01 } },
-      { label: "High False Positives", state: { p_plus_notD: 0.2 } },
-      { label: "No False Positives", state: { p_plus_notD: 0 } },
-    ],
-    controls: ["p_plus_notD"],
-  },
-  {
-    title: "Total Probability of a Positive Test: P(+)",
-    text: `The total probability of a positive test, P(+), is the sum of True Positives and False Positives. It's the overall rate of positive results in the population.
-    <div class="eq">P(+) = P(+|D)P(D) + P(+|not D)P(not D)</div>`,
-    draw: (id, s, r) => {
-      const groups = [
-        { n: r.num_plus_D, label: "True Positives (D, +)", color: V.color(0) },
-        { n: r.num_plus_notD, label: "False Positives (not D, +)", color: V.color(2) },
-        { n: r.num_minus_D + r.num_minus_notD, label: "Negative Tests", color: V.color(3) },
-      ];
-      V.waffle(id, {
-        groups: groups,
-        cols: 50,
-        title: `Total Positive Tests: ${r.num_plus} (${V.fmt(r.p_plus)} P(+))`,
-      });
-    },
-    choices: [
-      { label: "More Positives", state: { pD: 0.2, p_plus_D: 0.9, p_plus_notD: 0.1 } },
-      { label: "Fewer Positives", state: { pD: 0.05, p_plus_D: 0.8, p_plus_notD: 0.02 } },
-    ],
-    controls: [],
-  },
-  {
-    title: "Posterior Probability: P(D|+)",
-    text: `After a positive test, we update our belief. The <b>posterior probability</b>, P(D|+), is the probability of having the disease given a positive test result.
-    <div class="eq">P(D|+) = <span class="frac"><span>P(+|D)P(D)</span><span>P(+)</span></span></div>
-    This is Bayes' Rule. It tells us how likely we are to have the disease if we test positive.`,
-    draw: (id, s, r) => {
-      const groups = [
-        { n: r.num_plus_D, label: "True Positives (D, +)", color: V.color(0) },
-        { n: r.num_plus_notD, label: "False Positives (not D, +)", color: V.color(2) },
-        { n: r.num_minus_D + r.num_minus_notD, label: "Negative Tests", color: V.color(3) },
-      ];
-      V.waffle(id, {
-        groups: groups,
-        cols: 50,
-        title: `P(D|+) = ${V.fmt(r.pD_plus)} (True Positives / All Positives)`,
-        highlightGroups: [0, 2], // Highlight only the positive tests
-      });
-    },
-    choices: [
-      { label: "High P(D|+)", preset: "highPrevalence" },
-      { label: "Low P(D|+)", preset: "lowPrevalence" },
+      { label: "Highly Accurate", preset: "typicalCase" },
       { label: "Perfect Test", preset: "perfectTest" },
+      { label: "Useless Test", preset: "uselessTest" },
     ],
-    controls: ["pD", "p_plus_D"],
+    controls: ["p_pos_given_disease", "p_pos_given_no_disease"],
+    draw: (id, s, r) => {
+      const N = s.population;
+      const groups = [
+        { n: r.n_D_pos, label: "Diseased & Test +", color: V.color(0) },
+        { n: r.n_D_neg, label: "Diseased & Test -", color: V.color(1) },
+        { n: r.n_nD_pos, label: "Healthy & Test +", color: V.color(2) },
+        { n: r.n_nD_neg, label: "Healthy & Test -", color: V.color(3) },
+      ];
+      V.waffle(id, {
+        groups: groups,
+        cols: Math.round(Math.sqrt(N)),
+        title: `Test Results for ${N} people`,
+        note: `P(+|D) = ${V.fmt(s.p_pos_given_disease)}, P(+|~D) = ${V.fmt(s.p_pos_given_no_disease)}`
+      });
+    }
+  },
+  {
+    title: "What is the total evidence for a positive test?",
+    text: `When someone tests positive, we need to know the overall probability of a positive test, <b>P(+)</b>. This is the sum of positive tests from both the diseased and healthy groups.
+           <br><b>P(+) = P(D and +) + P(~D and +)</b>`,
+    choices: [
+      { label: "Typical Case", preset: "typicalCase" },
+      { label: "Rare Disease, Accurate Test", preset: "rareDisease" },
+    ],
+    draw: (id, s, r) => {
+      const N = s.population;
+      const groups = [
+        { n: r.n_D_pos, label: "Diseased & Test +", color: V.color(0) },
+        { n: r.n_nD_pos, label: "Healthy & Test +", color: V.color(2) },
+        { n: r.n_D_neg + r.n_nD_neg, label: "Test -", color: V.color(3), opacity: 0.3 }, // Dim negative tests
+      ];
+      V.waffle(id, {
+        groups: groups,
+        cols: Math.round(Math.sqrt(N)),
+        title: `Total Positive Tests`,
+        note: `P(+) = ${V.fmt(r.p_pos)}`
+      });
+    }
+  },
+  {
+    title: "What is the probability of disease given a positive test?",
+    text: `This is the crucial question: if you test positive, what is the probability you actually have the disease? This is the <i>posterior probability</i>, <b>P(D|+)</b>.
+           <br>It's the proportion of diseased people among all those who tested positive.`,
+    choices: [
+      { label: "Typical Case", preset: "typicalCase" },
+      { label: "Rare Disease, Accurate Test", preset: "rareDisease" },
+      { label: "High Prevalence, Accurate Test", preset: "highPrevalence" },
+    ],
+    draw: (id, s, r) => {
+      const N = s.population;
+      const groups = [
+        { n: r.n_D_pos, label: "Diseased & Test +", color: V.color(0) },
+        { n: r.n_nD_pos, label: "Healthy & Test +", color: V.color(2) },
+        { n: r.n_D_neg + r.n_nD_neg, label: "Test -", color: V.color(3), opacity: 0.1 }, // Dim negative tests even more
+      ];
+      V.waffle(id, {
+        groups: groups,
+        cols: Math.round(Math.sqrt(N)),
+        title: `P(Disease|+) = ${V.fmt(r.p_disease_given_pos)}`,
+        note: `Among those who tested positive, ${V.fmt(r.p_disease_given_pos * 100)}% are diseased.`
+      });
+    }
+  },
+  {
+    title: "Bayes' Theorem: Combining Prior and Evidence",
+    text: `Bayes' Theorem formally combines these probabilities:
+           <div class="eq">P(D|+) = <span class="frac"><span>P(+|D) P(D)</span><span>P(+)</span></span></div>
+           Where P(+) is the total probability of a positive test:
+           <div class="eq">P(+) = P(+|D) P(D) + P(+|~D) P(~D)</div>
+           Each term corresponds to a group in our population.`,
+    choices: [
+      { label: "See the numbers", preset: "typicalCase" },
+    ],
+    draw: (id, s, r) => {
+      const N = s.population;
+      const d = V.diagram(id, 600, 400);
+
+      const totalWidth = 500;
+      const totalHeight = 300;
+      const x0 = 50;
+      const y0 = 50;
+
+      // Total population rectangle
+      d.rect("total_pop", { x: x0, y: y0, width: totalWidth, height: totalHeight, fill: V.muted, stroke: V.ink, strokeWidth: 2 });
+      d.text("total_pop_label", x0 + totalWidth / 2, y0 + totalHeight + 20, `Total Population (${N})`, { textAnchor: "middle", fill: V.ink });
+
+      // Diseased (P(D))
+      const widthD = totalWidth * s.p_disease;
+      d.rect("diseased_group", { x: x0, y: y0, width: widthD, height: totalHeight, fill: V.color(0), opacity: 0.2, stroke: V.color(0), strokeWidth: 2 });
+      d.text("p_d_label", x0 + widthD / 2, y0 + totalHeight + 40, `P(D) = ${V.fmt(s.p_disease)}`, { textAnchor: "middle", fill: V.color(0) });
+
+      // Healthy (P(~D))
+      const widthND = totalWidth * r.p_no_disease;
+      d.rect("healthy_group", { x: x0 + widthD, y: y0, width: widthND, height: totalHeight, fill: V.color(3), opacity: 0.2, stroke: V.color(3), strokeWidth: 2 });
+      d.text("p_nd_label", x0 + widthD + widthND / 2, y0 + totalHeight + 40, `P(~D) = ${V.fmt(r.p_no_disease)}`, { textAnchor: "middle", fill: V.color(3) });
+
+      // P(+|D) * P(D) = P(D and +)
+      const heightD_pos = totalHeight * s.p_pos_given_disease;
+      d.rect("d_pos_area", { x: x0, y: y0, width: widthD, height: heightD_pos, fill: V.color(0), opacity: 0.8, stroke: V.color(0), strokeWidth: 2 });
+      d.text("p_d_pos_label", x0 + widthD / 2, y0 + heightD_pos / 2, `P(D and +) = ${V.fmt(r.p_D_pos)}`, { textAnchor: "middle", fill: V.ink, fontSize: 14 });
+
+      // P(+|~D) * P(~D) = P(~D and +)
+      const heightND_pos = totalHeight * s.p_pos_given_no_disease;
+      d.rect("nd_pos_area", { x: x0 + widthD, y: y0, width: widthND, height: heightND_pos, fill: V.color(2), opacity: 0.8, stroke: V.color(2), strokeWidth: 2 });
+      d.text("p_nd_pos_label", x0 + widthD + widthND / 2, y0 + heightND_pos / 2, `P(~D and +) = ${V.fmt(r.p_nD_pos)}`, { textAnchor: "middle", fill: V.ink, fontSize: 14 });
+
+      // P(+)
+      const totalPosAreaWidth = totalWidth;
+      const totalPosAreaHeight = (r.p_D_pos + r.p_nD_pos) * totalHeight; // This is P(+) * totalHeight
+      d.rect("p_pos_total_area", { x: x0, y: y0, width: totalPosAreaWidth, height: totalPosAreaHeight, fill: V.ink, opacity: 0.1, stroke: V.ink, strokeWidth: 1, strokeDasharray: "5,5" });
+      d.text("p_pos_label", x0 + totalPosAreaWidth + 20, y0 + totalPosAreaHeight / 2, `P(+) = ${V.fmt(r.p_pos)}`, { textAnchor: "start", fill: V.ink });
+
+      // P(D|+)
+      d.arrow("posterior_arrow", x0 + totalWidth / 2, y0 + totalHeight + 70, x0 + totalWidth / 2, y0 + totalHeight + 50, { stroke: V.color(4), strokeWidth: 2 });
+      d.text("posterior_label", x0 + totalWidth / 2, y0 + totalHeight + 90, `P(D|+) = ${V.fmt(r.p_disease_given_pos)}`, { textAnchor: "middle", fill: V.color(4), fontWeight: "bold" });
+
+      d.end();
+    }
   },
 ];
 </script>
