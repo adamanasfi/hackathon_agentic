@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>%%TITLE%%</title>
+<style>
+:root{--bg:#eef1f8;--card:#fff;--ink:#0f172a;--ink2:#334155;--muted:#64748b;--line:#e2e8f0;--accent:#4f46e5;--accent2:#0ea5e9;--ok:#16a34a;--bad:#dc2626;--warn:#d97706;--hl:#f59e0b;--soft:#eef2ff;--shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.08);--r:16px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.6 "Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+body{display:flex;flex-direction:column;overflow:hidden}
+/* ---------- top bar ---------- */
+.top{flex:0 0 auto;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 24px 0;position:relative;z-index:5}
+.top .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 12px rgba(79,70,229,.35);flex:0 0 auto}
+.top h1{font-size:1.12rem;margin:0;letter-spacing:-.01em}
+.top .cite{font-size:.8rem;color:var(--muted);flex:1 1 300px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .cite a{color:var(--accent)}
+.top .tools button{font-size:.8rem;padding:4px 10px}
+.prog{height:4px;background:var(--line);margin:10px -24px 0}
+.prog>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease}
+/* ---------- deck ---------- */
+#deck{flex:1 1 auto;overflow:hidden;position:relative}
+#track{display:flex;height:100%;transition:transform .55s cubic-bezier(.65,0,.35,1)}
+.slide{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;padding:26px 36px 30px;scroll-behavior:smooth}
+.slide>.in{max-width:1240px;margin:0 auto}
+.kicker{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);background:var(--soft);padding:3px 10px;border-radius:99px;margin-bottom:10px}
+.slide h2{font-size:1.85rem;line-height:1.2;margin:0 0 12px;letter-spacing:-.02em}
+.slide h3{font-size:1.08rem;margin:0 0 8px}
+p{margin:0 0 10px}
+/* title slide */
+.hero{padding:18px 0 22px}
+.hero h2{font-size:2.5rem;background:linear-gradient(90deg,var(--ink),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px}
+.hero .sum{font-size:1.15rem;color:var(--ink2);max-width:860px}
+.hero .hint{margin-top:10px;color:var(--muted);font-size:.88rem}
+#intro-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+/* concept slides */
+.cslide{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:28px;align-items:start;max-width:1280px;margin:0 auto}
+.stage{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;min-height:380px;display:flex;flex-direction:column;justify-content:center}
+.stage .viz{border:0;box-shadow:none;margin:0;padding:0}
+.side{padding-top:6px}
+.side .stext{font-size:1.04rem;color:var(--ink2)}
+.side .stext b{color:var(--ink)}
+.slide-ctrls:not(:empty){background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px 4px;margin:14px 0}
+.stage-empty{color:var(--muted);text-align:center;font-size:.95rem}
+@media (max-width:900px){.cslide,#intro-cards,.grid2,.grid3,.play{grid-template-columns:1fr!important}.slide{padding:18px 16px}.hero h2{font-size:1.8rem}}
+/* ---------- generic content ---------- */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;margin:0 0 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.play{display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:20px;align-items:start}
+.eq{font-family:"Cambria Math","Latin Modern Math","STIX Two Math",Georgia,serif;font-size:1.35rem;text-align:center;padding:14px;margin:10px 0;background:linear-gradient(135deg,#eef2ff,#e0f2fe);border-radius:12px;overflow-x:auto}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.9em;margin:0 2px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 3px}
+.frac>span:last-child{padding:0 3px}
+.ovl{text-decoration:overline}
+table{border-collapse:collapse}
+table.sym,table.vals{width:100%;font-size:.93rem}
+table.sym td,table.sym th,table.vals td,table.vals th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.vals td.num,table.vals th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.sym td:first-child{white-space:nowrap;font-family:Georgia,serif;font-size:1.05rem;color:var(--accent)}
+.ctrl{margin:0 0 14px}
+.ctrl label{display:block;font-weight:650;font-size:.9rem;margin-bottom:4px}
+.ctrl .hint{font-size:.8rem;color:var(--muted)}
+input[type=range]{width:calc(100% - 64px);vertical-align:middle;accent-color:var(--accent)}
+output.val{display:inline-block;width:58px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}
+input[type=number],select,textarea{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;max-width:100%}
+input[type=number]{width:90px}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--accent)}
+button{font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:99px;padding:6px 16px;margin:2px 4px 2px 0;transition:transform .12s,box-shadow .12s}
+button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(79,70,229,.25)}
+button.ghost{background:#fff;color:var(--accent)}
+button:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+.viz{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:12px;margin:0 0 16px;min-height:40px}
+.viz svg.v{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:center;font-size:.85rem;padding:2px 6px 4px}
+.legend i{display:inline-block;width:22px;vertical-align:middle;margin-right:6px}
+svg.v text{font:13px "Inter","Segoe UI",system-ui,sans-serif;fill:#0f172a}
+svg.v .ax{stroke:#94a3b8;stroke-width:1}
+svg.v .grid{stroke:#eef0f4;stroke-width:1}
+svg.v *{transition:fill .35s,stroke .35s}
+.big{font-size:1.45rem;font-weight:750;font-variant-numeric:tabular-nums;color:var(--ink)}
+.readout{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+.readout>div{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:8px 14px;min-width:120px}
+.readout small{display:block;color:var(--muted);font-size:.78rem}
+table.mx{margin:4px auto 10px;font-variant-numeric:tabular-nums}
+table.mx caption{font-weight:650;font-size:.88rem;padding-bottom:6px}
+table.mx td,table.mx th{padding:5px 9px;text-align:center;border:2px solid #fff;min-width:50px;font-size:.92rem;border-radius:6px}
+table.mx th{color:var(--muted);font-weight:600;background:transparent}
+table.mx td{transition:background .35s}
+table.mx td.hlc{outline:3px solid var(--hl);outline-offset:-3px}
+.grid-in input{width:64px;padding:4px;text-align:right}
+.grid-in table td{padding:2px}
+.grid-in input.bad{border-color:var(--bad);background:#fee2e2}
+.explore{border-top:5px solid var(--accent)}
+.caution{border-top:5px solid var(--warn);background:#fffbeb}
+.from-paper{border-top:5px solid var(--ok)}
+.ours{border-top:5px solid #a855f7}
+.note{font-size:.86rem;color:var(--muted)}
+.calc{font-weight:700;font-variant-numeric:tabular-nums;color:#3730a3;background:#e0e7ff;border-radius:5px;padding:0 4px}
+.hl{outline:3px solid var(--hl)!important;outline-offset:3px;border-radius:10px;animation:pulse 1.4s ease-in-out 2}
+@keyframes pulse{50%{outline-color:rgba(245,158,11,.25)}}
+#learnbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--card);box-shadow:var(--shadow);border-radius:12px;padding:10px 14px;margin:0 0 16px}
+ul.checks{list-style:none;padding:0;margin:0}
+ul.checks li{padding:3px 0;font-size:.92rem}
+.pass{color:var(--ok);font-weight:700}.fail{color:var(--bad);font-weight:700}
+#errors{display:none;background:#fee2e2;border:1px solid var(--bad);color:var(--bad);border-radius:10px;padding:8px 12px;margin:8px 24px;font-size:.88rem;white-space:pre-wrap;max-height:90px;overflow:auto}
+.disclaimer{font-size:.88rem;color:var(--muted);background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:10px 14px}
+code{background:#eef0f4;border-radius:4px;padding:0 4px}
+/* ---------- bottom nav ---------- */
+.nav{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 16px;background:rgba(255,255,255,.92);border-top:1px solid var(--line)}
+.dots{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:60vw}
+.dots button{width:11px;height:11px;padding:0;margin:0;border-radius:99px;background:#cbd5e1;border:0}
+.dots button.on{background:var(--accent);width:28px}
+.dots button:hover{box-shadow:none;transform:scale(1.2)}
+#counter{font-size:.85rem;color:var(--muted);min-width:150px;text-align:center}
+/* ---------- "view as page" mode ---------- */
+body.flow{overflow:auto;display:block}
+body.flow #deck{overflow:visible}
+body.flow #track{display:block;transform:none!important}
+body.flow .slide{height:auto;overflow:visible;border-bottom:1px solid var(--line);padding-bottom:40px}
+body.flow .nav .dots,body.flow #prev,body.flow #next{display:none}
+body.flow .top,body.flow .nav{position:sticky;z-index:5}
+body.flow .top{top:0}body.flow .nav{bottom:0}
+</style>
+</head>
+<body>
+<header class="top"><div class="row"><div class="logo"></div><h1>%%TITLE%%</h1><div class="cite">%%CITE%%</div>
+<div class="tools"><button class="ghost" id="flowbtn" title="Show all slides as one scrolling page">View as page</button></div></div>
+<div class="prog"><div id="bar"></div></div></header>
+<div id="errors"></div>
+<main id="deck"><div id="track">
+<section class="slide" data-title="The idea"><div class="in">
+<div class="hero"><span class="kicker">Interactive lesson</span><h2>%%TITLE%%</h2><p class="sum">%%SUMMARY%%</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
+<div id="intro-cards">
+%%INTRO%%
+</div></div></section>
+<section class="slide" id="play" data-title="Playground"><div class="in">
+<span class="kicker">Sandbox</span><h2>Playground: the full mechanism</h2>
+<div id="learnbar" hidden></div>
+%%PLAYGROUND%%
+<div class="card" id="livebox" hidden><h3>Live checks (recomputed on every change)</h3><ul class="checks" id="live"></ul></div>
+</div></section>
+<section class="slide" id="source" data-title="Sources &amp; checks"><div class="in">
+<span class="kicker">Grounding</span><h2>What comes from the paper, and what is ours</h2>
+%%GROUNDING%%
+<p class="disclaimer">This page is an automatically generated, simplified teaching demonstration. All numbers are computed live in your browser from the formulas shown, using small illustrative inputs; they do not reproduce the paper's experiments or reported results.</p>
+<div class="card" id="selftest"><h3>Built-in calculation checks</h3><p class="note">Known cases evaluated with the same <code>compute()</code> function that drives every slide.</p>
+<table class="vals" id="tests"><tr><th>Case</th><th class="num">Computed</th><th class="num">Expected</th><th>Result</th></tr></table></div>
+</div></section>
+</div></main>
+<div id="explore-src" hidden>
+%%EXPLORE%%
+</div>
+<nav class="nav"><button class="ghost" id="prev">← Back</button><div class="dots" id="dots"></div><span id="counter"></span><button id="next">Next →</button></nav>
+<script>
+"use strict";
+/* ---------- Generic helper library (template, paper-agnostic) ---------- */
+const V = (function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (id) => document.getElementById(id);
+  const PAL = ["#4f46e5", "#f97316", "#14b8a6", "#eab308", "#a855f7", "#ec4899", "#22c55e", "#64748b"];
+  const color = (i) => PAL[((i % PAL.length) + PAL.length) % PAL.length];
+  function fmt(x, d) {
+    d = d === undefined ? 3 : d;
+    if (typeof x !== "number") return String(x);
+    if (Number.isNaN(x)) return "NaN";
+    if (!isFinite(x)) return x > 0 ? "∞" : "−∞";
+    if (x === 0) return (0).toFixed(d);
+    const a = Math.abs(x);
+    let s = a >= 1e6 || a < Math.pow(10, -d) ? x.toExponential(Math.max(1, d - 1)) : x.toFixed(d);
+    if (/^-0\.?0*$/.test(s)) s = s.slice(1);
+    return s.replace("-", "−");
+  }
+  function num(id) { const e = $(id); if (!e) return NaN; return e.type === "checkbox" ? (e.checked ? 1 : 0) : parseFloat(e.value); }
+  function val(id) { const e = $(id); return !e ? undefined : e.type === "checkbox" ? e.checked : e.value; }
+  function syncOut(e) { const o = e && e.nextElementSibling; if (o && o.classList && o.classList.contains("val")) o.textContent = e.value; }
+  function set(id, v) {
+    const e = $(id); if (!e || v === undefined) return;
+    if (e.type === "checkbox") e.checked = !!v; else e.value = v;
+    syncOut(e);
+  }
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+  /* --- animation engine: tweens numeric parts of geometric attributes --- */
+  const GEO = new Set(["x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "d", "points", "transform", "opacity", "fill-opacity", "stroke-width"]);
+  const STYLE = new Set(["fill", "stroke"]);
+  const NUM = /-?\d*\.?\d+(?:e[-+]?\d+)?/gi;
+  const anims = new Map();
+  let rafOn = false;
+  const DUR = 380;
+  function skel(s) { return String(s).replace(NUM, "#"); }
+  function nums(s) { return (String(s).match(NUM) || []).map(Number); }
+  function tick(now) {
+    for (const [e, list] of anims) {
+      let alive = false;
+      for (const a of list) {
+        const t = clamp((now - a.t0) / DUR, 0, 1), k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        let i = 0;
+        const out = a.sk.replace(/#/g, () => { const v = a.f[i] + (a.t[i] - a.f[i]) * k; i++; return +v.toFixed(3); });
+        e.setAttribute(a.name, out);
+        if (t < 1) alive = true;
+      }
+      if (!alive) anims.delete(e);
+    }
+    if (anims.size) requestAnimationFrame(tick); else rafOn = false;
+  }
+  function setAttrs(e, attrs, fresh) {
+    const list = [];
+    for (let k in attrs) {
+      let v = attrs[k];
+      if (v === undefined || v === null) continue;
+      const name = k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+      if (STYLE.has(name)) { e.style[name] = v; continue; }
+      if (name === "class") { e.setAttribute("class", v); continue; }
+      const cur = e.getAttribute(name);
+      if (!fresh && GEO.has(name) && cur !== null && skel(cur) === skel(v) && String(cur) !== String(v)) {
+        list.push({ name, sk: skel(v), f: nums(cur), t: nums(v), t0: performance.now() });
+      } else e.setAttribute(name, v);
+    }
+    const prev = anims.get(e) || [];
+    if (list.length) {
+      const names = new Set(list.map((a) => a.name));
+      anims.set(e, prev.filter((a) => !names.has(a.name)).concat(list));
+      if (!rafOn) { rafOn = true; requestAnimationFrame(tick); }
+    } else if (prev.length) {
+      const names = new Set(Object.keys(attrs).map((k) => k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())));
+      const keep = prev.filter((a) => !names.has(a.name));
+      if (keep.length) anims.set(e, keep); else anims.delete(e);
+    }
+  }
+
+  /* --- keyed, animated SVG drawing context --- */
+  function diagram(id, w, h) {
+    w = w || 640; h = h || 360;
+    const host = $(id);
+    if (!host) throw new Error("V.diagram: no element with id '" + id + "'");
+    let svg = host.querySelector("svg.v");
+    if (!svg) { svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "v"); host.appendChild(svg); svg._keys = new Map(); }
+    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    const seen = new Set();
+    /* track the extent of everything drawn so the viewBox can grow instead of clipping */
+    const ext = { x0: 0, y0: 0, x1: w, y1: h };
+    function grow(x0, y0, x1, y1) { if (isFinite(x0) && isFinite(x1)) { ext.x0 = Math.min(ext.x0, x0); ext.x1 = Math.max(ext.x1, x1); } if (isFinite(y0) && isFinite(y1)) { ext.y0 = Math.min(ext.y0, y0); ext.y1 = Math.max(ext.y1, y1); } }
+    function extent(tag, a, text) {
+      const n = (v) => (v === undefined || v === null ? NaN : +v);
+      if (tag === "rect") grow(n(a.x), n(a.y), n(a.x) + n(a.width), n(a.y) + n(a.height));
+      else if (tag === "circle") { const r = n(a.r) || 0; grow(n(a.cx) - r, n(a.cy) - r, n(a.cx) + r, n(a.cy) + r); }
+      else if (tag === "line") grow(Math.min(n(a.x1), n(a.x2)), Math.min(n(a.y1), n(a.y2)), Math.max(n(a.x1), n(a.x2)), Math.max(n(a.y1), n(a.y2)));
+      else if (tag === "path" && a.d) { const v = (String(a.d).match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi) || []).map(Number); for (let i = 0; i + 1 < v.length; i += 2) grow(v[i], v[i + 1], v[i], v[i + 1]); }
+      else if (tag === "text" && !a.transform) {
+        let fs = parseFloat(a.fontSize || a["font-size"]) || 13; if (/em$/.test(String(a.fontSize || a["font-size"] || ""))) fs *= 13;
+        const tw = String(text || "").length * fs * 0.56, anc = a.textAnchor || a["text-anchor"] || "start";
+        const x0 = anc === "middle" ? n(a.x) - tw / 2 : anc === "end" ? n(a.x) - tw : n(a.x);
+        grow(x0, n(a.y) - fs, x0 + tw, n(a.y) + fs * 0.3);
+      }
+    }
+    function el(tag, key, attrs, text) {
+      try { extent(tag, attrs || {}, text); } catch (e) {}
+      let e = svg._keys.get(key), fresh = false;
+      if (e && e.tagName !== tag) { e.remove(); e = null; }
+      if (!e) { e = document.createElementNS(NS, tag); svg._keys.set(key, e); fresh = true; }
+      svg.appendChild(e);
+      seen.add(key);
+      setAttrs(e, attrs || {}, fresh);
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+    /* tolerate positional forms: rect(k,x,y,w,h,attrs), circle(k,cx,cy,r,attrs), line(k,x1,y1,x2,y2,attrs) */
+    const pos = (names, args) => { if (typeof args[0] !== "number") return args[0] || {}; const o = Object.assign({}, args[names.length] || {}); names.forEach((n, i) => { o[n] = args[i]; }); return o; };
+    const d = {
+      w, h, width: w, height: h, svg,
+      rect: (k, ...a) => el("rect", k, pos(["x", "y", "width", "height"], a)),
+      circle: (k, ...a) => el("circle", k, pos(["cx", "cy", "r"], a)),
+      line: (k, ...a) => { a = pos(["x1", "y1", "x2", "y2"], a); return el("line", k, Object.assign(a.class ? {} : { stroke: "#1d2433" }, a)); },
+      path: (k, a) => el("path", k, Object.assign(a && a.class ? { fill: "none" } : { fill: "none", stroke: "#1d2433" }, a)),
+      text: (k, x, y, s, a) => el("text", k, Object.assign({ x, y }, a || {}), String(s)),
+      arrow(k, x1, y1, x2, y2, a) {
+        a = a || {};
+        const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L, s = a.head || 9;
+        const hx = x2 - ux * s, hy = y2 - uy * s;
+        const p = "M" + x1 + " " + y1 + " L" + x2 + " " + y2 + " M" + (hx - uy * s * 0.55) + " " + (hy + ux * s * 0.55) + " L" + x2 + " " + y2 + " L" + (hx + uy * s * 0.55) + " " + (hy - ux * s * 0.55);
+        const b = Object.assign({}, a); delete b.head;
+        return el("path", k, Object.assign({ d: p, fill: "none", stroke: "#1d2433", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, b));
+      },
+      end() {
+        for (const [k, e] of svg._keys) if (!seen.has(k)) { e.remove(); svg._keys.delete(k); anims.delete(e); }
+        if (ext.x0 < 0 || ext.y0 < 0 || ext.x1 > w || ext.y1 > h) svg.setAttribute("viewBox", (ext.x0 - 6) + " " + (ext.y0 - 6) + " " + (ext.x1 - ext.x0 + 12) + " " + (ext.y1 - ext.y0 + 12));
+      },
+    };
+    return d;
+  }
+
+  function ticks(a, b, n) {
+    n = n || 5;
+    if (!(b > a)) { b = a + 1; }
+    const span = b - a, step0 = Math.pow(10, Math.floor(Math.log10(span / n))), err = (span / n) / step0;
+    const step = step0 * (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1);
+    const out = [];
+    for (let v = Math.ceil(a / step - 1e-9) * step; v <= b + step * 1e-9; v += step) out.push(+v.toFixed(10));
+    return out;
+  }
+  function tickFmt(v) { const a = Math.abs(v); return a !== 0 && (a < 1e-3 || a >= 1e5) ? v.toExponential(1) : String(+v.toPrecision(6)); }
+
+  /* --- HTML legend under a chart (never overlaps the plot) --- */
+  function legend(host, items) {
+    let lg = host.querySelector(":scope > .legend");
+    if (!items.length) { if (lg) lg.remove(); return; }
+    if (!lg) { lg = document.createElement("div"); lg.className = "legend"; host.appendChild(lg); }
+    lg.innerHTML = items.map((it) => "<span><i style='border-top:3px " + (it.dash ? "dashed " : "solid ") + it.color + "'></i>" + it.name + "</span>").join("");
+  }
+
+  /* --- bar chart --- */
+  function bars(id, items, o) {
+    o = o || {};
+    const W = o.w || 640, H = o.h || 300, m = { l: 52, r: 16, t: o.title ? 30 : 14, b: 46 };
+    const d = diagram(id, W, H);
+    const vals = items.map((it) => (isFinite(it.value) ? it.value : 0));
+    const refs = o.ref || [];
+    let lo = o.min !== undefined ? o.min : Math.min(0, ...vals, ...refs.map((r) => r.value));
+    let hi = o.max !== undefined ? o.max : Math.max(0, ...vals, ...refs.map((r) => r.value));
+    if (!(hi > lo)) hi = lo + 1;
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const Y = (v) => m.t + ph * (1 - (clamp(v, lo, hi) - lo) / (hi - lo));
+    if (o.title) d.text("title", W / 2, 18, o.title, { "text-anchor": "middle", "font-weight": 600 });
+    ticks(lo, hi, 5).forEach((t, i) => { d.line("g" + i, { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), class: "grid" }); d.text("gt" + i, m.l - 6, Y(t) + 4, tickFmt(t), { "text-anchor": "end", "font-size": 11 }); });
+    if (o.ylabel) d.text("yl", 12, m.t + ph / 2, o.ylabel, { transform: "rotate(-90 12 " + (m.t + ph / 2) + ")", "text-anchor": "middle", "font-size": 12 });
+    const n = Math.max(1, items.length), slot = pw / n, bw = Math.min(70, slot * 0.7);
+    items.forEach((it, i) => {
+      const v = vals[i], x = m.l + slot * i + (slot - bw) / 2, y0 = Y(0), y1 = Y(v);
+      d.rect("b" + i, { x, y: Math.min(y0, y1), width: bw, height: Math.max(0.5, Math.abs(y1 - y0)), fill: it.color || color(o.colorBy === "index" ? i : 0), rx: 3 });
+      d.text("v" + i, x + bw / 2, (v >= 0 ? Math.min(y0, y1) - 5 : Math.max(y0, y1) + 14), isFinite(it.value) ? fmt(it.value, o.digits === undefined ? 3 : o.digits) + (o.unit || "") : String(it.value), { "text-anchor": "middle", "font-size": 12, "font-weight": 600 });
+      d.text("l" + i, x + bw / 2, H - m.b + 18, it.label, { "text-anchor": "middle", "font-size": 12 });
+    });
+    d.line("ax0", { x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0), class: "ax" });
+    refs.forEach((r, i) => {
+      d.line("r" + i, { x1: m.l, x2: W - m.r, y1: Y(r.value), y2: Y(r.value), stroke: r.color || "#b91c1c", "stroke-dasharray": "6 4", "stroke-width": 1.5 });
+      d.text("rt" + i, W - m.r - 4, Y(r.value) - 5, r.label || fmt(r.value), { "text-anchor": "end", "font-size": 11, fill: r.color || "#b91c1c" });
+    });
+    if (o.xlabel) d.text("xl", m.l + pw / 2, H - 8, o.xlabel, { "text-anchor": "middle", "font-size": 12 });
+    d.end();
+    return d;
+  }
+
+  /* --- line / scatter plot --- */
+  function line(id, series, o) {
+    o = o || {};
+    const W = o.w || 640, H = o.h || 340, m = { l: 56, r: 18, t: o.title ? 30 : 14, b: 46 };
+    const d = diagram(id, W, H);
+    const xs = [], ys = [];
+    series.forEach((s) => (s.pts || []).forEach((p) => { if (isFinite(p[0]) && isFinite(p[1])) { xs.push(p[0]); ys.push(p[1]); } }));
+    (o.points || []).forEach((p) => { if (isFinite(p.x) && isFinite(p.y)) { xs.push(p.x); ys.push(p.y); } });
+    let x0 = o.xmin !== undefined ? o.xmin : Math.min(...xs), x1 = o.xmax !== undefined ? o.xmax : Math.max(...xs);
+    let y0 = o.ymin !== undefined ? o.ymin : Math.min(...ys), y1 = o.ymax !== undefined ? o.ymax : Math.max(...ys);
+    if (!isFinite(x0) || !isFinite(x1)) { x0 = 0; x1 = 1; }
+    if (!isFinite(y0) || !isFinite(y1)) { y0 = 0; y1 = 1; }
+    if (x1 <= x0) x1 = x0 + 1;
+    if (y1 <= y0) { y0 -= 0.5; y1 += 0.5; }
+    if (o.ymin === undefined && o.ymax === undefined) { const pad = (y1 - y0) * 0.06; y0 -= pad; y1 += pad; }
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const X = (v) => m.l + pw * (v - x0) / (x1 - x0), Y = (v) => m.t + ph * (1 - (v - y0) / (y1 - y0));
+    const cx = (v) => clamp(X(v), m.l - 4, W - m.r + 4), cy = (v) => clamp(Y(v), m.t - 4, H - m.b + 4);
+    if (o.title) d.text("title", W / 2, 18, o.title, { "text-anchor": "middle", "font-weight": 600 });
+    ticks(x0, x1, 6).forEach((t, i) => { d.line("gx" + i, { x1: X(t), x2: X(t), y1: m.t, y2: H - m.b, class: "grid" }); d.text("tx" + i, X(t), H - m.b + 16, tickFmt(t), { "text-anchor": "middle", "font-size": 11 }); });
+    ticks(y0, y1, 5).forEach((t, i) => { d.line("gy" + i, { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), class: "grid" }); d.text("ty" + i, m.l - 6, Y(t) + 4, tickFmt(t), { "text-anchor": "end", "font-size": 11 }); });
+    d.line("axx", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, class: "ax" });
+    d.line("axy", { x1: m.l, x2: m.l, y1: m.t, y2: H - m.b, class: "ax" });
+    if (o.xlabel) d.text("xl", m.l + pw / 2, H - 8, o.xlabel, { "text-anchor": "middle", "font-size": 12 });
+    if (o.ylabel) d.text("yl", 14, m.t + ph / 2, o.ylabel, { transform: "rotate(-90 14 " + (m.t + ph / 2) + ")", "text-anchor": "middle", "font-size": 12 });
+    (o.hlines || []).forEach((l, i) => { d.line("hl" + i, { x1: m.l, x2: W - m.r, y1: cy(l.y), y2: cy(l.y), stroke: l.color || "#6b7280", "stroke-dasharray": "6 4" }); if (l.label) d.text("hlt" + i, W - m.r - 4, cy(l.y) - 5, l.label, { "text-anchor": "end", "font-size": 11 }); });
+    (o.vlines || []).forEach((l, i) => { d.line("vl" + i, { x1: cx(l.x), x2: cx(l.x), y1: m.t, y2: H - m.b, stroke: l.color || "#6b7280", "stroke-dasharray": "6 4" }); if (l.label) { const R = cx(l.x) > W * 0.7; d.text("vlt" + i, cx(l.x) + (R ? -4 : 4), m.t + 12 + 14 * (i % 2), l.label, { "font-size": 11, "text-anchor": R ? "end" : "start" }); } });
+    series.forEach((s, si) => {
+      const c = s.color || color(si), pts = (s.pts || []).filter((p) => isFinite(p[0]) && isFinite(p[1]));
+      if (s.line !== false && pts.length > 1) d.path("s" + si, { d: "M" + pts.map((p) => cx(p[0]).toFixed(2) + " " + cy(p[1]).toFixed(2)).join(" L"), stroke: c, "stroke-width": s.width || 2.5, "stroke-dasharray": s.dash ? "7 5" : "none" });
+      if (s.dots) pts.forEach((p, j) => d.circle("s" + si + "p" + j, { cx: cx(p[0]), cy: cy(p[1]), r: s.r || 4.5, fill: c, stroke: "#fff", "stroke-width": 1 }));
+    });
+    (o.points || []).forEach((p, i) => {
+      d.circle("pt" + i, { cx: cx(p.x), cy: cy(p.y), r: p.r || 6, fill: p.color || "#b91c1c", stroke: "#fff", "stroke-width": 1.5 });
+      if (p.label) { const R = cx(p.x) > W * 0.7; d.text("ptl" + i, cx(p.x) + (R ? -9 : 9), cy(p.y) - 8, p.label, { "font-size": 12, "font-weight": 600, "text-anchor": R ? "end" : "start" }); }
+    });
+    d.end();
+    legend($(id), series.filter((s) => s.name).map((s) => ({ name: s.name, color: s.color || color(series.indexOf(s)), dash: s.dash })));
+    d.X = X; d.Y = Y;
+    return d;
+  }
+
+  /* labels may arrive as array, count or comma string: normalise */
+  function labs(x) { return Array.isArray(x) ? x : typeof x === "string" && x ? x.split(",") : undefined; }
+
+  /* --- heatmap matrix (read-only) --- */
+  function cellColor(v, mx, div) {
+    if (!isFinite(v)) return "#fca5a5";
+    const t = clamp(Math.abs(v) / (mx || 1), 0, 1);
+    if (div && v < 0) return "rgba(249,115,22," + (0.08 + 0.75 * t).toFixed(3) + ")";
+    return "rgba(79,70,229," + (0.06 + 0.7 * t).toFixed(3) + ")";
+  }
+  function matrix(id, M, o) {
+    o = Object.assign({}, o || {}); o.rows = labs(o.rows); o.cols = labs(o.cols);
+    if (!Array.isArray(M)) M = [];
+    M = M.map((r) => (Array.isArray(r) ? r : [r]));
+    const host = $(id);
+    if (!host) throw new Error("V.matrix: no element with id '" + id + "'");
+    const R = M.length, C = R ? M[0].length : 0, dg = o.digits === undefined ? 2 : o.digits;
+    let mx = o.max;
+    if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (isFinite(v)) mx = Math.max(mx, Math.abs(v)); })); }
+    let t = host.querySelector("table.mx");
+    const shape = R + "x" + C + "|" + (o.rows || []).join(",") + "|" + (o.cols || []).join(",") + "|" + (o.title || "");
+    if (!t || t._shape !== shape) {
+      let h = "<table class='mx'>" + (o.title ? "<caption>" + o.title + "</caption>" : "");
+      if (o.cols) h += "<tr><th></th>" + o.cols.map((c) => "<th>" + c + "</th>").join("") + "</tr>";
+      for (let i = 0; i < R; i++) { h += "<tr>" + (o.rows ? "<th>" + (o.rows[i] === undefined ? "" : o.rows[i]) + "</th>" : (o.cols ? "<th></th>" : "")) + "<td></td>".repeat(C) + "</tr>"; }
+      host.innerHTML = h + "</table>";
+      t = host.querySelector("table.mx"); t._shape = shape;
+    }
+    const hl = new Set((o.hl || []).map((p) => p[0] + "," + p[1]));
+    const rows = t.querySelectorAll("tr");
+    const off = o.cols ? 1 : 0;
+    for (let i = 0; i < R; i++) {
+      const tds = rows[i + off].querySelectorAll("td");
+      for (let j = 0; j < C; j++) {
+        const v = M[i][j], td = tds[j];
+        td.textContent = typeof v === "number" ? fmt(v, dg) : String(v);
+        td.style.background = typeof v === "number" ? cellColor(v, mx, o.diverging) : "#f3f4f6";
+        td.style.color = typeof v === "number" && isFinite(v) && Math.abs(v) / (mx || 1) > 0.62 ? "#fff" : "";
+        td.className = hl.has(i + "," + j) ? "hlc" : "";
+      }
+    }
+  }
+
+  /* --- editable numeric grid --- */
+  function editGrid(id, M, o) {
+    o = Object.assign({}, o || {}); o.rows = labs(o.rows); o.cols = labs(o.cols);
+    if (!Array.isArray(M)) M = [];
+    const host = $(id);
+    if (!host) throw new Error("V.editGrid: no element with id '" + id + "'");
+    host._flat = M.length > 0 && !M.some(Array.isArray);
+    if (host._flat) M = [M];
+    M = M.map((r) => (Array.isArray(r) ? r : [r]));
+    const R = M.length, C = R ? M[0].length : 0;
+    let t = host.querySelector("table");
+    if (!t || t._shape !== R + "x" + C) {
+      let h = "<table>" + (o.title ? "<caption>" + o.title + "</caption>" : "");
+      if (o.cols) h += "<tr><th></th>" + o.cols.map((c) => "<th>" + c + "</th>").join("") + "</tr>";
+      for (let i = 0; i < R; i++) {
+        h += "<tr>" + (o.rows ? "<th>" + (o.rows[i] === undefined ? "" : o.rows[i]) + "</th>" : (o.cols ? "<th></th>" : ""));
+        for (let j = 0; j < C; j++) h += "<td><input type='number' step='" + (o.step || 0.1) + "' data-i='" + i + "' data-j='" + j + "'></td>";
+        h += "</tr>";
+      }
+      host.innerHTML = h + "</table>";
+      host.classList.add("grid-in");
+      t = host.querySelector("table"); t._shape = R + "x" + C;
+    }
+    t.querySelectorAll("input").forEach((inp) => { const v = M[+inp.dataset.i][+inp.dataset.j]; if (document.activeElement !== inp || o.force) inp.value = v; });
+  }
+  function readGrid(id) {
+    const host = $(id); if (!host) return [];
+    const out = [];
+    host.querySelectorAll("input").forEach((inp) => {
+      const i = +inp.dataset.i, j = +inp.dataset.j, v = parseFloat(inp.value);
+      inp.classList.toggle("bad", !isFinite(v));
+      (out[i] = out[i] || [])[j] = isFinite(v) ? v : 0;
+    });
+    return host._flat ? out[0] || [] : out;
+  }
+
+  function table(id, head, rows, o) {
+    o = o || {};
+    const host = $(id); if (!host) throw new Error("V.table: no element with id '" + id + "'");
+    const dg = o.digits === undefined ? 3 : o.digits;
+    const cell = (v, th) => { const n = typeof v === "number"; const tag = th ? "th" : "td"; return "<" + tag + (n ? " class='num'" : "") + ">" + (n ? fmt(v, dg) : v) + "</" + tag + ">"; };
+    host.innerHTML = "<table class='vals'>" + (head ? "<tr>" + head.map((h) => cell(h, true)).join("") + "</tr>" : "") + rows.map((r) => "<tr>" + r.map((v) => cell(v)).join("") + "</tr>").join("") + "</table>";
+  }
+
+  function resize(M, rows, cols, fill) {
+    fill = fill === undefined ? 0 : fill;
+    const A = Array.isArray(M) ? M : [];
+    if (cols === undefined) return Array.from({ length: rows }, (_, i) => (A[i] === undefined || A[i] === null ? fill : A[i]));
+    return Array.from({ length: rows }, (_, i) => Array.from({ length: cols }, (_, j) => (Array.isArray(A[i]) && A[i][j] !== undefined && A[i][j] !== null ? A[i][j] : fill)));
+  }
+  /* several panels on one slide: returns child ids "<id>-0" … */
+  function split(id, n, o) {
+    o = o || {};
+    const host = $(id);
+    if (!host) throw new Error("V.split: no element with id '" + id + "'");
+    if (host._split !== n) {
+      host.innerHTML = "";
+      host.style.display = "grid";
+      host.style.gridTemplateColumns = "repeat(" + (o.cols || 1) + ", minmax(0, 1fr))";
+      host.style.gap = "10px"; host.style.alignItems = "center";
+      for (let i = 0; i < n; i++) { const c = document.createElement("div"); c.id = id + "-" + i; host.appendChild(c); }
+      host._split = n;
+    }
+    return Array.from({ length: n }, (_, i) => id + "-" + i);
+  }
+  const api = { $, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, stage: Infinity, syncOut };
+  const warned = new Set();
+  /* unknown helpers degrade to no-ops instead of breaking the page */
+  return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; if (!warned.has(k)) { warned.add(k); console.warn("V." + String(k) + " is not a helper"); } return () => ""; } });
+})();
+</script>
+<script>
+%%MATHLIB%%
+</script>
+<script>
+/* ---------- MODEL (generated) ---------- */
+%%MODEL%%
+</script>
+<script>
+/* ---------- UI (generated) ---------- */
+%%UI%%
+</script>
+<script>
+"use strict";
+/* ---------- Boot (template): slides, navigation, wiring, run loop, checks ---------- */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const errBox = $("errors");
+  const seenErr = new Set();
+  function showErr(msg) { if (seenErr.has(msg) || seenErr.size >= 3) return; seenErr.add(msg); errBox.style.display = "block"; errBox.textContent += (errBox.textContent ? "\n" : "") + "⚠ " + msg; }
+  window.addEventListener("error", (e) => showErr(e.message));
+  const has = (n) => { try { return typeof eval(n) !== "undefined"; } catch (e) { return false; } };
+  const S0 = has("DEFAULT_STATE") ? DEFAULT_STATE : {};
+  const full = (s) => Object.assign({}, S0, s || {});
+  const P = has("PRESETS") ? PRESETS : {};
+  const track = $("track"), play = $("play"), source = $("source");
+  const esc = (t) => String(t === undefined ? "" : t);
+
+  /* ---- concept slides from SLIDES ---- */
+  const CS = has("SLIDES") && Array.isArray(SLIDES) ? SLIDES : [];
+  CS.forEach((sl, i) => {
+    const sec = document.createElement("section");
+    sec.className = "slide concept"; sec.dataset.title = esc(sl.title) || "Step " + (i + 1); sec.dataset.j = i;
+    sec.innerHTML = "<div class='cslide'><div class='stage'><div class='viz' id='slide-viz-" + i + "'></div></div><div class='side'><span class='kicker'>Step " + (i + 1) + " of " + CS.length + "</span><h2>" + esc(sl.title) +
+      "</h2><div class='stext'>" + esc(sl.text) + "</div><div class='slide-ctrls' id='slide-ctrls-" + i + "'></div>" + (sl.preset && P[sl.preset] ? "<button class='ghost' data-preset='" + sl.preset + "' data-stay='1'>↺ Reset this example</button>" : "") + "</div></div>";
+    track.insertBefore(sec, play);
+  });
+
+  /* ---- exploration / limitation slides from EXPLORE cards ---- */
+  const XV = [];
+  [...$("explore-src").children].filter((c) => c.classList && c.classList.contains("card")).forEach((c, i) => {
+    const sec = document.createElement("section");
+    const isCaution = c.classList.contains("caution");
+    const h = c.querySelector("h3");
+    sec.className = "slide"; sec.dataset.title = h ? h.textContent : isCaution ? "Limitation" : "Exploration";
+    const k = c.getAttribute("data-show-slide"), pk = c.getAttribute("data-show-preset");
+    const ok = k !== null && CS[+k] && typeof CS[+k].draw === "function";
+    sec.innerHTML = "<div class='cslide'><div class='stage'>" + (ok ? "<div class='viz' id='xviz-" + i + "'></div><p class='note' style='text-align:center;margin:6px 0 0'>Shown for the example “" + (pk || "default") + "”. Use the button to explore it live.</p>" : "<div class='stage-empty'>Use the button to load this setup into the playground.</div>") +
+      "</div><div class='side'><span class='kicker'>" + (isCaution ? "Watch out" : "Guided exploration") + "</span></div></div>";
+    sec.querySelector(".side").appendChild(c);
+    if (ok) XV.push({ id: "xviz-" + i, k: +k, preset: pk });
+    track.insertBefore(sec, source);
+  });
+
+  /* ---- drawing ---- */
+  const getters = new Map();
+  function calcFill(el, s, r) {
+    const ex = el.getAttribute("data-get");
+    let f = getters.get(ex);
+    if (!f) { try { f = new Function("r", "s", "return (" + ex + ");"); } catch (e) { f = () => "?"; } getters.set(ex, f); }
+    let v; try { v = f(r, s); } catch (e) { v = "?"; }
+    const d = el.hasAttribute("data-d") ? +el.getAttribute("data-d") : 3;
+    const f2 = (x) => (Array.isArray(x) ? "[" + x.map(f2).join(", ") + "]" : typeof x === "number" ? V.fmt(x, d) : String(x));
+    el.textContent = f2(v);
+  }
+  function drawSlide(j, id, s, r) {
+    const host = $(id);
+    try { CS[j].draw(id, s, r); if (host && host._failed) { host._failed = false; const n = host.querySelector(".vfail"); if (n) n.remove(); } }
+    catch (e) {
+      console.warn("slide " + (j + 1) + " visual:", e);
+      if (host && !host._failed) { host._failed = true; const n = document.createElement("p"); n.className = "note vfail"; n.style.textAlign = "center"; n.textContent = "This visual could not be drawn for the current values (" + e.message + "). The other slides and the playground still work."; host.appendChild(n); }
+    }
+  }
+  function draw(s) {
+    const r = compute(s);
+    render(s, r);
+    CS.forEach((sl, j) => { if (typeof sl.draw === "function") drawSlide(j, "slide-viz-" + j, s, r); });
+    if (has("invariants")) {
+      const dropInv = has("__DROP_INV") ? __DROP_INV : [];
+      const list = (invariants(s, r) || []).filter((c) => dropInv.indexOf(c.label) < 0);
+      $("livebox").hidden = !list.length;
+      $("live").innerHTML = list.map((c) => "<li><span class='" + (c.ok ? "pass'>✓" : "fail'>✗") + "</span> " + c.label + (c.detail ? " <span class='note'>(" + c.detail + ")</span>" : "") + "</li>").join("");
+    }
+    document.querySelectorAll(".calc[data-get]:not([data-at])").forEach((el) => calcFill(el, s, r));
+    return r;
+  }
+  V.update = function () { try { draw(full(readState())); } catch (e) { showErr("update: " + e.message); } };
+  V.apply = function (s) { try { const st = full(s); setState(st); draw(full(Object.assign({}, st, readState()))); } catch (e) { showErr("apply: " + e.message); } };
+
+  /* ---- input wiring (whole deck) ---- */
+  play.querySelectorAll("input[type=range]").forEach((e) => {
+    if (!(e.nextElementSibling && e.nextElementSibling.classList.contains("val"))) { const o = document.createElement("output"); o.className = "val"; e.after(o); }
+    V.syncOut(e);
+  });
+  let pending = false;
+  function onInput(ev) {
+    const t = ev.target;
+    if (!t || !t.matches || !t.matches("input,select,textarea")) return;
+    if (t.closest("#learnbar")) return;
+    V.syncOut(t);
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; V.update(); });
+  }
+  track.addEventListener("input", onInput);
+  track.addEventListener("change", onInput);
+
+  /* ---- navigation ---- */
+  const slides = [...track.children];
+  const dots = $("dots");
+  slides.forEach((sl, i) => { const b = document.createElement("button"); b.title = (i + 1) + ". " + sl.dataset.title; b.setAttribute("aria-label", b.title); b.onclick = () => go(i); dots.appendChild(b); });
+  const homes = [];
+  function restoreCtrls() { while (homes.length) { const h = homes.pop(); h.p.insertBefore(h.box, h.n); } }
+  function moveCtrls(j) {
+    (CS[j].controls || []).forEach((id) => {
+      const el = $(id); if (!el) return;
+      const box = (el.closest && el.closest(".ctrl")) || el;
+      if (!play.contains(box)) return;
+      homes.push({ box, p: box.parentNode, n: box.nextSibling });
+      $("slide-ctrls-" + j).appendChild(box);
+    });
+  }
+  let cur = 0;
+  function go(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    cur = i;
+    restoreCtrls();
+    const sl = slides[i];
+    if (sl.classList.contains("concept")) { const j = +sl.dataset.j; V.stage = j; moveCtrls(j); } else V.stage = Infinity;
+    if (!document.body.classList.contains("flow")) track.style.transform = "translateX(" + (-100 * i) + "%)";
+    [...dots.children].forEach((d, k) => d.classList.toggle("on", k === i));
+    $("bar").style.width = (100 * (i + 1) / slides.length) + "%";
+    $("counter").textContent = (i + 1) + " / " + slides.length + " · " + sl.dataset.title;
+    $("prev").disabled = i === 0; $("next").disabled = i === slides.length - 1;
+    sl.scrollTop = 0;
+    V.update();
+  }
+  $("prev").onclick = () => go(cur - 1);
+  $("next").onclick = () => go(cur + 1);
+  document.addEventListener("keydown", (e) => {
+    if (e.target && e.target.matches && e.target.matches("input,select,textarea")) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown") { go(cur + 1); e.preventDefault(); }
+    if (e.key === "ArrowLeft" || e.key === "PageUp") { go(cur - 1); e.preventDefault(); }
+  });
+  $("flowbtn").onclick = function () {
+    const on = document.body.classList.toggle("flow");
+    this.textContent = on ? "View as slides" : "View as page";
+    restoreCtrls();
+    if (on) track.style.transform = "none"; else go(cur);
+  };
+
+  /* ---- presets ---- */
+  document.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.getAttribute("data-preset");
+    if (!P[k]) { showErr("unknown preset " + k); return; }
+    V.apply(P[k]);
+    if (!b.hasAttribute("data-stay")) { go(slides.indexOf(play)); play.classList.add("hl"); setTimeout(() => play.classList.remove("hl"), 1600); }
+  }));
+
+  /* ---- iterative run loop ("Learn") ---- */
+  if (has("step") && typeof step === "function") {
+    const lb = $("learnbar");
+    lb.hidden = false;
+    const label = has("STEP_LABEL") ? STEP_LABEL : "Run";
+    lb.innerHTML = "<button id='lrun'>▶ " + label + "</button><button class='ghost' id='lstep'>Step once</button><button class='ghost' id='lreset'>↺ Reset</button><span>Iteration: <b id='liter'>0</b></span><span class='note' id='lmsg'></span>";
+    let curS = null, it = 0, timer = null, snap = null;
+    const MAXIT = has("MAX_ITERS") ? MAX_ITERS : 400;
+    function one() {
+      if (!curS) { curS = full(readState()); snap = Object.assign({}, curS); }
+      const nx = step(Object.assign({}, curS));
+      if (!nx || it >= MAXIT) { stop(nx ? "stopped at max iterations" : "converged / finished"); return false; }
+      curS = full(nx); it++;
+      setState(curS);
+      draw(curS);
+      $("liter").textContent = it;
+      return true;
+    }
+    function stop(msg) { if (timer) { clearInterval(timer); timer = null; } $("lrun").textContent = "▶ " + label; if (msg) $("lmsg").textContent = msg; }
+    $("lrun").onclick = function () {
+      if (timer) { stop(); return; }
+      $("lmsg").textContent = "";
+      this.textContent = "⏸ Pause";
+      timer = setInterval(() => { try { one(); } catch (e) { stop(); showErr("step: " + e.message); } }, has("STEP_MS") ? STEP_MS : 120);
+    };
+    $("lstep").onclick = () => { stop(); try { one(); } catch (e) { showErr("step: " + e.message); } };
+    $("lreset").onclick = () => { stop(""); it = 0; $("liter").textContent = 0; V.apply(snap || S0); curS = null; snap = null; };
+    track.addEventListener("input", (e) => { if (!e.target.closest("#learnbar")) { stop(); curS = null; it = 0; $("liter").textContent = 0; } });
+  }
+
+  /* ---- first render ---- */
+  try { if (has("init") && typeof init === "function") init(); } catch (e) { showErr("init: " + e.message); }
+  V.apply(S0);
+  /* exploration visuals, each at its own preset */
+  XV.forEach((x) => { const st = full(P[x.preset] || {}); try { drawSlide(x.k, x.id, st, compute(st)); } catch (e) { showErr("exploration visual: " + e.message); } });
+  /* numbers quoted in text are computed from presets, never typed by hand */
+  document.querySelectorAll(".calc[data-get][data-at]").forEach((el) => {
+    const st = full(P[el.getAttribute("data-at")] || {});
+    try { calcFill(el, st, compute(st)); } catch (e) { el.textContent = "?"; }
+  });
+  go(0);
+
+  /* ---- self-tests ---- */
+  const tt = $("tests");
+  const show = (v) => (Array.isArray(v) ? "[" + v.map(show).join(", ") + "]" : typeof v === "number" ? V.fmt(v, 4) : String(v));
+  const drop = has("__DROP_TESTS") ? __DROP_TESTS : [];
+  if (drop.length) { const n = document.createElement("p"); n.className = "note"; n.textContent = drop.length + " model-proposed check(s) were excluded because their hand-derived expectation did not match the executed computation: " + drop.join("; ") + "."; tt.after(n); }
+  if (has("TESTS")) TESTS.filter((t) => drop.indexOf(t.name) < 0).forEach((t) => {
+    let got, ok = false, msg = "";
+    try {
+      const st = full(t.state); got = t.get(compute(st), st);
+      const tol = t.tol === undefined ? 1e-6 : t.tol;
+      const close = (a, b) => Array.isArray(a) || Array.isArray(b) ? Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => close(x, b[i])) : typeof a === "number" && typeof b === "number" ? Math.abs(a - b) <= tol : a === b;
+      ok = close(got, t.expect);
+    } catch (e) { msg = e.message; }
+    const row = document.createElement("tr");
+    row.innerHTML = "<td>" + t.name + "</td><td class='num'>" + (msg ? "error: " + msg : show(got)) + "</td><td class='num'>" + show(t.expect) + "</td><td class='" + (ok ? "pass'>✓ pass" : "fail'>✗ fail") + "</td>";
+    tt.appendChild(row);
+  });
+})();
+</script>
+</body>
+</html>

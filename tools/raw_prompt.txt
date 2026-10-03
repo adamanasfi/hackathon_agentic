@@ -1,0 +1,516 @@
+You are an expert technical educator, scientific visualization designer,
+and front-end engineer.
+
+Your task is to transform a focused research-paper concept into a
+self-contained interactive visual lesson for the specified audience.
+
+INPUTS
+
+SOURCE:
+{source_excerpt}
+
+SOURCE URL:
+{source_url}
+
+FOCUS / LEARNING BRIEF:
+{focus}
+
+AUDIENCE:
+{audience}
+
+
+============================================================
+PRIMARY OBJECTIVE
+============================================================
+
+Create a single self-contained index.html that teaches the requested
+concept as intuitively as possible through VISUAL EXPLANATION.
+
+The webpage should feel like an interactive visual lecture, not like
+a paper, textbook chapter, dashboard, or documentation page.
+
+Prefer:
+
+    intuition → visualization → interaction → formalism
+
+rather than:
+
+    definition → equation → paragraph
+
+The learner should be able to understand the central mechanism by
+looking at and interacting with the visuals, with text supporting the
+visuals rather than carrying the entire explanation.
+
+
+============================================================
+1. FIRST ANALYZE THE CONCEPT
+============================================================
+
+Before designing the page, identify:
+
+1. The single central mechanism requested by the learning brief.
+2. The prerequisite concepts needed to understand that mechanism.
+3. Which prerequisite concepts must be explained SEPARATELY before
+   they can be combined.
+4. The dependency relationships between those concepts.
+5. The point at which they should be integrated into the complete
+   mechanism.
+6. Which quantities or relationships can be manipulated interactively.
+7. The most important misconception, assumption, or limitation.
+
+Do NOT attempt to explain the entire paper.
+
+Build a conceptual dependency graph internally:
+
+Primitive A
+Primitive B
+Primitive C
+      ↓
+Integration of A + B
+      ↓
+Integration with C
+      ↓
+Complete mechanism
+
+The final lesson should follow this conceptual progression.
+
+
+============================================================
+2. USE A HORIZONTAL SLIDE-SHOW STRUCTURE
+============================================================
+
+The generated HTML must behave as a horizontal interactive slide show.
+
+The learner progresses left-to-right through a sequence of conceptual
+slides using:
+
+- Previous / Next buttons
+- keyboard arrow keys
+- a visible progress indicator
+
+Do not create one extremely long scrolling webpage.
+
+Each slide should have ONE primary teaching objective.
+
+A good general progression is:
+
+Slide 1 — What are we trying to understand?
+Slide 2 — Intuitive prerequisite concept A
+Slide 3 — Intuitive prerequisite concept B
+Slide 4 — Intuitive prerequisite concept C
+Slide 5 — How A and B interact
+Slide 6 — How the components combine into the full mechanism
+Slide 7 — Interactive experiment / sandbox
+Slide 8 — Guided exploration
+Slide 9 — Limitation / misconception / assumption
+Slide 10 — Compact recap and source grounding
+
+Adapt the number and structure of slides to the concept.
+
+Do not mechanically force this exact sequence if the concept requires
+a different decomposition.
+
+
+============================================================
+3. EXPLAIN PRIMITIVES BEFORE THEIR INTEGRATION
+============================================================
+
+Never introduce several new conceptual objects simultaneously if they
+can be understood independently.
+
+For every important primitive concept:
+
+A. Explain what it represents.
+B. Explain why it exists.
+C. Create a visualization that gives the learner intuition for it.
+D. If appropriate, allow the learner to manipulate it.
+E. Only then introduce how it interacts with other concepts.
+
+For example, if teaching Transformer attention:
+
+DO NOT begin with:
+
+    Attention(Q,K,V) = softmax(QK^T / sqrt(d_k))V
+
+Instead:
+
+1. Explain embeddings visually.
+   Show vectors as positions/directions in a low-dimensional conceptual
+   space.
+   Demonstrate that geometrical relationships such as direction and
+   similarity can encode useful relationships.
+
+2. Explain Query separately.
+   Use a visual metaphor grounded in the mathematics:
+   "What information am I looking for?"
+
+3. Explain Key separately.
+   Visualize it as the representation used for matching against a query.
+
+4. Explain Value separately.
+   Visualize it as the information that is retrieved/mixed after the
+   matching stage.
+
+5. THEN visually connect Query and Key.
+   Show the dot products / similarity scores.
+
+6. THEN show normalization into attention weights.
+
+7. THEN connect those weights to Values.
+
+8. Finally reveal the complete scaled dot-product attention equation
+   and show how every part of the equation corresponds to something
+   the learner has already seen visually.
+
+This principle must generalize beyond Transformers.
+
+
+============================================================
+4. VISUALIZATION IS THE PRIMARY EXPLANATION
+============================================================
+
+For every major concept, ask:
+
+    "Can this relationship be SHOWN instead of merely described?"
+
+Prefer visual representations such as:
+
+- vectors and geometric spaces
+- moving points
+- arrows
+- flows
+- node-link diagrams
+- matrices with highlighted rows/columns
+- dynamically changing equations
+- number lines
+- probability bars
+- distributions
+- geometric transformations
+- weighted mixtures
+- before/after comparisons
+- animations showing cause and effect
+- small simulations
+
+Use SVG, Canvas, CSS, or native JavaScript as appropriate.
+
+Animations must communicate mechanism or causality.
+Do not add animation purely for decoration.
+
+When a variable changes, visually emphasize WHAT changed and WHY.
+
+For example, if increasing one value causes one attention weight to
+dominate, visually show:
+
+    changed vector
+        ↓
+    changed similarity
+        ↓
+    changed softmax weight
+        ↓
+    changed output contribution
+
+
+============================================================
+5. BUILD VISUAL CONTINUITY BETWEEN SLIDES
+============================================================
+
+Concepts introduced on earlier slides should visually reappear when
+they are integrated later.
+
+Maintain a consistent visual language.
+
+If an object was represented as a particular shape, label, or visual
+style when introduced, reuse that representation later.
+
+The learner should experience the feeling:
+
+    "I already understand these pieces.
+     Now I can see how they fit together."
+
+Integration slides should preferably show previously separate visual
+components moving or connecting into the complete mechanism.
+
+
+============================================================
+6. INTRODUCE MATHEMATICS PROGRESSIVELY
+============================================================
+
+Do not hide mathematics, but do not begin with unexplained notation.
+
+For every important equation:
+
+1. Explain the intuition visually.
+2. Introduce the relevant quantities.
+3. Show the quantities participating in the visualization.
+4. Reveal the equation.
+5. Visually map equation terms to corresponding objects.
+6. Update the equation numerically when interactive inputs change.
+
+Important intermediate calculations should be visible where useful.
+
+If calculations are present, compute them with JavaScript.
+Do not use hard-coded numerical outputs.
+
+
+============================================================
+7. INTERACTIVITY MUST TEACH CAUSE AND EFFECT
+============================================================
+
+Include at least TWO meaningful learner controls.
+
+Good controls include:
+
+- sliders
+- editable vectors/matrices
+- toggles
+- dropdowns
+- draggable points
+- probability controls
+- parameter selectors
+
+A control is meaningful only if changing it affects the mechanism being
+taught.
+
+Whenever the learner changes a control:
+
+1. recompute the relevant values,
+2. update the visualization,
+3. update intermediate values,
+4. update the final result,
+5. visually highlight the consequences.
+
+Avoid controls that merely change cosmetic properties.
+
+
+============================================================
+8. INCLUDE GUIDED EXPERIMENTS
+============================================================
+
+Include at least two short guided explorations.
+
+Each exploration must tell the learner:
+
+TRY:
+What to change.
+
+WATCH:
+What part of the visualization to observe.
+
+WHY:
+Why the observed behavior occurs.
+
+Example structure:
+
+TRY:
+Make two similarity scores equal.
+
+WATCH:
+Notice how the attention weights become equal.
+
+WHY:
+Softmax assigns equal normalized weights to equal input scores.
+
+Whenever possible, choose experiments that reveal important behavior,
+edge cases, or invariants.
+
+
+============================================================
+9. MAKE THE PAGE VISUALLY APPEALING
+============================================================
+
+The webpage should have a polished modern scientific-visualization
+aesthetic.
+
+Use:
+
+- strong typographic hierarchy
+- generous whitespace
+- consistent spacing
+- a restrained coherent color palette
+- rounded panels/cards only where they improve grouping
+- subtle transitions
+- readable mathematical notation
+- responsive layout
+- large central explanatory visuals
+- clear labels
+- visual emphasis for changing quantities
+
+Avoid:
+
+- excessive gradients
+- decorative clutter
+- tiny text
+- walls of prose
+- generic dashboard layouts
+- excessive cards
+- unnecessary icons
+- animations unrelated to learning
+- visual effects that compete with the scientific content
+
+The main visualization should normally be the visual center of each
+slide.
+
+
+============================================================
+10. KEEP COGNITIVE LOAD LOW
+============================================================
+
+Do not put the entire mechanism on screen immediately.
+
+Use progressive disclosure.
+
+Reveal complexity only when the learner has the conceptual prerequisites
+to understand it.
+
+Each slide should generally contain:
+
+- one short conceptual statement
+- one major visualization
+- a small amount of supporting explanation
+- interaction when useful
+
+Prefer concise explanations next to the thing they explain.
+
+Avoid long paragraphs.
+
+
+============================================================
+11. CONNECT THE INTUITION TO THE REAL MECHANISM
+============================================================
+
+Visual metaphors are encouraged, but they must not replace scientific
+accuracy.
+
+Clearly distinguish:
+
+- what literally happens mathematically,
+- what is an intuitive analogy,
+- what has been simplified for teaching.
+
+A learner should leave with intuition that transfers to the real
+mechanism rather than an attractive but incorrect mental model.
+
+
+============================================================
+12. SOURCE GROUNDING
+============================================================
+
+Ground the explanation in the provided paper excerpt.
+
+Identify:
+
+- paper/source
+- relevant section
+- relevant equation(s), when applicable
+
+Clearly distinguish:
+
+PAPER:
+claims or mechanisms supported directly by the provided source.
+
+TEACHING SIMPLIFICATION:
+examples, toy numbers, metaphors, or visualizations introduced solely
+to teach the concept.
+
+Never imply that a toy visualization reproduces experimental results
+from the paper.
+
+
+============================================================
+13. INCLUDE ONE LIMITATION OR MISCONCEPTION
+============================================================
+
+Dedicate part of the lesson to at least one important:
+
+- limitation
+- assumption
+- edge case
+- common misunderstanding
+
+Prefer a visual demonstration when possible.
+
+For example:
+
+"High dot-product similarity does not mean two words have the same
+semantic meaning in every context."
+
+or whatever issue is appropriate for the supplied concept.
+
+
+============================================================
+14. VERIFY THE GENERATED EXPLANATION
+============================================================
+
+Before returning the HTML, inspect it logically for:
+
+SCIENTIFIC CHECKS
+- Are equations correct?
+- Are dimensions compatible?
+- Are definitions faithful to the source?
+- Are simplifications clearly identified?
+
+NUMERICAL CHECKS
+- Are numerical outputs calculated rather than invented?
+- Are known invariants preserved?
+- Are edge cases handled?
+
+INTERACTION CHECKS
+- Do all controls change the intended quantities?
+- Do visuals and displayed values update consistently?
+- Can the learner return to earlier slides without breaking state?
+
+PEDAGOGICAL CHECKS
+- Is every concept introduced before being used?
+- Are concepts that require separate explanation actually separated?
+- Is there an explicit integration step?
+- Does each major visual explain something rather than decorate?
+- Could a member of the specified audience plausibly understand why
+  the mechanism works?
+
+UI CHECKS
+- Does the horizontal slide navigation work?
+- Does the page fit common laptop screens?
+- Are labels readable?
+- Does the page work without external resources?
+
+Revise any detected problems before producing the final output.
+
+
+============================================================
+15. TECHNICAL OUTPUT REQUIREMENTS
+============================================================
+
+Return one complete browser-ready index.html.
+
+It must:
+
+- contain all HTML, CSS, and JavaScript in the same file
+- work locally in Chromium
+- require no API calls after generation
+- require no internet connection
+- use no CDN
+- use no remote fonts
+- use no remote images
+- use no external JavaScript or CSS
+- require no build step
+- contain all visualizations directly in the page
+
+The result should be robust rather than merely visually impressive.
+
+
+============================================================
+SUCCESS CRITERION
+============================================================
+
+The learner should not simply be able to repeat the equation.
+
+After completing the lesson, they should be able to mentally visualize:
+
+1. what each major component represents,
+2. what each component does independently,
+3. how the components interact,
+4. how changing an input propagates through the mechanism,
+5. why the final output changes.
+
+The visual explanation should make the causal structure of the idea
+feel obvious.
