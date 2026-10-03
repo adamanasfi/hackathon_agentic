@@ -105,7 +105,7 @@ def sanitize(blocks):
             fixes.append(f"created missing display containers {miss}")
     ui0 = blocks.get("UI", "")
     def _strip_s(m):
-        body = re.sub(r"\s*,?\s*[A-Za-z_$][\w$]*\s*:\s*s\.[\w$.\[\]]+\s*(?=[,}])", "", m.group(1))
+        body = re.sub(r"\s*,?\s*[A-Za-z_$][\w$]*\s*:\s*s\.[\w$.\[\]]+\s*(?=[,}]|$)", "", m.group(1))
         return "state: {" + re.sub(r"^\s*,", "", body) + "}"
     ui1 = re.sub(r"state:\s*\{([^{}]*)\}", _strip_s, ui0)
     if ui1 != ui0:
