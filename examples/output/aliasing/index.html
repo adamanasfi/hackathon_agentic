@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kalman Filter Measurement Update (Scalar)</title>
+<title>Sampling and Aliasing</title>
 <style>
 :root{--bg:#0d1117;--panel:#131922;--panel2:#171e29;--ink:#e6edf3;--ink2:#c3ccd6;--muted:#8b949e;--line:#262e3a;--gold:#e2b86b;--teal:#4fb3bf;--coral:#e07a5f;--ok:#7fb77e;--bad:#e5534b;--warn:#e2b86b;--hl:#e2b86b;--r:12px;--mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;--sans:"DM Sans","Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
 *{box-sizing:border-box}
@@ -149,45 +149,38 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 </style>
 </head>
 <body>
-<header class="top"><div class="row"><div class="logo"></div><h1>Kalman Filter Measurement Update (Scalar)</h1><div class="cite">Source: Kalman (1960). A New Approach to Linear Filtering and Prediction Problems · Optimal estimate update (scalar form of the filter equations) · <a href="https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf" target="_blank" rel="noopener">https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf</a> · Audience: Engineering undergraduate who knows mean, variance and the normal distribution.</div>
+<header class="top"><div class="row"><div class="logo"></div><h1>Sampling and Aliasing</h1><div class="cite">Source: Shannon (1949). Communication in the Presence of Noise · Section II, Theorem 1 (sampling theorem) · <a href="https://ieeexplore.ieee.org/document/1697831" target="_blank" rel="noopener">https://ieeexplore.ieee.org/document/1697831</a> · Audience: Engineering undergraduate who knows sinusoids.</div>
 <div class="tools"><button class="ghost" id="flowbtn" title="Show all slides as one scrolling page">View as page</button></div></div>
 <div class="prog"><div id="bar"></div></div></header>
 <div id="errors"></div>
 <main id="deck"><div id="track">
 <section class="slide" data-title="The idea"><div class="in">
-<div class="hero"><span class="kicker">Interactive lesson</span><h2>Kalman Filter Measurement Update (Scalar)</h2><p class="sum">See how the Kalman filter optimally combines a prior belief and a new measurement to produce a more certain posterior estimate.</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
+<div class="hero"><span class="kicker">Interactive lesson</span><h2>Sampling and Aliasing</h2><p class="sum">Learners will see how a continuous signal is represented by discrete samples, and how undersampling leads to aliasing, where a high-frequency signal appears as a lower frequency.</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
 <div id="intro-cards">
 <div class="card">
   <h3>The idea</h3>
-  Imagine you're trying to guess the temperature in a room. You have a thermometer (a measurement) and your own feeling (a prior belief). The Kalman filter is a smart way to combine these two pieces of information, especially when both are a bit uncertain, to get the best possible estimate. It's like finding the sweet spot between what you thought and what you just saw.
+  Imagine a spinning wheel. If you take photos of it too slowly, it might look like it's spinning backward or slower than it actually is. The Shannon Sampling Theorem says that to perfectly capture the motion of the wheel (or any signal), you need to take photos (samples) at least twice as fast as the wheel's fastest spin. If you don't, you get an illusion called <b>aliasing</b>.
 </div>
 <div class="card">
   <h3>Why it matters</h3>
-  The Kalman filter is fundamental in many engineering applications, from guiding spacecraft and drones to tracking objects in computer vision and even predicting financial markets. It provides an optimal way to estimate the state of a dynamic system from noisy measurements. This specific excerpt focuses on the core "measurement update" step, where a new observation refines an existing estimate.
+  In digital audio, aliasing can make high-pitched sounds appear as lower, distorted frequencies. In digital video, it causes wagon wheels to appear to spin backward. In scientific measurements, undersampling can lead to misinterpreting data, making a fast-changing phenomenon look slow or even static. Understanding sampling is fundamental to correctly digitizing and processing any continuous signal.
 </div>
 <div class="card">
   <h3>The key equation</h3>
   <div class="eq">
-    K = P⁻ / (P⁻ + R)
+    f<sub>alias</sub> = |f - k · f<sub>s</sub>|
   </div>
-  <div class="eq">
-    x̂ = x̂⁻ + K (z − x̂⁻)
-  </div>
-  <div class="eq">
-    P = (1 − K) P⁻
-  </div>
-  These equations compute the <b>Kalman Gain K</b>, the <b>posterior mean x̂</b> (updated estimate), and the <b>posterior variance P</b> (updated uncertainty) from a prior estimate and a new measurement.
+  This equation describes the apparent frequency (f<sub>alias</sub>) you observe when a signal of true frequency (f) is sampled at a rate (f<sub>s</sub>). The integer 'k' is chosen such that f<sub>alias</sub> is minimized and falls within the range [0, f<sub>s</sub>/2].
 </div>
 <div class="card">
   <h3>Symbols</h3>
   <table class="sym">
-    <tr><td>x̂⁻</td><td>Prior mean (estimate before measurement)</td><td>Scalar, units of state</td></tr>
-    <tr><td>P⁻</td><td>Prior variance (uncertainty of prior estimate)</td><td>Scalar, units of state²</td></tr>
-    <tr><td>z</td><td>Measurement</td><td>Scalar, units of state</td></tr>
-    <tr><td>R</td><td>Measurement noise variance</td><td>Scalar, units of state²</td></tr>
-    <tr><td>K</td><td>Kalman Gain</td><td>Scalar, unitless (0 ≤ K ≤ 1)</td></tr>
-    <tr><td>x̂</td><td>Posterior mean (updated estimate)</td><td>Scalar, units of state</td></tr>
-    <tr><td>P</td><td>Posterior variance (uncertainty of updated estimate)</td><td>Scalar, units of state²</td></tr>
+    <tr><td>f</td><td>Original signal frequency</td><td>Hz (cycles/second)</td></tr>
+    <tr><td>f<sub>s</sub></td><td>Sampling frequency</td><td>Hz (samples/second)</td></tr>
+    <tr><td>f<sub>alias</sub></td><td>Apparent (aliased) frequency</td><td>Hz (cycles/second)</td></tr>
+    <tr><td>2f</td><td>Nyquist rate</td><td>Hz (samples/second)</td></tr>
+    <tr><td>A</td><td>Amplitude</td><td>Unitless</td></tr>
+    <tr><td>φ</td><td>Phase</td><td>Radians</td></tr>
   </table>
 </div>
 </div></div></section>
@@ -197,29 +190,34 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 <div class="play">
   <div class="card">
     <div class="ctrl">
-      <label for="x_prior_mean">Prior Mean (x̂⁻)</label>
-      <input type="range" id="x_prior_mean" min="-5" max="5" step="0.1" value="0">
-      <div class="hint">Your current best estimate of the state.</div>
+      <label for="f">Signal Frequency (f)</label>
+      <input type="range" id="f" min="0.1" max="2.5" step="0.1" value="1">
+      <div class="hint">Frequency of the continuous sinusoid (Hz).</div>
     </div>
     <div class="ctrl">
-      <label for="p_prior_var">Prior Variance (P⁻)</label>
-      <input type="range" id="p_prior_var" min="0.01" max="5" step="0.01" value="1">
-      <div class="hint">Uncertainty in your prior estimate.</div>
+      <label for="fs">Sampling Frequency (f<sub>s</sub>)</label>
+      <input type="range" id="fs" min="0.5" max="5" step="0.1" value="3">
+      <div class="hint">Rate at which the signal is sampled (samples/sec).</div>
     </div>
     <div class="ctrl">
-      <label for="z_measurement">Measurement (z)</label>
-      <input type="range" id="z_measurement" min="-5" max="5" step="0.1" value="1">
-      <div class="hint">The new observation.</div>
+      <label for="A">Amplitude (A)</label>
+      <input type="range" id="A" min="0.1" max="2" step="0.1" value="1">
+      <div class="hint">Peak value of the sinusoid.</div>
     </div>
     <div class="ctrl">
-      <label for="r_noise_var">Measurement Noise Variance (R)</label>
-      <input type="range" id="r_noise_var" min="0.01" max="5" step="0.01" value="0.5">
-      <div class="hint">Uncertainty in the measurement.</div>
+      <label for="phi">Phase (φ)</label>
+      <input type="range" id="phi" min="0" max="6.28" step="0.1" value="0">
+      <div class="hint">Starting phase of the sinusoid (radians).</div>
+    </div>
+    <div class="ctrl">
+      <label for="t_max">Plot Duration</label>
+      <input type="range" id="t_max" min="2" max="10" step="0.5" value="4">
+      <div class="hint">How many seconds of the signal to display.</div>
     </div>
   </div>
-  <div class="visuals">
-    <div class="viz" id="gaussian_plot"></div>
-    <div class="readout" id="results"></div>
+  <div class="card">
+    <div class="viz" id="samplingViz"></div>
+    <div class="readout" id="samplingReadout"></div>
   </div>
 </div>
 <div class="card" id="livebox" hidden><h3>Live checks (recomputed on every change)</h3><ul class="checks" id="live"></ul></div>
@@ -230,17 +228,17 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
   <div class="card from-paper">
     <h3>Stated in the paper</h3>
     <ul>
-      <li>"For a scalar state with prior estimate x̂⁻ and prior variance P⁻, and a measurement z with noise variance R, the optimal (minimum-variance) linear update is: K = P⁻ / (P⁻ + R); x̂ = x̂⁻ + K (z − x̂⁻); P = (1 − K) P⁻." (Section: Optimal estimate update, scalar form)</li>
-      <li>"The gain K weighs the measurement residual according to the relative uncertainty of the prediction and the measurement." (Section: Optimal estimate update, scalar form)</li>
+      <li>"If a function f(t) contains no frequencies higher than W cps, it is completely determined by giving its ordinates at a series of points spaced 1/2W seconds apart." (Section II, Theorem 1)</li>
+      <li>This implies that the sampling rate must be at least 2W (where W is our 'f' for a single sinusoid) to perfectly reconstruct the signal.</li>
     </ul>
   </div>
   <div class="card ours">
     <h3>Our simplifications &amp; examples</h3>
     <ul>
-      <li>We focus exclusively on the scalar measurement update step, omitting the prediction step and the multi-dimensional (matrix) forms of the equations.</li>
-      <li>We assume Gaussian noise for both the prior and measurement likelihood to visually represent them as bell curves, which is a standard assumption in Kalman filtering for optimal linear estimation.</li>
-      <li>The specific numerical ranges for sliders (e.g., -5 to 5 for means, 0.01 to 5 for variances) are chosen for clear visualization and to demonstrate edge cases.</li>
-      <li>The "bell curve" visualization for Gaussian distributions is an analogy to help build intuition for mean and variance as location and spread.</li>
+      <li>We focus on a single sinusoid for simplicity, rather than a general band-limited function.</li>
+      <li>We use 'f' for the signal frequency and 'f<sub>s</sub>' for the sampling frequency, consistent with modern notation, where Shannon used 'W' for the highest frequency component.</li>
+      <li>The phase (φ) and amplitude (A) controls are added to make the sinusoid more general, though the core aliasing concept depends only on f and f<sub>s</sub>.</li>
+      <li>The visual representation of the "reconstructed signal" as the lowest frequency sinusoid passing through the samples is an intuitive way to demonstrate aliasing, directly illustrating the ambiguity.</li>
     </ul>
   </div>
 </div>
@@ -250,26 +248,29 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 </div></section>
 </div></main>
 <div id="explore-src" hidden>
-<div class="card explore" data-show-slide="6" data-show-preset="highMeasurementTrust">
-  <h3>Exploration 1: Trusting the Measurement</h3>
-  <p><b>Try:</b> Set the <b>Measurement Noise Variance (R)</b> to a very small value, e.g., <b>0.01</b>. Keep <b>Prior Variance (P⁻)</b> at <b>1</b>.</p>
-  <p><b>Watch:</b> The <b>Kalman Gain K</b> will approach <span class="calc" data-at="highMeasurementTrust" data-get="r.K" data-d="3"></span>. The <b>posterior mean x̂</b> will be very close to the <b>measurement z</b> (<span class="calc" data-at="highMeasurementTrust" data-get="s.z_measurement" data-d="1"></span>), and the <b>posterior variance P</b> will be very small (<span class="calc" data-at="highMeasurementTrust" data-get="r.p_posterior_var" data-d="3"></span>). The posterior Gaussian curve will be narrow and centered on the measurement.</p>
-  <p><b>Why:</b> When the measurement is highly certain (low R), the Kalman filter gives it almost all the weight (K ≈ 1), effectively ignoring the prior estimate and trusting the measurement completely. The uncertainty of the combined estimate becomes very low.</p>
-  <button data-preset="highMeasurementTrust">Try it in the playground</button>
-</div>
-
-<div class="card explore" data-show-slide="6" data-show-preset="highPriorTrust">
-  <h3>Exploration 2: Trusting the Prior</h3>
-  <p><b>Try:</b> Set the <b>Prior Variance (P⁻)</b> to a very small value, e.g., <b>0.01</b>. Keep <b>Measurement Noise Variance (R)</b> at <b>1</b>.</p>
-  <p><b>Watch:</b> The <b>Kalman Gain K</b> will approach <span class="calc" data-at="highPriorTrust" data-get="r.K" data-d="3"></span>. The <b>posterior mean x̂</b> will be very close to the <b>prior mean x̂⁻</b> (<span class="calc" data-at="highPriorTrust" data-get="s.x_prior_mean" data-d="1"></span>), and the <b>posterior variance P</b> will be very close to the <b>prior variance P⁻</b> (<span class="calc" data-at="highPriorTrust" data-get="r.p_posterior_var" data-d="3"></span>). The posterior Gaussian curve will be narrow and centered on the prior mean.</p>
-  <p><b>Why:</b> When the prior estimate is highly certain (low P⁻), the Kalman filter gives it almost all the weight (K ≈ 0), effectively ignoring the new measurement and trusting the prior estimate. The uncertainty of the combined estimate remains close to the prior uncertainty.</p>
-  <button data-preset="highPriorTrust">Try it in the playground</button>
-</div>
-
-<div class="card caution" data-show-slide="5" data-show-preset="typicalCase">
-  <h3>Limitation / common misunderstanding</h3>
-  <p>A common misconception is that combining information might sometimes increase uncertainty. However, the Kalman filter's optimal update guarantees that the <b>posterior variance (P) is always less than or equal to both the prior variance (P⁻) and the measurement noise variance (R)</b>. You can observe this in the "Updating the Variance" slide: the posterior variance bar is always the shortest. This means that combining two pieces of information, even if they disagree, always leads to a more certain estimate (or at least not less certain).</p>
+<div class="card explore" data-show-slide="3" data-show-preset="typicalCase">
+  <h3>Exploration 1: Meeting the Nyquist Criterion</h3>
+  <p><b>Try:</b> Set the original signal frequency <b>f</b> to <code>1.0</code> Hz and the sampling frequency <b>f<sub>s</sub></b> to <code>3.0</code> Hz. This means f<sub>s</sub> is greater than 2f (the Nyquist rate of 2.0 Hz).</p>
+  <p><b>Watch:</b> Observe the "Reconstructed Frequency (f<sub>alias</sub>)" readout. It should be <span class="calc" data-at="typicalCase" data-get="r.f_alias"></span> Hz, which is exactly the original frequency. The dashed reconstructed signal (purple) perfectly matches the original continuous signal (teal).</p>
+  <p><b>Why:</b> When the sampling rate is at least twice the signal's frequency, the samples contain enough information to perfectly reconstruct the original signal without any ambiguity.</p>
   <button data-preset="typicalCase">Try it in the playground</button>
+</div>
+
+<div class="card explore" data-show-slide="3" data-show-preset="slowSampling">
+  <h3>Exploration 2: Aliasing in Action</h3>
+  <p><b>Try:</b> Keep <b>f</b> at <code>1.0</code> Hz, but reduce <b>f<sub>s</sub></b> to <code>1.5</code> Hz. Now f<sub>s</sub> is less than 2f.</p>
+  <p><b>Watch:</b> The "Reconstructed Frequency (f<sub>alias</sub>)" readout now shows <span class="calc" data-at="slowSampling" data-get="r.f_alias"></span> Hz. The dashed reconstructed signal (purple) clearly has a lower frequency than the original signal (teal), even though it passes through all the sample points. The Nyquist Criterion readout should say "NOT MET".</p>
+  <p><b>Why:</b> With insufficient samples, multiple sinusoids can pass through the same sample points. The reconstruction algorithm picks the lowest frequency one, leading to the high-frequency signal being misinterpreted as a lower-frequency one.</p>
+  <button data-preset="slowSampling">Try it in the playground</button>
+</div>
+
+<div class="card caution" data-show-slide="3" data-show-preset="dcAlias">
+  <h3>Limitation / common misunderstanding: Aliasing means signal loss</h3>
+  <p>A common misconception is that aliasing means the signal is completely lost or destroyed. While the original frequency information is indeed misinterpreted, the samples themselves are still valid points on the original signal. The problem is in the *interpretation* or *reconstruction* of the signal from these samples.</p>
+  <p><b>Try:</b> Set <b>f</b> to <code>1.0</code> Hz and <b>f<sub>s</sub></b> to <code>1.0</code> Hz. This is an extreme case of undersampling.</p>
+  <p><b>Watch:</b> The "Reconstructed Frequency (f<sub>alias</sub>)" will be <span class="calc" data-at="dcAlias" data-get="r.f_alias"></span> Hz. The reconstructed signal (purple dashed line) is now a flat line (DC signal). This is because at this sampling rate, all samples happen to fall at the same point on each cycle of the original signal (e.g., all at the peak if phase is 0), making it appear as a constant value.</p>
+  <p><b>Why:</b> Even in this extreme case, the samples are correct values of the original signal. However, without sufficient information (i.e., enough samples per cycle), it's impossible to uniquely determine the original frequency, and the lowest frequency interpretation is a flat line.</p>
+  <button data-preset="dcAlias">Try it in the playground</button>
 </div>
 </div>
 <nav class="nav"><button class="ghost" id="prev">← Back</button><div class="dots" id="dots"></div><span id="counter"></span><button id="next">Next →</button></nav>
@@ -293,7 +294,20 @@ const V = (function () {
   const INK = "#e6edf3", MUTED = "#8b949e", BG = "#131922";
   /* models often hard-code light-theme colours: remap them for the dark slides */
   const REMAP = { black: INK, "#000": INK, "#000000": INK, "#111": INK, "#222": INK, "#333": INK, "#1d2433": INK, "#0f172a": INK, white: BG, "#fff": BG, "#ffffff": BG, "#fafafa": BG, "#f5f5f5": BG, "#eee": "#2a3240", "#ddd": "#3a4352", "#ccc": "#4b5563", gray: MUTED, grey: MUTED, lightgray: "#4b5563", lightgrey: "#4b5563" };
-  const color = (i) => PAL[((i % PAL.length) + PAL.length) % PAL.length];
+  /* colours are strings that also offer d3-style .darker()/.brighter()/.alpha() */
+  function shade(hex, f) {
+    const n = parseInt(String(hex).slice(1), 16); if (isNaN(n)) return hex;
+    const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => Math.max(0, Math.min(255, Math.round(f >= 0 ? c + (255 - c) * f : c * (1 + f)))));
+    return "#" + ch.map((c) => c.toString(16).padStart(2, "0")).join("");
+  }
+  function col(hex) {
+    const c = new String(hex);
+    c.darker = (k) => col(shade(hex, -0.25 * (k === undefined ? 1 : k)));
+    c.brighter = (k) => col(shade(hex, 0.25 * (k === undefined ? 1 : k)));
+    c.alpha = (a) => { const n = parseInt(String(hex).slice(1), 16); return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")"; };
+    return c;
+  }
+  const color = (i) => col(PAL[((i % PAL.length) + PAL.length) % PAL.length]);
   function fmt(x, d) {
     d = d === undefined ? 3 : d;
     if (typeof x !== "number") return String(x);
@@ -399,6 +413,11 @@ const V = (function () {
     }
     function el(tag, key, attrs, text) {
       key = ns + key;
+      if (tag === "rect" && attrs) { /* negative sizes are invalid SVG: flip the rectangle instead */
+        attrs = Object.assign({}, attrs);
+        if (+attrs.height < 0) { attrs.y = +attrs.y + +attrs.height; attrs.height = -attrs.height; }
+        if (+attrs.width < 0) { attrs.x = +attrs.x + +attrs.width; attrs.width = -attrs.width; }
+      }
       let ls = null;
       if (tag === "text" && text !== undefined) { ls = lines(text, attrs); text = ls.join(" "); }
       try { extent(tag, attrs || {}, ls && ls.length > 1 ? ls.reduce((a, b) => (b.length > a.length ? b : a), "") : text); if (ls && ls.length > 1) { const a = attrs || {}; extent("text", Object.assign({}, a, { y: +a.y + 15 * (ls.length - 1) }), ls[ls.length - 1]); } } catch (e) {}
@@ -425,12 +444,33 @@ const V = (function () {
       text: (k, x, y, s, a) => el("text", k, Object.assign({ x, y }, a || {}), String(s)),
       arrow(k, x1, y1, x2, y2, a) {
         a = a || {};
-        const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L, s = a.head || 9;
+        const L = Math.hypot(x2 - x1, y2 - y1) || 1, s = a.head || 9;
+        let bend = a.bend;
+        /* a long, nearly flat connector would run through whatever lies on that line (and overlap sibling
+           arrows): bow it into an arc, away from nearby labels; longer arrows bow further, so they fan out */
+        if (bend === undefined && Math.abs(y2 - y1) < 6 && Math.abs(x2 - x1) > 90) {
+          let above = 0, below = 0;
+          const lo = Math.min(x1, x2), hi = Math.max(x1, x2);
+          for (const e of svg._keys.values()) if (e.tagName === "text") {
+            const ex = +e.getAttribute("x"), ey = +e.getAttribute("y");
+            if (ex >= lo && ex <= hi) { if (ey < y1 && ey > y1 - 70) above++; else if (ey > y1 && ey < y1 + 70) below++; }
+          }
+          /* only when the straight path runs along several labels (e.g. words of a sentence); a plain
+             box-to-box arrow with one label stays straight. Direction is screen-absolute: away from the labels */
+          if (above + below >= 2) bend = (above > below ? 1 : -1) * Math.min(140, 0.32 * L) * (x2 >= x1 ? 1 : -1);
+        }
+        bend = bend || 0;
+        const mx = (x1 + x2) / 2 - ((y2 - y1) / L) * bend, my = (y1 + y2) / 2 + ((x2 - x1) / L) * bend;
+        const tx = bend ? x2 - mx : x2 - x1, ty = bend ? y2 - my : y2 - y1, TL = Math.hypot(tx, ty) || 1, ux = tx / TL, uy = ty / TL;
         const hx = x2 - ux * s, hy = y2 - uy * s;
-        const p = "M" + x1 + " " + y1 + " L" + x2 + " " + y2 + " M" + (hx - uy * s * 0.55) + " " + (hy + ux * s * 0.55) + " L" + x2 + " " + y2 + " L" + (hx + uy * s * 0.55) + " " + (hy - ux * s * 0.55);
-        const b = Object.assign({}, a); delete b.head;
+        const head = " M" + (hx - uy * s * 0.55) + " " + (hy + ux * s * 0.55) + " L" + x2 + " " + y2 + " L" + (hx + uy * s * 0.55) + " " + (hy - ux * s * 0.55);
+        const p = "M" + x1 + " " + y1 + " Q" + mx + " " + my + " " + x2 + " " + y2 + (a.noHead ? "" : head);
+        const b = Object.assign({}, a); delete b.head; delete b.bend; delete b.noHead;
+        try { extent("path", { d: "M" + x1 + " " + y1 + " L" + ((x1 + x2) / 2 + (mx - (x1 + x2) / 2) / 2) + " " + ((y1 + y2) / 2 + (my - (y1 + y2) / 2) / 2) + " L" + x2 + " " + y2 }); } catch (e) {}
         return el("path", k, Object.assign({ d: p, fill: "none", stroke: INK, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, b));
       },
+      /* curved connector: positive bend bows to the left of the direction of travel (above for left-to-right) */
+      curve(k, x1, y1, x2, y2, a) { a = Object.assign({ bend: -0.3 * Math.hypot(x2 - x1, y2 - y1) }, a || {}); return d.arrow(k, x1, y1, x2, y2, a); },
       end() {
         for (const [k, e] of svg._keys) if (!seen.has(k) && (ns ? k.startsWith(ns) : k.charAt(0) !== "\u0001")) { e.remove(); svg._keys.delete(k); anims.delete(e); }
         ext.x0 = Math.max(ext.x0, -0.2 * w); ext.x1 = Math.min(ext.x1, 1.2 * w); ext.y0 = Math.max(ext.y0, -0.2 * h); ext.y1 = Math.min(ext.y1, 1.2 * h);
@@ -599,6 +639,7 @@ const V = (function () {
         td.className = hl.has(i + "," + j) ? "hlc" : "";
       }
     }
+    t.toString = () => t.outerHTML;
     return t;
   }
 
@@ -648,7 +689,9 @@ const V = (function () {
     const dg = o.digits === undefined ? 3 : o.digits;
     const cell = (v, th) => { const n = typeof v === "number"; const tag = th ? "th" : "td"; return "<" + tag + (n ? " class='num'" : "") + ">" + (n ? fmt(v, dg) : v) + "</" + tag + ">"; };
     host.innerHTML = "<table class='vals'>" + (head ? "<tr>" + head.map((h) => cell(h, true)).join("") + "</tr>" : "") + rows.map((r) => "<tr>" + r.map((v) => cell(v)).join("") + "</tr>").join("") + "</table>";
-    return host.firstChild;
+    const t = host.firstChild;
+    if (t) t.toString = () => t.outerHTML; /* usable as an element or, inside a template string, as its HTML */
+    return t;
   }
 
   function resize(M, rows, cols, fill) {
@@ -825,9 +868,39 @@ const V = (function () {
     return d;
   }
 
+  /* ---- row layout of V.graph: items in a row, weighted links as arcs above them (arc diagram) ---- */
+  function graphRow(id, o) {
+    const N = o.nodes || [], E = o.edges || [], n = Math.max(1, N.length), top = o.title ? 30 : 8;
+    const W = o.w || fitW(id, 680), slot = (W - 40) / n, bw = Math.min(110, slot * 0.86), bh = 44;
+    const idx = new Map(N.map((nd, i) => [nd.id === undefined ? i : nd.id, i]));
+    const wmax = sticky(id, "w", 0, Math.max(1e-9, ...E.map((e) => (fin(e.w) ? Math.abs(e.w) : 1))))[1];
+    let maxSpan = 1; E.forEach((e) => { const a = idx.get(e.from), b = idx.get(e.to); if (a !== undefined && b !== undefined) maxSpan = Math.max(maxSpan, Math.abs(a - b)); });
+    const archH = Math.min(220, 40 + maxSpan * slot * 0.42), baseY = top + archH + 18, H = o.h || baseY + bh + 46;
+    const d = diagram(id, W, H, "\u0001graphrow\u0001");
+    const cx = (i) => 20 + slot * i + slot / 2;
+    if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    const vmax = sticky(id, "v", 0, Math.max(1e-9, ...N.map((nd) => (fin(nd.value) ? Math.abs(nd.value) : 0))))[1];
+    E.forEach((e, k) => {
+      const a = idx.get(e.from), b = idx.get(e.to); if (a === undefined || b === undefined || a === b) return;
+      const t = fin(e.w) ? Math.abs(e.w) / wmax : 0.5, x1 = cx(a), x2 = cx(b), h = 26 + Math.abs(b - a) * slot * 0.42;
+      const c = e.color || TEAL;
+      d.path("e" + k, { d: "M" + x1 + " " + baseY + " C" + x1 + " " + (baseY - h) + " " + x2 + " " + (baseY - h) + " " + x2 + " " + baseY, stroke: c, strokeWidth: 1 + 9 * t, opacity: 0.18 + 0.82 * t, strokeLinecap: "round" });
+      if (e.label !== undefined) d.text("el" + k, (x1 + x2) / 2, baseY - h * 0.75 - 6, typeof e.label === "number" ? num(e.label, 2) : e.label, { textAnchor: "middle", fill: c, fontSize: 12, fontWeight: 600 });
+    });
+    N.forEach((nd, i) => {
+      const t = fin(nd.value) ? Math.abs(nd.value) / vmax : 0, c = nd.color || (nd.active ? GOLD : TEAL);
+      d.rect("n" + i, { x: cx(i) - bw / 2, y: baseY, width: bw, height: bh, rx: 8, fill: nd.active ? "rgba(226,184,107,.22)" : "rgba(79,179,191," + (0.08 + 0.6 * t).toFixed(3) + ")", stroke: nd.active ? GOLD : "#30363d", strokeWidth: nd.active ? 2.5 : 1 });
+      d.text("nl" + i, cx(i), baseY + bh / 2 + 5, nd.label === undefined ? String(nd.id === undefined ? i : nd.id) : nd.label, { textAnchor: "middle", fill: INK, fontSize: 14, fontWeight: nd.active ? 700 : 500 });
+      if (fin(nd.value)) d.text("nv" + i, cx(i), baseY + bh + 18, num(nd.value, o.digits === undefined ? 2 : o.digits), { textAnchor: "middle", fill: c === GOLD ? GOLD : MUTED, fontSize: 12 });
+    });
+    d.end();
+    return Object.assign(d, { X: cx, Y: () => baseY });
+  }
+
   /* ---- V.graph: weighted directed graph (PageRank, Markov chains, message passing) ---- */
   function graph(id, o) {
     o = o || {};
+    if (o.layout === "row") return graphRow(id, o);
     const N = o.nodes || [], E = o.edges || [], W = o.w || fitW(id, 640), H = o.h || Math.round(W * 0.66), top = o.title ? 28 : 6;
     const d = diagram(id, W, H, "\u0001graph\u0001");
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
@@ -1117,75 +1190,83 @@ const L = (function () {
 <script>
 /* ---------- MODEL (generated) ---------- */
 const DEFAULT_STATE = {
-  x_prior_mean: 0,
-  p_prior_var: 1,
-  z_measurement: 1,
-  r_noise_var: 0.5,
+  f: 1,   // frequency of continuous signal (Hz)
+  A: 1,   // amplitude
+  phi: 0, // phase (radians)
+  fs: 3,  // sampling frequency (Hz)
+  t_max: 4 // max time for plotting
 };
 
 function compute(s) {
-  const x_prior_mean = s.x_prior_mean;
-  const p_prior_var = s.p_prior_var;
-  const z_measurement = s.z_measurement;
-  const r_noise_var = s.r_noise_var;
+  const { f, A, phi, fs, t_max } = s;
 
-  // Ensure variances are non-negative
-  const P_prior_safe = Math.max(1e-9, p_prior_var);
-  const R_safe = Math.max(1e-9, r_noise_var);
+  // Continuous signal points
+  const t_continuous = L.range(200).map(i => i * t_max / 199);
+  const y_continuous = t_continuous.map(t => A * Math.cos(2 * Math.PI * f * t + phi));
 
-  // Kalman Gain K = P⁻ / (P⁻ + R)
-  const K = P_prior_safe / (P_prior_safe + R_safe);
+  // Sample points
+  const num_samples = Math.floor(fs * t_max) + 1;
+  const t_samples = L.range(num_samples).map(n => n / fs);
+  const y_samples = t_samples.map(t => A * Math.cos(2 * Math.PI * f * t + phi));
 
-  // Posterior mean x̂ = x̂⁻ + K (z − x̂⁻)
-  const x_posterior_mean = x_prior_mean + K * (z_measurement - x_prior_mean);
+  // Reconstructed (aliased) frequency
+  // f_alias = |f - k * fs| where k is an integer such that f_alias is minimized and >= 0
+  // The lowest frequency that passes through the samples.
+  // This can be found by f_alias = abs(f - round(f/fs) * fs)
+  // Or, more simply, f_alias = abs(f % fs - fs/2) - fs/2 if f % fs > fs/2
+  // A common way to calculate it is f_alias = abs(f - n*fs) for some integer n
+  // such that f_alias is in [0, fs/2].
+  // The actual formula is f_alias = abs(f - k*fs) where k is chosen to minimize the absolute value.
+  // This is equivalent to f_alias = abs(f - fs * round(f/fs))
+  // Or, if we want the positive frequency in [0, fs/2]:
+  let f_alias_raw = f % fs;
+  if (f_alias_raw > fs / 2) {
+    f_alias_raw = fs - f_alias_raw;
+  }
+  const f_alias = f_alias_raw;
 
-  // Posterior variance P = (1 − K) P⁻
-  const p_posterior_var = (1 - K) * P_prior_safe;
+  // Reconstructed signal points (using f_alias)
+  const y_alias = t_continuous.map(t => A * Math.cos(2 * Math.PI * f_alias * t + phi));
 
-  // Gaussian PDF helper
-  const gaussian_pdf = (x, mean, variance) => {
-    if (variance <= 0) return 0; // Avoid division by zero or negative variance
-    const std_dev = Math.sqrt(variance);
-    return (1 / (std_dev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / std_dev, 2));
-  };
+  // Nyquist rate
+  const nyquist_rate = 2 * f;
+  const is_nyquist_met = fs >= nyquist_rate;
 
   return {
-    K,
-    x_posterior_mean,
-    p_posterior_var,
-    P_prior_safe,
-    R_safe,
-    gaussian_pdf,
+    t_continuous, y_continuous,
+    t_samples, y_samples,
+    f_alias, y_alias,
+    nyquist_rate, is_nyquist_met
   };
 }
 
 function invariants(s, r) {
-  return [
-    {
-      label: "Kalman Gain K is between 0 and 1",
-      ok: r.K >= 0 && r.K <= 1,
-      detail: `K = ${V.fmt(r.K)}`,
-    },
-    {
-      label: "Posterior variance P is never larger than prior P⁻",
-      ok: r.p_posterior_var <= r.P_prior_safe + 1e-9, // Add tolerance for floating point
-      detail: `P = ${V.fmt(r.p_posterior_var)}, P⁻ = ${V.fmt(r.P_prior_safe)}`,
-    },
-    {
-      label: "Posterior variance P is never larger than measurement noise R",
-      ok: r.p_posterior_var <= r.R_safe + 1e-9, // Add tolerance for floating point
-      detail: `P = ${V.fmt(r.p_posterior_var)}, R = ${V.fmt(r.R_safe)}`,
-    },
-  ];
+  const checks = [];
+  // Check if the alias frequency is within the Nyquist interval [0, fs/2]
+  checks.push({
+    label: "Alias frequency in [0, fs/2]",
+    ok: r.f_alias >= 0 && r.f_alias <= s.fs / 2 + 1e-9, // Add tolerance for floating point
+    detail: `f_alias = ${V.fmt(r.f_alias)}, fs/2 = ${V.fmt(s.fs / 2)}`
+  });
+  // Check if f_alias equals f when Nyquist criterion is met
+  if (r.is_nyquist_met) {
+    checks.push({
+      label: "f_alias = f (Nyquist met)",
+      ok: Math.abs(r.f_alias - s.f) < 1e-9,
+      detail: `f_alias = ${V.fmt(r.f_alias)}, f = ${V.fmt(s.f)}`
+    });
+  }
+  return checks;
 }
 
 
 
 const PRESETS = {
-  typicalCase: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 1, r_noise_var: 0.5 },
-  highMeasurementTrust: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 5, r_noise_var: 0.1 },
-  highPriorTrust: { x_prior_mean: 0, p_prior_var: 0.1, z_measurement: 5, r_noise_var: 1 },
-  measurementFarAway: { x_prior_mean: -2, p_prior_var: 0.8, z_measurement: 3, r_noise_var: 0.2 },
+  typicalCase: { f: 1, A: 1, phi: 0, fs: 3, t_max: 4 },
+  slowSampling: { f: 1, A: 1, phi: 0, fs: 1.5, t_max: 4 },
+  dcAlias: { f: 1, A: 1, phi: 0, fs: 1, t_max: 4 },
+  highFreq: { f: 2, A: 1, phi: 0, fs: 3, t_max: 4 },
+  justNyquist: { f: 1, A: 1, phi: 0, fs: 2, t_max: 4 }
 };
 </script>
 <script>
@@ -1193,350 +1274,292 @@ const PRESETS = {
 var TESTS = [], __TESTS_ERROR = null;
 try { TESTS = [
   {
-    name: "Equal variances: K=0.5, x̂=midpoint, P=P⁻/2",
-    state: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 2, r_noise_var: 1 },
-    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
-    expect: [0.5, 1, 0.5],
-    tol: 1e-9,
+    name: "Nyquist met: f=1, fs=3",
+    state: { f: 1, fs: 3 },
+    get: (r) => r.f_alias,
+    expect: 1,
+    tol: 1e-9
   },
   {
-    name: "Measurement noise R -> 0: K=1, x̂=z, P=0",
-    state: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 5, r_noise_var: 1e-9 },
-    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
-    expect: [1, 5, 0],
-    tol: 1e-6, // Looser tolerance for near-zero R
+    name: "Aliasing: f=1, fs=1.5",
+    state: { f: 1, fs: 1.5 },
+    get: (r) => r.f_alias,
+    expect: 0.5, // |1 - 1.5| = 0.5
+    tol: 1e-9
   },
   {
-    name: "Prior variance P⁻ -> 0: K=0, x̂=x̂⁻, P=P⁻",
-    state: { x_prior_mean: 10, p_prior_var: 1e-9, z_measurement: 0, r_noise_var: 1 },
-    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
-    expect: [0, 10, 1e-9],
-    tol: 1e-6, // Looser tolerance for near-zero P_prior
+    name: "Aliasing to DC: f=1, fs=1",
+    state: { f: 1, fs: 1 },
+    get: (r) => r.f_alias,
+    expect: 0, // |1 - 1*1| = 0
+    tol: 1e-9
   },
   {
-    name: "Prior and measurement far apart",
-    state: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 10, r_noise_var: 1 },
-    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
-    expect: [0.5, 5, 0.5],
-    tol: 1e-9,
+    name: "Aliasing: f=2, fs=1.5",
+    state: { f: 2, fs: 1.5 },
+    get: (r) => r.f_alias,
+    expect: 0.5, // |2 - 1*1.5| = 0.5
+    tol: 1e-9
   },
   {
-    name: "Prior and measurement close",
-    state: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 0.1, r_noise_var: 1 },
-    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
-    expect: [0.5, 0.05, 0.5],
-    tol: 1e-9,
-  },
+    name: "Nyquist met: f=2, fs=4",
+    state: { f: 2, fs: 4 },
+    get: (r) => r.f_alias,
+    expect: 2,
+    tol: 1e-9
+  }
 ]; } catch (e) { __TESTS_ERROR = String(e && e.message || e); }
 </script>
 <script>
 /* ---------- UI (generated) ---------- */
 function readState() {
   return {
-    x_prior_mean: V.num("x_prior_mean"),
-    p_prior_var: V.num("p_prior_var"),
-    z_measurement: V.num("z_measurement"),
-    r_noise_var: V.num("r_noise_var"),
+    f: V.num("f"),
+    A: V.num("A"),
+    phi: V.num("phi"),
+    fs: V.num("fs"),
+    t_max: V.num("t_max")
   };
 }
 
 function setState(s) {
-  V.set("x_prior_mean", s.x_prior_mean);
-  V.set("p_prior_var", s.p_prior_var);
-  V.set("z_measurement", s.z_measurement);
-  V.set("r_noise_var", s.r_noise_var);
+  V.set("f", s.f);
+  V.set("A", s.A);
+  V.set("phi", s.phi);
+  V.set("fs", s.fs);
+  V.set("t_max", s.t_max);
 }
 
 function render(s, r) {
-  const x_min = Math.min(s.x_prior_mean - 3 * Math.sqrt(r.P_prior_safe), s.z_measurement - 3 * Math.sqrt(r.R_safe), r.x_posterior_mean - 3 * Math.sqrt(r.p_posterior_var)) - 1;
-  const x_max = Math.max(s.x_prior_mean + 3 * Math.sqrt(r.P_prior_safe), s.z_measurement + 3 * Math.sqrt(r.R_safe), r.x_posterior_mean + 3 * Math.sqrt(r.p_posterior_var)) + 1;
+  const { t_continuous, y_continuous, t_samples, y_samples, f_alias, y_alias, nyquist_rate, is_nyquist_met } = r;
 
-  const pts_prior = [];
-  const pts_measurement = [];
-  const pts_posterior = [];
-  for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
-    pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
-    pts_measurement.push([x, r.gaussian_pdf(x, s.z_measurement, r.R_safe)]);
-    pts_posterior.push([x, r.gaussian_pdf(x, r.x_posterior_mean, r.p_posterior_var)]);
-  }
+  const data = [
+    {
+      pts: t_continuous.map((t, i) => [t, y_continuous[i]]),
+      color: V.color(0),
+      name: `f(t) = ${V.fmt(s.f)} Hz`
+    },
+    {
+      pts: t_samples.map((t, i) => [t, y_samples[i]]),
+      color: V.color(1),
+      name: "Samples",
+      line: false,
+      dots: true
+    },
+    {
+      pts: t_continuous.map((t, i) => [t, y_alias[i]]),
+      color: V.color(2),
+      name: `f_alias = ${V.fmt(f_alias)} Hz`,
+      dash: [5, 5]
+    }
+  ];
 
-  V.line("gaussian_plot", [
-    { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
-    { name: "Measurement Likelihood (z, R)", pts: pts_measurement, color: V.color(2) },
-    { name: "Posterior (x̂, P)", pts: pts_posterior, color: V.color(1), line: true },
-  ], {
-    title: "Combining Gaussian Beliefs",
-    xlabel: "State Value",
-    ylabel: "Probability Density",
-    xmin: x_min, xmax: x_max,
-    ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1]), ...pts_measurement.map(p => p[1]), ...pts_posterior.map(p => p[1])) * 1.1,
+  V.line("samplingViz", data, {
+    title: "Continuous Signal, Samples, and Reconstructed Signal",
+    xlabel: "Time (s)",
+    ylabel: "Amplitude",
+    xmin: 0,
+    xmax: s.t_max,
+    ymin: -s.A * 1.1,
+    ymax: s.A * 1.1,
     points: [
-      { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
-      { x: s.z_measurement, y: r.gaussian_pdf(s.z_measurement, s.z_measurement, r.R_safe), label: "z", color: V.color(2), r: 4 },
-      { x: r.x_posterior_mean, y: r.gaussian_pdf(r.x_posterior_mean, r.x_posterior_mean, r.p_posterior_var), label: "x̂", color: V.color(1), r: 4 },
+      { x: 0, y: s.A, label: `A=${V.fmt(s.A)}`, color: V.color(0) },
+      { x: 1 / s.f, y: s.A * Math.cos(2 * Math.PI + s.phi), label: `T=${V.fmt(1 / s.f)}`, color: V.color(0) }
     ]
   });
 
-  V.$("results").innerHTML = `
-    <div><small>Kalman Gain</small><span class="big" style="color:${V.color(3)}">${V.fmt(r.K)}</span></div>
-    <div><small>Posterior Mean</small><span class="big" style="color:${V.color(1)}">${V.fmt(r.x_posterior_mean)}</span></div>
-    <div><small>Posterior Variance</small><span class="big" style="color:${V.color(1)}">${V.fmt(r.p_posterior_var)}</span></div>
+  V.$("samplingReadout").innerHTML = `
+    <div>
+      <small>Original Frequency (f)</small>
+      <span class="big">${V.fmt(s.f)} Hz</span>
+    </div>
+    <div>
+      <small>Sampling Frequency (f<sub>s</sub>)</small>
+      <span class="big">${V.fmt(s.fs)} Hz</span>
+    </div>
+    <div>
+      <small>Nyquist Rate (2f)</small>
+      <span class="big">${V.fmt(nyquist_rate)} Hz</span>
+    </div>
+    <div>
+      <small>Reconstructed Frequency (f<sub>alias</sub>)</small>
+      <span class="big" style="color:${V.color(2)}">${V.fmt(f_alias)} Hz</span>
+    </div>
+    <div>
+      <small>Nyquist Criterion (f<sub>s</sub> ≥ 2f)</small>
+      <span class="big" style="color:${is_nyquist_met ? V.color(3) : V.color(4)}">${is_nyquist_met ? "MET" : "NOT MET"}</span>
+    </div>
   `;
 }
 
 const SLIDES = [
   {
-    title: "Combining Beliefs with the Kalman Filter",
-    text: "The Kalman filter's measurement update combines two sources of information: your current best estimate (the <b>prior belief</b>) and a new observation (the <b>measurement likelihood</b>). Both are represented as Gaussian distributions, characterized by a mean and a variance. The result is a new, more certain estimate: the <b>posterior belief</b>.",
+    title: "The Continuous Signal",
+    text: "A continuous signal, like this sinusoid, has a specific <b>frequency (f)</b> and <b>amplitude (A)</b>. It exists at every point in time.",
+    choices: [
+      { label: "Typical sinusoid", preset: "typicalCase" },
+      { label: "Higher frequency", state: { f: 2, t_max: 2 } },
+      { label: "Larger amplitude", state: { A: 1.5 } }
+    ],
+    controls: ["f", "A"],
     draw: (id, s, r) => {
-      const x_min = Math.min(s.x_prior_mean - 3 * Math.sqrt(r.P_prior_safe), s.z_measurement - 3 * Math.sqrt(r.R_safe), r.x_posterior_mean - 3 * Math.sqrt(r.p_posterior_var)) - 1;
-      const x_max = Math.max(s.x_prior_mean + 3 * Math.sqrt(r.P_prior_safe), s.z_measurement + 3 * Math.sqrt(r.R_safe), r.x_posterior_mean + 3 * Math.sqrt(r.p_posterior_var)) + 1;
-
-      const pts_prior = [];
-      const pts_measurement = [];
-      const pts_posterior = [];
-      for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
-        pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
-        pts_measurement.push([x, r.gaussian_pdf(x, s.z_measurement, r.R_safe)]);
-        pts_posterior.push([x, r.gaussian_pdf(x, r.x_posterior_mean, r.p_posterior_var)]);
-      }
-
-      V.line(id, [
-        { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
-        { name: "Measurement Likelihood (z, R)", pts: pts_measurement, color: V.color(2) },
-        { name: "Posterior (x̂, P)", pts: pts_posterior, color: V.color(1), line: true },
-      ], {
-        title: "Prior, Measurement, and Posterior",
-        xlabel: "State Value",
-        ylabel: "Probability Density",
-        xmin: x_min, xmax: x_max,
-        ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1]), ...pts_measurement.map(p => p[1]), ...pts_posterior.map(p => p[1])) * 1.1,
+      const data = [
+        {
+          pts: r.t_continuous.map((t, i) => [t, r.y_continuous[i]]),
+          color: V.color(0),
+          name: `f(t) = ${V.fmt(s.f)} Hz`
+        }
+      ];
+      V.line(id, data, {
+        title: "Continuous Sinusoid f(t)",
+        xlabel: "Time (s)",
+        ylabel: "Amplitude",
+        xmin: 0,
+        xmax: s.t_max,
+        ymin: -s.A * 1.1,
+        ymax: s.A * 1.1,
         points: [
-          { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
-          { x: s.z_measurement, y: r.gaussian_pdf(s.z_measurement, s.z_measurement, r.R_safe), label: "z", color: V.color(2), r: 4 },
-          { x: r.x_posterior_mean, y: r.gaussian_pdf(r.x_posterior_mean, r.x_posterior_mean, r.p_posterior_var), label: "x̂", color: V.color(1), r: 4 },
+          { x: 0, y: s.A, label: `A=${V.fmt(s.A)}`, color: V.color(0) },
+          { x: 1 / s.f, y: s.A * Math.cos(2 * Math.PI + s.phi), label: `T=${V.fmt(1 / s.f)}`, color: V.color(0) }
         ]
       });
-    },
-    choices: [
-      { label: "Typical Case", preset: "typicalCase" },
-      { label: "Measurement Far Away", preset: "measurementFarAway" },
-      { label: "High Measurement Trust", preset: "highMeasurementTrust" },
-    ],
-    controls: ["x_prior_mean", "z_measurement"]
+    }
   },
   {
-    title: "The Prior Belief: x̂⁻ and P⁻",
-    text: "Your current best estimate of the system's state is the <b>prior mean</b> x̂⁻. Its uncertainty is captured by the <b>prior variance</b> P⁻. Together, they form a Gaussian probability distribution, representing your belief before seeing any new data.",
+    title: "Sampling the Signal",
+    text: "To process a continuous signal digitally, we take discrete <b>samples</b> at a fixed <b>sampling frequency (f<sub>s</sub>)</b>. The higher f<sub>s</sub>, the more samples we get per second.",
+    choices: [
+      { label: "Typical sampling", preset: "typicalCase" },
+      { label: "Faster sampling", state: { fs: 5 } },
+      { label: "Slower sampling", state: { fs: 1.5 } }
+    ],
+    controls: ["fs"],
     draw: (id, s, r) => {
-      const x_min = s.x_prior_mean - 4 * Math.sqrt(r.P_prior_safe);
-      const x_max = s.x_prior_mean + 4 * Math.sqrt(r.P_prior_safe);
-      const pts_prior = [];
-      for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
-        pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
-      }
-      V.line(id, [
-        { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
-      ], {
-        title: "Prior Belief",
-        xlabel: "State Value",
-        ylabel: "Probability Density",
-        xmin: x_min, xmax: x_max,
-        ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1])) * 1.1,
-        points: [
-          { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
-        ]
+      const data = [
+        {
+          pts: r.t_continuous.map((t, i) => [t, r.y_continuous[i]]),
+          color: V.color(0),
+          name: `f(t) = ${V.fmt(s.f)} Hz`
+        },
+        {
+          pts: r.t_samples.map((t, i) => [t, r.y_samples[i]]),
+          color: V.color(1),
+          name: `Samples (f<sub>s</sub> = ${V.fmt(s.fs)} Hz)`,
+          line: false,
+          dots: true
+        }
+      ];
+      V.line(id, data, {
+        title: "Continuous Signal with Samples",
+        xlabel: "Time (s)",
+        ylabel: "Amplitude",
+        xmin: 0,
+        xmax: s.t_max,
+        ymin: -s.A * 1.1,
+        ymax: s.A * 1.1
       });
-    },
-    choices: [
-      { label: "Narrow Prior", state: { p_prior_var: 0.1, x_prior_mean: 0 } },
-      { label: "Wide Prior", state: { p_prior_var: 2, x_prior_mean: 0 } },
-      { label: "Shifted Prior", state: { p_prior_var: 1, x_prior_mean: 2 } },
-    ],
-    controls: ["x_prior_mean", "p_prior_var"]
+    }
   },
   {
-    title: "The Measurement Likelihood: z and R",
-    text: "A new <b>measurement</b> z provides additional information. However, measurements are noisy. The <b>measurement noise variance</b> R quantifies this uncertainty. We model the measurement as a Gaussian distribution centered at z with variance R.",
+    title: "Reconstruction and Aliasing",
+    text: "When we reconstruct a signal from samples, we assume it's the <b>lowest frequency sinusoid</b> that passes through all the sample points. If f<sub>s</sub> is too low, this reconstructed frequency (f<sub>alias</sub>) can be different from the original f. This is called <b>aliasing</b>.",
+    choices: [
+      { label: "No aliasing (f<sub>s</sub> > 2f)", preset: "typicalCase" },
+      { label: "Aliasing (f<sub>s</sub> < 2f)", preset: "slowSampling" },
+      { label: "Aliasing to DC (f<sub>s</sub> = f)", preset: "dcAlias" }
+    ],
+    controls: ["f", "fs"],
     draw: (id, s, r) => {
-      const x_min = Math.min(s.x_prior_mean - 3 * Math.sqrt(r.P_prior_safe), s.z_measurement - 3 * Math.sqrt(r.R_safe)) - 1;
-      const x_max = Math.max(s.x_prior_mean + 3 * Math.sqrt(r.P_prior_safe), s.z_measurement + 3 * Math.sqrt(r.R_safe)) + 1;
-
-      const pts_prior = [];
-      const pts_measurement = [];
-      for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
-        pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
-        pts_measurement.push([x, r.gaussian_pdf(x, s.z_measurement, r.R_safe)]);
-      }
-      V.line(id, [
-        { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
-        { name: "Measurement Likelihood (z, R)", pts: pts_measurement, color: V.color(2) },
-      ], {
-        title: "Prior and Measurement Likelihood",
-        xlabel: "State Value",
-        ylabel: "Probability Density",
-        xmin: x_min, xmax: x_max,
-        ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1]), ...pts_measurement.map(p => p[1])) * 1.1,
-        points: [
-          { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
-          { x: s.z_measurement, y: r.gaussian_pdf(s.z_measurement, s.z_measurement, r.R_safe), label: "z", color: V.color(2), r: 4 },
-        ]
+      const data = [
+        {
+          pts: r.t_continuous.map((t, i) => [t, r.y_continuous[i]]),
+          color: V.color(0),
+          name: `Original f = ${V.fmt(s.f)} Hz`
+        },
+        {
+          pts: r.t_samples.map((t, i) => [t, r.y_samples[i]]),
+          color: V.color(1),
+          name: `Samples (f<sub>s</sub> = ${V.fmt(s.fs)} Hz)`,
+          line: false,
+          dots: true
+        },
+        {
+          pts: r.t_continuous.map((t, i) => [t, r.y_alias[i]]),
+          color: V.color(2),
+          name: `Reconstructed f<sub>alias</sub> = ${V.fmt(r.f_alias)} Hz`,
+          dash: [5, 5]
+        }
+      ];
+      V.line(id, data, {
+        title: "Aliasing: Original vs. Reconstructed Signal",
+        xlabel: "Time (s)",
+        ylabel: "Amplitude",
+        xmin: 0,
+        xmax: s.t_max,
+        ymin: -s.A * 1.1,
+        ymax: s.A * 1.1
       });
-    },
-    choices: [
-      { label: "Precise Measurement", state: { r_noise_var: 0.1, z_measurement: 1 } },
-      { label: "Noisy Measurement", state: { r_noise_var: 2, z_measurement: 1 } },
-      { label: "Measurement Far From Prior", state: { r_noise_var: 0.5, z_measurement: 4 } },
-    ],
-    controls: ["z_measurement", "r_noise_var"]
+    }
   },
   {
-    title: "The Kalman Gain K: Weighing Information Sources",
-    text: "The <b>Kalman Gain K</b> determines how much we trust the new measurement versus our prior estimate. It's a weighting factor between 0 and 1. If the measurement is very certain (small R), K approaches 1, giving more weight to the measurement. If the prior is very certain (small P⁻), K approaches 0, giving more weight to the prior. <div class='eq'>K = P⁻ / (P⁻ + R)</div>",
+    title: "The Nyquist Rate",
+    text: "To avoid aliasing, the sampling frequency f<sub>s</sub> must be at least twice the highest frequency (f) in the signal. This minimum sampling rate, <b>2f</b>, is called the <b>Nyquist rate</b>. When f<sub>s</sub> ≥ 2f, then f<sub>alias</sub> = f.",
+    choices: [
+      { label: "Nyquist met (f<sub>s</sub> > 2f)", preset: "typicalCase" },
+      { label: "Exactly Nyquist (f<sub>s</sub> = 2f)", preset: "justNyquist" },
+      { label: "Aliasing (f<sub>s</sub> < 2f)", preset: "slowSampling" }
+    ],
+    controls: ["f", "fs"],
     draw: (id, s, r) => {
-      const [left, right] = V.split(id, 2, { cols: 2 });
+      const [left, right] = V.split(id, 2, { cols: 1 });
 
-      V.bars(left, [
-        { label: "P⁻", value: r.P_prior_safe, color: V.color(0) },
-        { label: "R", value: r.R_safe, color: V.color(2) },
-      ], {
-        title: "Relative Uncertainties",
-        ylabel: "Variance",
-        max: Math.max(r.P_prior_safe, r.R_safe, 1) * 1.2,
-        digits: 2
+      const data = [
+        {
+          pts: r.t_continuous.map((t, i) => [t, r.y_continuous[i]]),
+          color: V.color(0),
+          name: `Original f = ${V.fmt(s.f)} Hz`
+        },
+        {
+          pts: r.t_samples.map((t, i) => [t, r.y_samples[i]]),
+          color: V.color(1),
+          name: `Samples (f<sub>s</sub> = ${V.fmt(s.fs)} Hz)`,
+          line: false,
+          dots: true
+        },
+        {
+          pts: r.t_continuous.map((t, i) => [t, r.y_alias[i]]),
+          color: V.color(2),
+          name: `Reconstructed f<sub>alias</sub> = ${V.fmt(r.f_alias)} Hz`,
+          dash: [5, 5]
+        }
+      ];
+      V.line(left, data, {
+        title: "Signal and Alias",
+        xlabel: "Time (s)",
+        ylabel: "Amplitude",
+        xmin: 0,
+        xmax: s.t_max,
+        ymin: -s.A * 1.1,
+        ymax: s.A * 1.1
       });
 
       V.numberline(right, {
+        title: "Frequency Domain",
+        xlabel: "Frequency (Hz)",
+        min: 0,
+        max: Math.max(s.f * 2.5, s.fs * 1.5, 2.5),
         points: [
-          { x: 0, label: "0", color: V.ink },
-          { x: r.K, label: "K = " + V.fmt(r.K, 2), color: V.color(3), r: 6 },
-          { x: 1, label: "1", color: V.ink },
+          { x: s.f, label: `f = ${V.fmt(s.f)}`, color: V.color(0), r: 8 },
+          { x: s.fs, label: `f<sub>s</sub> = ${V.fmt(s.fs)}`, color: V.color(1), r: 8 },
+          { x: r.nyquist_rate, label: `2f = ${V.fmt(r.nyquist_rate)}`, color: V.color(3), r: 8 },
+          { x: r.f_alias, label: `f<sub>alias</sub> = ${V.fmt(r.f_alias)}`, color: V.color(2), r: 8 }
         ],
         spans: [
-          { from: 0, to: r.K, label: "Weight on Measurement", color: V.color(2), side: "above" },
-          { from: r.K, to: 1, label: "Weight on Prior", color: V.color(0), side: "below" },
-        ],
-        min: -0.1, max: 1.1,
-        title: "Kalman Gain K"
-      });
-    },
-    choices: [
-      { label: "Equal Uncertainty", state: { p_prior_var: 1, r_noise_var: 1 } },
-      { label: "Trust Measurement More", state: { p_prior_var: 1, r_noise_var: 0.1 } },
-      { label: "Trust Prior More", state: { p_prior_var: 0.1, r_noise_var: 1 } },
-    ],
-    controls: ["p_prior_var", "r_noise_var"]
-  },
-  {
-    title: "Updating the Mean: x̂",
-    text: "The <b>posterior mean</b> x̂ is a weighted average of the prior mean x̂⁻ and the measurement z. The Kalman Gain K acts as the weighting factor. If K is high, x̂ moves closer to z; if K is low, x̂ stays closer to x̂⁻. <div class='eq'>x̂ = x̂⁻ + K (z − x̂⁻)</div> This can also be written as x̂ = (1-K)x̂⁻ + Kz.",
-    draw: (id, s, r) => {
-      const x_min = Math.min(s.x_prior_mean, s.z_measurement, r.x_posterior_mean) - 1;
-      const x_max = Math.max(s.x_prior_mean, s.z_measurement, r.x_posterior_mean) + 1;
-
-      const d = V.diagram(id, 700, 250);
-      const Y = 120;
-      const X = V.scale(x_min, x_max, 50, 650);
-
-      d.line("axis", { x1: X(x_min), y1: Y, x2: X(x_max), y2: Y, stroke: V.ink, strokeWidth: 1 });
-
-      d.circle("x_prior_mean", { cx: X(s.x_prior_mean), cy: Y, r: 8, fill: V.color(0) });
-      d.text("x_prior_mean_label", X(s.x_prior_mean), Y - 25, `x̂⁻ = ${V.fmt(s.x_prior_mean)}`, { textAnchor: "middle", fill: V.color(0) });
-
-      d.circle("z_measurement", { cx: X(s.z_measurement), cy: Y, r: 8, fill: V.color(2) });
-      d.text("z_measurement_label", X(s.z_measurement), Y - 25, `z = ${V.fmt(s.z_measurement)}`, { textAnchor: "middle", fill: V.color(2) });
-
-      d.arrow("residual_arrow", X(s.x_prior_mean), Y + 50, X(s.z_measurement), Y + 50, { stroke: V.muted, strokeWidth: 2, strokeDasharray: "5 5" });
-      d.text("residual_label", X(s.x_prior_mean + (s.z_measurement - s.x_prior_mean) / 2), Y + 70, `(z - x̂⁻) = ${V.fmt(s.z_measurement - s.x_prior_mean)}`, { textAnchor: "middle", fill: V.muted });
-
-      d.arrow("k_residual_arrow", X(s.x_prior_mean), Y + 100, X(s.x_prior_mean + r.K * (s.z_measurement - s.x_prior_mean)), Y + 100, { stroke: V.color(3), strokeWidth: 3 });
-      d.text("k_residual_label", X(s.x_prior_mean + r.K * (s.z_measurement - s.x_prior_mean) / 2), Y + 120, `K(z - x̂⁻) = ${V.fmt(r.K * (s.z_measurement - s.x_prior_mean))}`, { textAnchor: "middle", fill: V.color(3) });
-
-      d.circle("x_posterior_mean", { cx: X(r.x_posterior_mean), cy: Y, r: 10, fill: V.color(1) });
-      d.text("x_posterior_mean_label", X(r.x_posterior_mean), Y + 25, `x̂ = ${V.fmt(r.x_posterior_mean)}`, { textAnchor: "middle", fill: V.color(1), fontWeight: "bold" });
-
-      d.end();
-    },
-    choices: [
-      { label: "K = 0.5", state: { p_prior_var: 1, r_noise_var: 1, x_prior_mean: 0, z_measurement: 2 } },
-      { label: "K ≈ 1 (Trust Z)", state: { p_prior_var: 1, r_noise_var: 0.01, x_prior_mean: 0, z_measurement: 2 } },
-      { label: "K ≈ 0 (Trust X̂⁻)", state: { p_prior_var: 0.01, r_noise_var: 1, x_prior_mean: 0, z_measurement: 2 } },
-    ],
-    controls: ["x_prior_mean", "z_measurement"]
-  },
-  {
-    title: "Updating the Variance: P",
-    text: "The <b>posterior variance</b> P represents the uncertainty of our new estimate. It is always less than or equal to both the prior variance P⁻ and the measurement noise R, meaning the update always reduces uncertainty. <div class='eq'>P = (1 − K) P⁻</div> This formula shows that as K approaches 1 (trusting the measurement more), P approaches 0 (very certain). If K approaches 0 (trusting the prior more), P approaches P⁻.",
-    draw: (id, s, r) => {
-      V.bars(id, [
-        { label: "P⁻ (Prior Variance)", value: r.P_prior_safe, color: V.color(0) },
-        { label: "R (Measurement Noise)", value: r.R_safe, color: V.color(2) },
-        { label: "P (Posterior Variance)", value: r.p_posterior_var, color: V.color(1) },
-      ], {
-        title: "Variance Reduction",
-        ylabel: "Variance",
-        max: Math.max(r.P_prior_safe, r.R_safe, 1) * 1.2,
-        digits: 3,
-        ref: [
-          { value: r.P_prior_safe, label: "P⁻", color: V.color(0) },
-          { value: r.R_safe, label: "R", color: V.color(2) },
+          { from: 0, to: r.nyquist_rate / 2, label: "Nyquist Interval", color: V.color(5), side: "above" }
         ]
       });
-    },
-    choices: [
-      { label: "Equal Uncertainty", state: { p_prior_var: 1, r_noise_var: 1 } },
-      { label: "Measurement Very Certain", state: { p_prior_var: 1, r_noise_var: 0.1 } },
-      { label: "Prior Very Certain", state: { p_prior_var: 0.1, r_noise_var: 1 } },
-    ],
-    controls: ["p_prior_var", "r_noise_var"]
-  },
-  {
-    title: "The Full Measurement Update",
-    text: "The Kalman filter measurement update combines the prior belief (x̂⁻, P⁻) and the measurement likelihood (z, R) to produce the posterior belief (x̂, P). The Kalman Gain K balances their influence. The posterior is always narrower (less uncertain) than either input, representing a more informed estimate. <div class='eq'>K = P⁻ / (P⁻ + R)</div> <div class='eq'>x̂ = x̂⁻ + K (z − x̂⁻)</div> <div class='eq'>P = (1 − K) P⁻</div>",
-    draw: (id, s, r) => {
-      const x_min = Math.min(s.x_prior_mean - 3 * Math.sqrt(r.P_prior_safe), s.z_measurement - 3 * Math.sqrt(r.R_safe), r.x_posterior_mean - 3 * Math.sqrt(r.p_posterior_var)) - 1;
-      const x_max = Math.max(s.x_prior_mean + 3 * Math.sqrt(r.P_prior_safe), s.z_measurement + 3 * Math.sqrt(r.R_safe), r.x_posterior_mean + 3 * Math.sqrt(r.p_posterior_var)) + 1;
-
-      const pts_prior = [];
-      const pts_measurement = [];
-      const pts_posterior = [];
-      for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
-        pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
-        pts_measurement.push([x, r.gaussian_pdf(x, s.z_measurement, r.R_safe)]);
-        pts_posterior.push([x, r.gaussian_pdf(x, r.x_posterior_mean, r.p_posterior_var)]);
-      }
-
-      V.line(id, [
-        { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
-        { name: "Measurement Likelihood (z, R)", pts: pts_measurement, color: V.color(2) },
-        { name: "Posterior (x̂, P)", pts: pts_posterior, color: V.color(1), line: true },
-      ], {
-        title: "Complete Kalman Measurement Update",
-        xlabel: "State Value",
-        ylabel: "Probability Density",
-        xmin: x_min, xmax: x_max,
-        ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1]), ...pts_measurement.map(p => p[1]), ...pts_posterior.map(p => p[1])) * 1.1,
-        points: [
-          { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
-          { x: s.z_measurement, y: r.gaussian_pdf(s.z_measurement, s.z_measurement, r.R_safe), label: "z", color: V.color(2), r: 4 },
-          { x: r.x_posterior_mean, y: r.gaussian_pdf(r.x_posterior_mean, r.x_posterior_mean, r.p_posterior_var), label: "x̂", color: V.color(1), r: 4 },
-        ],
-        vlines: [
-          { x: r.x_posterior_mean, label: `x̂ = ${V.fmt(r.x_posterior_mean)}`, color: V.color(1) }
-        ],
-        hlines: [
-          { y: 0.05, label: `K = ${V.fmt(r.K)}`, color: V.color(3) },
-          { y: 0.02, label: `P = ${V.fmt(r.p_posterior_var)}`, color: V.color(1) }
-        ]
-      });
-    },
-    choices: [
-      { label: "Typical Case", preset: "typicalCase" },
-      { label: "High Measurement Trust", preset: "highMeasurementTrust" },
-      { label: "High Prior Trust", preset: "highPriorTrust" },
-    ],
-    controls: ["x_prior_mean", "p_prior_var"]
-  },
+    }
+  }
 ];
 </script>
 <script>

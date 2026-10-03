@@ -154,28 +154,32 @@ passing calculation.
 ## Measured results
 
 **Final batch:** each case was run once through `agent.py` with exactly
-`python agent.py --input <case>.json --output <dir> --model google/gemini-2.5-flash`, on the final commit, with
-nothing post-processed. Every run exited 0, wrote exactly `index.html` and `trace.jsonl`, stayed inside 10 requests,
-30k completion tokens and 10 minutes, and loaded in Chromium without JavaScript errors.
+`python agent.py --input <case>.json --output <dir> --model google/gemini-2.5-flash`, on the submitted code, with
+nothing post-processed. Every run exited 0, wrote exactly `index.html` and `trace.jsonl`, and stayed inside 10
+requests, 30k completion tokens and 10 minutes.
 
 | Case | Calls | Total tokens | Time | Final status |
 |---|---|---|---|---|
-| **Held-out:** scalar Kalman update (Kalman 1960) | 1 | 17.2k | 51 s | clean (example output below) |
-| **Held-out:** sampling and aliasing (Shannon 1949, Thm 1) | 2 | 36.7k | 70 s | clean |
-| **Held-out:** Huffman construction (Huffman 1952) | 1 | 14.7k | 41 s | 1 minor issue |
-| Scaled dot-product attention (Sec. 3.2.1) | 2 | 37.2k | 72 s | clean |
-| Shannon entropy (Sec. 6) | 3 | 38.1k | 55 s | clean |
-| Adam bias correction (Alg. 1, iterative) | 1 | 16.7k | 51 s | clean |
-| Bayes' rule, base-rate fallacy | 1 | 17.3k | 51 s | 1 minor issue |
-| MLP forward pass (Rumelhart et al. 1986, Eq. 1–2) | 1 | 16.3k | 48 s | 4 minor issues |
-| Convolution + sub-sampling (LeCun et al. 1998, Sec. II.A) | 1 | 16.4k | 49 s | 4 minor issues |
-| word2vec analogies (Sec. 1, 5) | 2 | 40.3k | 79 s | minor issues |
-| Batch Normalization (Alg. 1) | 2 | 37.6k | 74 s | minor issues |
-| PageRank (Sec. 2.4, 2.6, iterative) | 3 | 61.6k | 104 s | **failed:** model-written transition matrix gives NaN; repairs did not fix it, so the best (first) version was kept |
+| **Held-out:** sampling and aliasing (Shannon 1949, Thm 1) | 1 | 13.1k | 32 s | clean (example output below) |
+| **Held-out:** scalar Kalman update (Kalman 1960) | 2 | 40.6k | 75 s | works; 4 minor issues |
+| **Held-out:** Huffman construction (Huffman 1952) | 2 | 28.9k | 44 s | **failed:** the model's `compute()` stringifies a self-referencing object and throws on load |
+| Shannon entropy (Sec. 6) | 1 | 14.8k | 34 s | clean |
+| Bayes' rule, base-rate fallacy | 1 | 14.8k | 35 s | clean |
+| MLP forward pass (Rumelhart et al. 1986, Eq. 1–2) | 2 | 40.4k | 72 s | works; 4 minor issues |
+| word2vec analogies (Sec. 1, 5) | 2 | 36.1k | 64 s | works; 3 minor issues |
+| PageRank (Sec. 2.4, 2.6, iterative) | 2 | 41.6k | 74 s | works; 2 minor issues |
+| Batch Normalization (Alg. 1) | 2 | 35.8k | 62 s | works; 3 minor issues |
+| Convolution + sub-sampling (LeCun et al. 1998, Sec. II.A) | 2 | 29.9k | 49 s | works; one slide has mis-positioned shapes |
+| Scaled dot-product attention (Sec. 3.2.1) | 2 | 40.9k | 74 s | works; 5 minor issues |
+| Adam bias correction (Alg. 1, iterative) | 3 | 40.7k | 78 s | works; its scenario presets carry iteration history that does not round-trip |
 
 The held-out cases were written after the prompt was finalised and are never referenced by it. "Minor issues" are
 non-fatal checker findings, such as an edge case at a control extreme or a pruned model-written self-check.
-PageRank is our hardest case and the one whose quality varies most between runs.
+
+**Variance.** Over several full batches on the final code, about 1–3 of 12 runs per batch ended with a
+model-written code error that the repair round could not fix, and *which* case failed changed from batch to batch
+(PageRank, Huffman, entropy, Bayes and MLP each failed once). The trace always records the remaining errors. Each
+recurring failure *pattern* was turned into a deterministic engine fix rather than a prompt rule.
 
 We also verified:
 - a clean-room install (fresh clone, fresh venv, exact command above);
@@ -183,11 +187,8 @@ We also verified:
   generation completed from the case text);
 - a second model family (`openai/gpt-4.1-mini`).
 
-During development, failures were always model-written code errors the repair round could not fix. Each
-recurring pattern was turned into a deterministic library fix rather than a prompt rule.
-
-**Example input/output pair:** [examples/output/kalman/](examples/output/kalman/) holds `case.json`, `index.html`
-and `trace.jsonl` from the final batch, exactly as the agent wrote them.
+**Example input/output pair:** [examples/output/aliasing/](examples/output/aliasing/) holds `case.json`,
+`index.html` and `trace.jsonl` from the final batch, exactly as the agent wrote them.
 
 ## Files
 
@@ -204,7 +205,7 @@ and `trace.jsonl` from the final batch, exactly as the agent wrote them.
 | `p2p/vizlib.js`, `p2p/mathlib.js` | Drawing tools and numeric helpers embedded in every page |
 | `examples/*.json` | Practice inputs (the two public examples plus seven of ours) |
 | `examples/heldout/*.json` | Held-out inputs, used only for testing |
-| `examples/output/kalman/` | Example input/output pair with its trace |
+| `examples/output/aliasing/` | Example input/output pair with its trace |
 | `tools/` | Development-only scripts, never used by the agent: browser smoke test, slide screenshots and contact sheets, an A/B script for a one-shot prompt, and `reassemble.py`, which rebuilds a saved debug run with the current library so library fixes could be compared on identical model output during development. None of the reported results use it. |
 
 ## Credits and reuse
