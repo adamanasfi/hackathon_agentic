@@ -8,6 +8,7 @@ from .prompts import BLOCKS
 
 TEMPLATE = os.path.join(os.path.dirname(__file__), "template.html")
 MATHLIB = os.path.join(os.path.dirname(__file__), "mathlib.js")
+VIZLIB = os.path.join(os.path.dirname(__file__), "vizlib.js")
 MARK = re.compile(r"^[ \t]*@@([A-Z]+(?:[ \t]+[A-Z]+)?)[ \t]*$", re.M)
 
 
@@ -99,6 +100,7 @@ def assemble(blocks, case):
         "%%TESTS%%": _js(tests_js),
         "%%UI%%": _js(blocks.get("UI", "")),
         "%%MATHLIB%%": open(MATHLIB, encoding="utf-8").read(),
+        "%%VIZLIB%%": open(VIZLIB, encoding="utf-8").read(),
     }
     # single pass so generated content containing %%X%% is never re-substituted
     return re.sub("|".join(re.escape(k) for k in rep), lambda m: rep[m.group(0)], page)

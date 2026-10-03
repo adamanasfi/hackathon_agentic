@@ -226,10 +226,45 @@ var V = (function(){
   function resize(M, rows, cols, fill){ fill = fill === undefined ? 0 : fill; var A = Array.isArray(M) ? M : [], out = [], i, j;
     for (i = 0; i < rows; i++) { if (cols === undefined) out.push(A[i] === undefined || A[i] === null ? fill : A[i]);
       else { var row = []; for (j = 0; j < cols; j++) row.push(Array.isArray(A[i]) && A[i][j] !== undefined && A[i][j] !== null ? A[i][j] : fill); out.push(row); } } return out; }
+  function chkNum(f, what, v){ if (typeof v !== 'number' || !isFinite(v)) __err(f + ': ' + what + ' is ' + v + ' (must be a finite number)'); }
+  function tryDrag(f, fn, x, y){ if (typeof fn !== 'function') return; try { fn(x, y); } catch (e) { __err(f + ': drag callback threw: ' + (e && e.message)); } }
+  function space(id, o){ __need(id, 'V.space'); o = o || {}; var f = "V.space('" + id + "')";
+    (o.vectors || []).forEach(function(v, i){ chkNum(f, 'vectors[' + i + '].x', v && v.x); chkNum(f, 'vectors[' + i + '].y', v && v.y); if (v) tryDrag(f, v.drag, v.x, v.y); });
+    (o.points || []).forEach(function(p, i){ chkNum(f, 'points[' + i + '].x', p && p.x); chkNum(f, 'points[' + i + '].y', p && p.y); if (p) tryDrag(f, p.drag, p.x, p.y); });
+    (o.lines || []).forEach(function(l, i){ ['x1', 'y1', 'x2', 'y2'].forEach(function(k){ chkNum(f, 'lines[' + i + '].' + k, l && l[k]); }); });
+    if (!(o.vectors || []).length && !(o.points || []).length) __warn(f + ' has no vectors or points');
+    return {X: function(v){ return v; }, Y: function(v){ return v; }, scale: 1}; }
+  function network(id, o){ __need(id, 'V.network'); o = o || {}; var f = "V.network('" + id + "')";
+    if (!Array.isArray(o.layers) || !o.layers.length || o.layers.some(function(n){ return !(n >= 1); })) __err(f + ': layers must be an array of node counts, e.g. [2, 3, 1]');
+    (o.values || []).forEach(function(r, l){ (r || []).forEach(function(v, i){ if (typeof v === 'number' && !isFinite(v)) __err(f + ': values[' + l + '][' + i + '] is ' + v); }); });
+    (o.weights || []).forEach(function(M, l){ (M || []).forEach(function(r){ (r || []).forEach(function(v){ if (typeof v === 'number' && !isFinite(v)) __err(f + ': weights[' + l + '] has ' + v); }); }); }); return {}; }
+  function graph(id, o){ __need(id, 'V.graph'); o = o || {}; var f = "V.graph('" + id + "')", N = o.nodes || [], ids = {};
+    if (!N.length) __err(f + ': nodes must be a non-empty array of {id, label, value}');
+    N.forEach(function(n, i){ ids[n && n.id !== undefined ? n.id : i] = 1; if (n && n.value !== undefined && (typeof n.value !== 'number' || !isFinite(n.value))) __err(f + ': nodes[' + i + '].value is ' + n.value); });
+    (o.edges || []).forEach(function(e, k){ if (!e || !(e.from in ids) || !(e.to in ids)) __err(f + ': edges[' + k + '] refers to unknown node (from/to must be node ids or indices)'); if (e && e.w !== undefined && (typeof e.w !== 'number' || !isFinite(e.w))) __err(f + ': edges[' + k + '].w is ' + e.w); });
+    return {pos: []}; }
+  function flow(id, o){ __need(id, 'V.flow'); o = o || {}; if (!Array.isArray(o.steps) || !o.steps.length) __err("V.flow('" + id + "'): steps must be a non-empty array of {label, value}");
+    (o.steps || []).forEach(function(st, i){ if (st && typeof st.value === 'number' && !isFinite(st.value)) __err("V.flow('" + id + "'): steps[" + i + '].value is ' + st.value); if (st && /NaN|undefined/.test(String(st.value))) __err("V.flow('" + id + "'): steps[" + i + '] shows ' + st.value); }); return {}; }
+  function pixels(id, M, o){ __need(id, 'V.pixels'); var f = "V.pixels('" + id + "')";
+    if (!Array.isArray(M) || !M.length) { __err(f + ': M must be a 2-D array of numbers'); return {}; }
+    M.forEach(function(r, i){ (Array.isArray(r) ? r : [r]).forEach(function(v, j){ if (typeof v !== 'number' || !isFinite(v)) __err(f + ': cell [' + i + ',' + j + '] is ' + v); }); });
+    o = o || {}; (o.windows || (o.window ? [o.window] : [])).forEach(function(w){ if (!w || !(w.r >= 0) || !(w.c >= 0) || w.r + (w.h || 1) > M.length || w.c + (w.w || 1) > (M[0] || []).length) __warn(f + ': window outside the grid'); });
+    return {cell: 30, x0: 0, y0: 0}; }
+  function curve(id, o){ __need(id, 'V.curve'); o = o || {}; var f = "V.curve('" + id + "')";
+    if (typeof o.f !== 'function' && !Array.isArray(o.pts)) { __err(f + ': needs f: x => y (with xmin, xmax) or pts: [[x, y], ...]'); return {}; }
+    if (typeof o.f === 'function') { var ok = 0, a = o.xmin === undefined ? -5 : o.xmin, b = o.xmax === undefined ? 5 : o.xmax;
+      for (var i = 0; i <= 20; i++) { var y; try { y = o.f(a + (b - a) * i / 20); } catch (e) { __err(f + ': f threw: ' + e.message); return {}; } if (typeof y === 'number' && isFinite(y)) ok++; }
+      if (!ok) __err(f + ': f gives no finite values on [xmin, xmax]'); }
+    if (o.ball) chkNum(f, 'ball.x', o.ball.x); return {X: function(v){ return v; }, Y: function(v){ return v; }}; }
+  function waffle(id, o){ __need(id, 'V.waffle'); o = o || {}; if (!Array.isArray(o.groups) || !o.groups.length) __err("V.waffle('" + id + "'): groups must be a non-empty array of {n, label, color}");
+    (o.groups || []).forEach(function(g, i){ chkNum("V.waffle('" + id + "')", 'groups[' + i + '].n', g && g.n); }); return {}; }
+  function transform(id, o){ __need(id, 'V.transform'); o = o || {}; var M = o.M;
+    if (!Array.isArray(M) || M.length !== 2 || !M.every(function(r){ return Array.isArray(r) && r.length === 2 && r.every(function(v){ return typeof v === 'number' && isFinite(v); }); })) __err("V.transform('" + id + "'): M must be a finite 2x2 matrix");
+    return {X: function(v){ return v; }, Y: function(v){ return v; }, scale: 1}; }
   var api = {ink: '#e6edf3', muted: '#8b949e', bg: '#131922', $: $, $$: function(){ return []; }, fmt: fmt, num: num, val: val, set: set, clamp: function(x, a, b){ return Math.min(b, Math.max(a, x)); }, color: function(){ return '#000'; },
-    diagram: diagram, bars: bars, line: line, matrix: matrix, editGrid: editGrid, readGrid: readGrid, table: table, ticks: function(){ return [0, 1]; }, resize: resize, split: split, scale: function(d0, d1, r0, r1){ return function(v){ return r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0); }; }, stage: Infinity, syncOut: function(){}, update: function(){}, apply: function(){} };
+    diagram: diagram, bars: bars, line: line, matrix: matrix, editGrid: editGrid, readGrid: readGrid, table: table, ticks: function(){ return [0, 1]; }, resize: resize, split: split, space: space, network: network, graph: graph, flow: flow, pixels: pixels, curve: curve, waffle: waffle, transform: transform, setCell: function(){}, scale: function(d0, d1, r0, r1){ return function(v){ return r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0); }; }, stage: Infinity, syncOut: function(){}, update: function(){}, apply: function(){} };
   return new Proxy(api, {get: function(t, k){ if (k in t || typeof k === 'symbol') return t[k];
-    __err('V.' + String(k) + ' does not exist in the helper library (available: ink, muted, bg, $, $$, fmt, num, val, set, clamp, color, resize, split, scale, bars, line, matrix, editGrid, readGrid, table, diagram). The template already shows invariants() and TESTS; do not render them yourself.');
+    __err('V.' + String(k) + ' does not exist in the helper library (available: ink, muted, bg, $, $$, fmt, num, val, set, clamp, color, resize, split, scale, bars, line, matrix, editGrid, readGrid, table, diagram, space, network, graph, flow, pixels, curve, waffle, transform, setCell). The template already shows invariants() and TESTS; do not render them yourself.');
     return function(){ return ''; }; }});
 })();
 """

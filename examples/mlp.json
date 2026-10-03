@@ -1,0 +1,8 @@
+{
+  "source_url": "https://www.nature.com/articles/323533a0",
+  "title": "Learning representations by back-propagating errors (Rumelhart, Hinton, Williams, 1986)",
+  "section": "Forward pass equations (1)-(2) and the XOR-style hidden-unit example",
+  "excerpt": "The total input, x_j, to unit j is a linear function of the outputs, y_i, of the units that are connected to j and of the weights, w_ji, on these connections: x_j = Σ_i y_i w_ji (1). Units can be given biases by introducing an extra input to each unit which always has a value of 1. ... A unit has a real-valued output, y_j, which is a non-linear function of its total input: y_j = 1 / (1 + e^{-x_j}) (2). ... The aim is to find a set of weights that ensure that for each input vector the output vector produced by the network is the same as (or sufficiently close to) the desired output vector. ... Hidden units which are not part of the input or output come to represent important features of the task domain.",
+  "focus": "Explain the forward pass of a tiny 2-2-1 multilayer network with sigmoid units (equations 1 and 2). Let the learner set the two inputs and some weights/biases. Show the network as a graph where edge thickness and colour show weights and node colour shows activation, with each unit's total input x_j and output y_j. Show the sigmoid curve with the current x_j marked. Demonstrate weights that make the network compute XOR on the four binary inputs. Check that sigmoid(0)=0.5 and outputs stay in (0,1). Explain that this shows only the forward pass; learning the weights by back-propagation is not simulated.",
+  "audience": "Engineering undergraduate who knows weighted sums and functions but not neural networks."
+}

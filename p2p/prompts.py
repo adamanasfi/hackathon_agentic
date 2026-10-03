@@ -46,6 +46,18 @@ HTML: exactly two <div class="card explore" data-show-slide="k" data-show-preset
 HTML: <div class="grid2"><div class="card from-paper"><h3>Stated in the paper</h3><ul>claims supported by the excerpt, each tagged with its section/equation</ul></div><div class="card ours"><h3>Our simplifications &amp; examples</h3><ul>toy values, sizes, visual choices, analogies, anything not from the excerpt</ul></div></div>
 @@END
 
+# Visual vocabulary — pick the picture that matches the concept (3Blue1Brown style), not a table of numbers
+- Vectors, embeddings, similarity, dot products, attention geometry -> V.space: arrows in a 2-D space; similar items land close (show clusters with regions), angle arcs, projections as dashed lines; make the key vector draggable.
+- Neural networks, layers, perceptrons, backprop -> V.network: nodes = units (fill = activation), edges = weights (width = |w|, teal +, coral −); highlight the active layer.
+- Graphs, PageRank, Markov chains, message passing -> V.graph: node size = value, weighted arrows; animate values with the Run loop.
+- Multi-stage algorithms / data flow -> V.flow with live values in each stage and the current stage active.
+- Images, convolution, receptive fields, pooling -> V.pixels with a window that moves with a control.
+- Optimisation, loss landscapes, gradients, calculus -> V.curve with a ball at the current parameter, its tangent and the trail of past steps.
+- Probability, base rates, Bayes, sampling -> V.waffle (a population of dots) plus bars.
+- Linear maps, matrices acting on space, eigenvectors -> V.transform.
+- Distributions / per-item quantities -> V.bars; time series / curves -> V.line; a matrix ONLY when the matrix itself is the object of study, and then pair it with a geometric view.
+Use at least 3 different visual kinds across the slides; a slide may combine a geometric view with a small chart via V.split.
+
 # Helper library V (already loaded)
 V.$(id); V.num(id) -> parseFloat of control (checkbox -> 0/1); V.val(id) -> raw value (checkbox -> boolean); V.set(id, v); V.fmt(x, digits=3); V.clamp(x,a,b); V.color(i) categorical colour; V.resize(arr, n) / V.resize(M, rows, cols). Nothing else exists in V. The template already displays invariants() and TESTS — do not render them.
 V.bars(id, [{label, value, color?}], {title, min, max, digits, unit, ylabel, xlabel, colorBy:"index", ref:[{value,label,color}]})
@@ -53,6 +65,14 @@ V.line(id, [{name?, pts:[[x,y],…], color?, dash?, dots?, line?:false, r?}], {t
 V.matrix(id, M, {title, rows:[labels], cols:[labels], digits, max, diverging, hl:[[i,j]]}) — colour-scaled numeric table
 V.editGrid(id, M, {title, rows, cols, step, force}) and V.readGrid(id) -> numbers matrix — editable matrix input
 V.table(id, headerArray, rowsArrays, {digits}) — values table (numbers auto-formatted)
+V.space(id, {vectors:[{x,y,label,color,from:[x0,y0],opacity,drag:(x,y)=>{…}}], points:[{x,y,label,color,r,drag}], lines:[{x1,y1,x2,y2,label,color}], arcs:[{a,b,label}] (angle between vectors a,b), regions:[{x,y,r,label,color}], xmin,xmax,ymin,ymax, title, xlabel, ylabel}) — equal-aspect 2-D space. drag callbacks write the new position into controls (V.set(id, x) or V.setCell(gridId, i, j, v)); the page then recomputes.
+V.network(id, {layers:[2,3,1], values:[[…],[…],[…]] (activations per layer), weights:[W0 (n1×n0), W1 …], labels:[[…],[],[…]], layerNames:[…], active: layerIndex, edgeLabels:true, title})
+V.graph(id, {nodes:[{id,label,value,color,x?,y?,active}], edges:[{from,to,w,label,color}], title, digits}) — circular layout unless x,y in [0,1] given.
+V.flow(id, {steps:[{label, value, note, color}], active: i, arrowLabels:[…], title})
+V.pixels(id, M, {window:{r,c,h,w,label} or windows:[…], values:true, gray:false, max, title})
+V.curve(id, {f: x => y, xmin, xmax, ball:{x,label}, tangent:{x}, trail:[x…], title, xlabel, ylabel})
+V.waffle(id, {groups:[{n, label, color}], cols, title})
+V.transform(id, {M:[[a,b],[c,d]], t: 0..1 (animate from identity), vectors:[{x,y,label}], title})
 V.scale(d0, d1, r0, r1) -> function mapping data values to pixels (use it inside diagrams).
 const d = V.diagram(id, w, h); d.rect(key,{x,y,width,height,fill,stroke,rx}); d.circle(key,{cx,cy,r,fill}); d.line(key,{x1,y1,x2,y2,stroke,strokeWidth,strokeDasharray}); d.path(key,{d,stroke,fill}); d.arrow(key,x1,y1,x2,y2,{stroke,strokeWidth}); d.text(key,x,y,str,{textAnchor,fontSize,fontWeight,fill}); d.end() — keyed elements; calling again with the same key ANIMATES smoothly to the new geometry (3Blue1Brown-style). Always call d.end() after drawing. Use for custom mechanism diagrams (boxes, arrows, flows, geometry).
 const [a, b] = V.split(id, 2, {cols}) — splits a slide's container into panels (ids id-0, id-1, …; stacked by default, cols:3 puts small matrices side by side) so one slide can show e.g. Q, K and QKᵀ together; draw into those ids. Never invent other ids.

@@ -43,6 +43,9 @@ li::marker{color:var(--ink)}
 .cslide{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:40px;align-items:start;max-width:1300px;margin:0 auto}
 .stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-height:380px;display:flex;flex-direction:column;justify-content:center}
 .stage .viz{border:0;background:transparent;margin:0;padding:0}
+.stage,.stage .viz,.stage .viz>div{min-width:0;max-width:100%}
+.stage{overflow:auto}
+.stage table.mx{font-size:.85rem}
 .side{padding-top:4px}
 .side .stext{font-size:1.08rem;color:var(--ink)}
 .slide-ctrls:not(:empty){border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0 4px;margin:16px 0}
@@ -510,7 +513,7 @@ const V = (function () {
     if (host._split !== n) {
       host.innerHTML = "";
       host.style.display = "grid";
-      host.style.gridTemplateColumns = "repeat(" + (o.cols || 1) + ", minmax(0, 1fr))";
+      host.style.gridTemplateColumns = (o.cols || 1) > 1 ? "repeat(auto-fit, minmax(360px, 1fr))" : "minmax(0, 1fr)";
       host.style.gap = "10px"; host.style.alignItems = "center";
       for (let i = 0; i < n; i++) { const c = document.createElement("div"); c.id = id + "-" + i; host.appendChild(c); }
       host._split = n;
@@ -525,6 +528,9 @@ const V = (function () {
   /* unknown helpers degrade to no-ops instead of breaking the page */
   return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; if (!warned.has(k)) { warned.add(k); console.warn("V." + String(k) + " is not a helper"); } return () => ""; } });
 })();
+</script>
+<script>
+%%VIZLIB%%
 </script>
 <script>
 %%MATHLIB%%

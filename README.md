@@ -58,6 +58,23 @@ slides. The deck runs in this order:
    with a "Try it in the playground" button.
 5. A sources-and-checks slide: from the paper vs. our simplifications, plus the built-in calculation checks.
 
+The template also provides a **visual vocabulary** ([p2p/vizlib.js](p2p/vizlib.js)) of 3Blue1Brown-style semantic
+primitives. The prompt teaches the agent which one fits each kind of concept:
+
+| Primitive | Used for |
+|---|---|
+| `V.space` | Vectors and embeddings in a 2-D space: similar items cluster, angle arcs, projections, **draggable** vectors |
+| `V.network` | Neural networks: edge width and colour = weight, node fill = activation |
+| `V.graph` | PageRank, Markov chains, message passing: node size = value, weighted arrows |
+| `V.flow` | Multi-stage algorithms, with live values per stage |
+| `V.pixels` | Images, convolution, pooling, with an animated sliding window |
+| `V.curve` | Optimisation and calculus: a ball on the curve, its tangent, and the trail of past steps |
+| `V.waffle` | Probability and base rates: a population of dots |
+| `V.transform` | Linear maps: the plane's grid warped by a 2×2 matrix |
+
+Everything is SVG generated live from `compute()`, with no video or canned images. We considered Manim, but it
+renders videos and needs ffmpeg/LaTeX system packages, which the rules exclude.
+
 The template also provides two helper libraries:
 - `V`: animated SVG bar, line and scatter charts, heatmaps, editable matrices, multi-panel splits, and keyed
   diagram primitives that tween smoothly between states. A diagram's viewBox auto-fits its contents, so nothing is
@@ -131,7 +148,7 @@ completed from the case text.
 | `p2p/latex.py` | Deterministic LaTeX → HTML converter |
 | `p2p/assemble.py` | Block parser, search/replace edit applier, template assembly |
 | `p2p/source.py` | Excerpt handling and best-effort source fetch |
-| `p2p/template.html`, `p2p/mathlib.js` | Generic page template and helper libraries |
+| `p2p/template.html`, `p2p/vizlib.js`, `p2p/mathlib.js` | Generic slide-deck template, semantic visual primitives, numeric helpers |
 | `examples/*.json` | Practice inputs (our own; the two public examples plus three others) |
 | `examples/output/entropy/` | One example input/output pair with its trace |
 | `tools/` | Development-only scripts (browser smoke test, re-assembly); not used by the agent |
