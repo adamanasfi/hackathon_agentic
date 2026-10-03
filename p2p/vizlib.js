@@ -141,9 +141,39 @@
     return d;
   }
 
+  /* ---- row layout of V.graph: items in a row, weighted links as arcs above them (arc diagram) ---- */
+  function graphRow(id, o) {
+    const N = o.nodes || [], E = o.edges || [], n = Math.max(1, N.length), top = o.title ? 30 : 8;
+    const W = o.w || fitW(id, 680), slot = (W - 40) / n, bw = Math.min(110, slot * 0.86), bh = 44;
+    const idx = new Map(N.map((nd, i) => [nd.id === undefined ? i : nd.id, i]));
+    const wmax = sticky(id, "w", 0, Math.max(1e-9, ...E.map((e) => (fin(e.w) ? Math.abs(e.w) : 1))))[1];
+    let maxSpan = 1; E.forEach((e) => { const a = idx.get(e.from), b = idx.get(e.to); if (a !== undefined && b !== undefined) maxSpan = Math.max(maxSpan, Math.abs(a - b)); });
+    const archH = Math.min(220, 40 + maxSpan * slot * 0.42), baseY = top + archH + 18, H = o.h || baseY + bh + 46;
+    const d = diagram(id, W, H, "\u0001graphrow\u0001");
+    const cx = (i) => 20 + slot * i + slot / 2;
+    if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    const vmax = sticky(id, "v", 0, Math.max(1e-9, ...N.map((nd) => (fin(nd.value) ? Math.abs(nd.value) : 0))))[1];
+    E.forEach((e, k) => {
+      const a = idx.get(e.from), b = idx.get(e.to); if (a === undefined || b === undefined || a === b) return;
+      const t = fin(e.w) ? Math.abs(e.w) / wmax : 0.5, x1 = cx(a), x2 = cx(b), h = 26 + Math.abs(b - a) * slot * 0.42;
+      const c = e.color || TEAL;
+      d.path("e" + k, { d: "M" + x1 + " " + baseY + " C" + x1 + " " + (baseY - h) + " " + x2 + " " + (baseY - h) + " " + x2 + " " + baseY, stroke: c, strokeWidth: 1 + 9 * t, opacity: 0.18 + 0.82 * t, strokeLinecap: "round" });
+      if (e.label !== undefined) d.text("el" + k, (x1 + x2) / 2, baseY - h * 0.75 - 6, typeof e.label === "number" ? num(e.label, 2) : e.label, { textAnchor: "middle", fill: c, fontSize: 12, fontWeight: 600 });
+    });
+    N.forEach((nd, i) => {
+      const t = fin(nd.value) ? Math.abs(nd.value) / vmax : 0, c = nd.color || (nd.active ? GOLD : TEAL);
+      d.rect("n" + i, { x: cx(i) - bw / 2, y: baseY, width: bw, height: bh, rx: 8, fill: nd.active ? "rgba(226,184,107,.22)" : "rgba(79,179,191," + (0.08 + 0.6 * t).toFixed(3) + ")", stroke: nd.active ? GOLD : "#30363d", strokeWidth: nd.active ? 2.5 : 1 });
+      d.text("nl" + i, cx(i), baseY + bh / 2 + 5, nd.label === undefined ? String(nd.id === undefined ? i : nd.id) : nd.label, { textAnchor: "middle", fill: INK, fontSize: 14, fontWeight: nd.active ? 700 : 500 });
+      if (fin(nd.value)) d.text("nv" + i, cx(i), baseY + bh + 18, num(nd.value, o.digits === undefined ? 2 : o.digits), { textAnchor: "middle", fill: c === GOLD ? GOLD : MUTED, fontSize: 12 });
+    });
+    d.end();
+    return Object.assign(d, { X: cx, Y: () => baseY });
+  }
+
   /* ---- V.graph: weighted directed graph (PageRank, Markov chains, message passing) ---- */
   function graph(id, o) {
     o = o || {};
+    if (o.layout === "row") return graphRow(id, o);
     const N = o.nodes || [], E = o.edges || [], W = o.w || fitW(id, 640), H = o.h || Math.round(W * 0.66), top = o.title ? 28 : 6;
     const d = diagram(id, W, H, "\u0001graph\u0001");
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
