@@ -524,6 +524,7 @@ const V = (function () {
         td.className = hl.has(i + "," + j) ? "hlc" : "";
       }
     }
+    t.toString = () => t.outerHTML;
     return t;
   }
 
@@ -573,7 +574,9 @@ const V = (function () {
     const dg = o.digits === undefined ? 3 : o.digits;
     const cell = (v, th) => { const n = typeof v === "number"; const tag = th ? "th" : "td"; return "<" + tag + (n ? " class='num'" : "") + ">" + (n ? fmt(v, dg) : v) + "</" + tag + ">"; };
     host.innerHTML = "<table class='vals'>" + (head ? "<tr>" + head.map((h) => cell(h, true)).join("") + "</tr>" : "") + rows.map((r) => "<tr>" + r.map((v) => cell(v)).join("") + "</tr>").join("") + "</table>";
-    return host.firstChild;
+    const t = host.firstChild;
+    if (t) t.toString = () => t.outerHTML; /* usable as an element or, inside a template string, as its HTML */
+    return t;
   }
 
   function resize(M, rows, cols, fill) {

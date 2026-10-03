@@ -166,7 +166,7 @@ function __El(rec){
     getBoundingClientRect: function(){ return {x:0,y:0,width:600,height:300,left:0,top:0,right:600,bottom:300}; }, getContext: function(){ return __absorb('ctx'); }
   };
   p = new Proxy(st, {
-    get: function(t, k){ if (k in meth) return meth[k]; if (k === 'valueAsNumber') return parseFloat(st.value); if (k === 'options') return []; if (k === 'children' || k === 'childNodes') return [];
+    get: function(t, k){ if (k in meth) return meth[k]; if (k === Symbol.toPrimitive || k === 'toString' || k === 'valueOf') return function(){ return '<table></table>'; }; if (k === 'valueAsNumber') return parseFloat(st.value); if (k === 'options') return []; if (k === 'children' || k === 'childNodes') return [];
       if (k === 'classList') return {add: function(){}, remove: function(){}, toggle: function(){}, contains: function(){ return false; }};
       if (k in st) return st[k]; return __absorb(st.tagName + '.' + String(k)); },
     set: function(t, k, v){ if (k === 'value') v = __snap(String(v), {type: st.type, min: st.min, max: st.max, step: st.step});
