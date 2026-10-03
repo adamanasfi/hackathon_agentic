@@ -350,7 +350,12 @@ const V = (function () {
     const h = $(id);
     if (!h || !isFinite(lo) || !isFinite(hi)) return [lo, hi];
     const m = h._sticky || (h._sticky = {}), p = m[key];
-    if (p) { lo = Math.min(lo, p[0]); hi = Math.max(hi, p[1]); }
+    if (p) {
+      const ulo = Math.min(lo, p[0]), uhi = Math.max(hi, p[1]);
+      /* keep the previous frame while the new data still fills >= 40% of it (so changes are visible as motion);
+         otherwise re-fit, so data never shrinks to a speck after visiting an extreme case */
+      if ((hi - lo) >= 0.4 * (uhi - ulo)) { lo = ulo; hi = uhi; }
+    }
     m[key] = [lo, hi];
     return [lo, hi];
   }
