@@ -394,7 +394,7 @@ HARNESS = r"""
         if (typeof raw === 'function') { try { var s0 = full(S0); raw = raw(s0, compute(s0)); } catch (e) { __err('SLIDES[' + i + '].choices[' + k + '] state function threw: ' + msg(e)); return; } }
         var st = full(raw), r;
         try { r = compute(st); sl.draw('slide-viz-' + i, st, r); } catch (e) { __err('SLIDES[' + i + '].choices[' + k + '] ("' + c.label + '") breaks compute/draw: ' + msg(e)); return; }
-        var key = JSON.stringify(r); if (outs[key] !== undefined) __warn('SLIDES[' + i + '] choices "' + outs[key] + '" and "' + c.label + '" give the same result; make each scenario show something different'); outs[key] = c.label; });
+        var key; try { key = JSON.stringify(r); } catch (e) { key = 'unique-' + k; } /* results may legitimately be cyclic (trees) */ if (outs[key] !== undefined) __warn('SLIDES[' + i + '] choices "' + outs[key] + '" and "' + c.label + '" give the same result; make each scenario show something different'); outs[key] = c.label; });
       __clearLive('slide-viz-' + i);
       try { var c0 = full(S0); sl.draw('slide-viz-' + i, c0, compute(c0)); } catch (e) {}
       if (__visible('slide-viz-' + i) === 0) __err('SLIDES[' + i + '].draw leaves nothing visible in its container (no shapes survive: draw something with V helpers, and call d.end() only once, after drawing)');
