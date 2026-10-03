@@ -197,7 +197,20 @@ const V = (function () {
   const INK = "#e6edf3", MUTED = "#8b949e", BG = "#131922";
   /* models often hard-code light-theme colours: remap them for the dark slides */
   const REMAP = { black: INK, "#000": INK, "#000000": INK, "#111": INK, "#222": INK, "#333": INK, "#1d2433": INK, "#0f172a": INK, white: BG, "#fff": BG, "#ffffff": BG, "#fafafa": BG, "#f5f5f5": BG, "#eee": "#2a3240", "#ddd": "#3a4352", "#ccc": "#4b5563", gray: MUTED, grey: MUTED, lightgray: "#4b5563", lightgrey: "#4b5563" };
-  const color = (i) => PAL[((i % PAL.length) + PAL.length) % PAL.length];
+  /* colours are strings that also offer d3-style .darker()/.brighter()/.alpha() */
+  function shade(hex, f) {
+    const n = parseInt(String(hex).slice(1), 16); if (isNaN(n)) return hex;
+    const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => Math.max(0, Math.min(255, Math.round(f >= 0 ? c + (255 - c) * f : c * (1 + f)))));
+    return "#" + ch.map((c) => c.toString(16).padStart(2, "0")).join("");
+  }
+  function col(hex) {
+    const c = new String(hex);
+    c.darker = (k) => col(shade(hex, -0.25 * (k === undefined ? 1 : k)));
+    c.brighter = (k) => col(shade(hex, 0.25 * (k === undefined ? 1 : k)));
+    c.alpha = (a) => { const n = parseInt(String(hex).slice(1), 16); return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")"; };
+    return c;
+  }
+  const color = (i) => col(PAL[((i % PAL.length) + PAL.length) % PAL.length]);
   function fmt(x, d) {
     d = d === undefined ? 3 : d;
     if (typeof x !== "number") return String(x);
@@ -303,6 +316,11 @@ const V = (function () {
     }
     function el(tag, key, attrs, text) {
       key = ns + key;
+      if (tag === "rect" && attrs) { /* negative sizes are invalid SVG: flip the rectangle instead */
+        attrs = Object.assign({}, attrs);
+        if (+attrs.height < 0) { attrs.y = +attrs.y + +attrs.height; attrs.height = -attrs.height; }
+        if (+attrs.width < 0) { attrs.x = +attrs.x + +attrs.width; attrs.width = -attrs.width; }
+      }
       let ls = null;
       if (tag === "text" && text !== undefined) { ls = lines(text, attrs); text = ls.join(" "); }
       try { extent(tag, attrs || {}, ls && ls.length > 1 ? ls.reduce((a, b) => (b.length > a.length ? b : a), "") : text); if (ls && ls.length > 1) { const a = attrs || {}; extent("text", Object.assign({}, a, { y: +a.y + 15 * (ls.length - 1) }), ls[ls.length - 1]); } } catch (e) {}
