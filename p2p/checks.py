@@ -205,7 +205,10 @@ var V = (function(){
       a = a || {}; var fs = +(a.fontSize || a['font-size'] || 13) || 13, anc = a.textAnchor || a['text-anchor'] || 'start';
       var tw = String(s).replace(/<[^>]*>/g, '').length * fs * 0.56, x0 = anc === 'middle' ? x - tw / 2 : anc === 'end' ? x - tw : x;
       if (__fin(x) && !a.transform && (x0 < -6 || x0 + tw > w + 6)) __warn("V.diagram('" + id + "') label '" + String(s).slice(0, 30) + "' (~" + Math.round(tw) + 'px wide at x=' + Math.round(x) + ', anchor ' + anc + ') overflows the ' + w + 'px viewBox: shorten it, move it, or enlarge w'); },
-    arrow: function(k, x1, y1, x2, y2){ geo(tag('arrow', k), {x1: x1, y1: y1, x2: x2, y2: y2}); inb(k, [x1, x2], [y1, y2]); }, end: function(){}, svg: __absorb('svg') }; return d; }
+    arrow: function(k, x1, y1, x2, y2){ geo(tag('arrow', k), {x1: x1, y1: y1, x2: x2, y2: y2}); inb(k, [x1, x2], [y1, y2]); }, end: function(){}, svg: __absorb('svg') };
+    return new Proxy(d, {get: function(t, k){ if (k in t || typeof k === 'symbol') return t[k];
+      __err("V.diagram(...) has no member '" + String(k) + "' (it has only w, h, rect, circle, line, path, text, arrow, end). For coordinate maps use V.scale(d0, d1, r0, r1) which returns a function; V.line returns X/Y maps for plots.");
+      return function(){ return 0; }; }}); }
   function bars(id, items, o){ __need(id, 'V.bars'); if (!Array.isArray(items)) { __err('V.bars: items must be an array'); return; }
     items.forEach(function(it, i){ if (!it || !__fin(it.value)) __err("V.bars('" + id + "'): item " + i + ' has value=' + (it && it.value) + ' (keys: ' + (it ? Object.keys(it).join(',') : '') + '). Signature: V.bars(id, [{label, value: finite number, color?}, ...], opts) draws ONE bar per item; for two quantities use two charts or interleave items.'); }); }
   function line(id, series, o){ __need(id, 'V.line'); if (!Array.isArray(series)) { __err('V.line: series must be an array'); return {X: function(){return 0;}, Y: function(){return 0;}}; }
@@ -223,9 +226,9 @@ var V = (function(){
     for (i = 0; i < rows; i++) { if (cols === undefined) out.push(A[i] === undefined || A[i] === null ? fill : A[i]);
       else { var row = []; for (j = 0; j < cols; j++) row.push(Array.isArray(A[i]) && A[i][j] !== undefined && A[i][j] !== null ? A[i][j] : fill); out.push(row); } } return out; }
   var api = {$: $, fmt: fmt, num: num, val: val, set: set, clamp: function(x, a, b){ return Math.min(b, Math.max(a, x)); }, color: function(){ return '#000'; },
-    diagram: diagram, bars: bars, line: line, matrix: matrix, editGrid: editGrid, readGrid: readGrid, table: table, ticks: function(){ return [0, 1]; }, resize: resize, split: split, stage: Infinity, syncOut: function(){}, update: function(){}, apply: function(){} };
+    diagram: diagram, bars: bars, line: line, matrix: matrix, editGrid: editGrid, readGrid: readGrid, table: table, ticks: function(){ return [0, 1]; }, resize: resize, split: split, scale: function(d0, d1, r0, r1){ return function(v){ return r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0); }; }, stage: Infinity, syncOut: function(){}, update: function(){}, apply: function(){} };
   return new Proxy(api, {get: function(t, k){ if (k in t || typeof k === 'symbol') return t[k];
-    __err('V.' + String(k) + ' does not exist in the helper library (available: $, fmt, num, val, set, clamp, color, resize, split, bars, line, matrix, editGrid, readGrid, table, diagram). The template already shows invariants() and TESTS; do not render them yourself.');
+    __err('V.' + String(k) + ' does not exist in the helper library (available: $, fmt, num, val, set, clamp, color, resize, split, scale, bars, line, matrix, editGrid, readGrid, table, diagram). The template already shows invariants() and TESTS; do not render them yourself.');
     return function(){ return ''; }; }});
 })();
 """
@@ -393,10 +396,14 @@ def run_js(blocks, els, preset_keys, calcs=None, xshow=None, time_limit=4):
     codes = {"MODEL": model, "UI": blocks.get("UI", "")}
 
     def locate(e):
-        m = re.search(r"at ([\w$.]+) \(<input>:(\d+)\)", e)
+        m = re.search(r"at ([\w$.<>]+) \(<input>:(\d+)\)", e)
         if not m or "| line" in e:
             return e
         fn, n = m.group(1).split(".")[-1], int(m.group(2))
+        if fn == "<anonymous>" or fn == "anonymous":
+            blk = "UI" if re.search(r"render|draw|readState|setState|SLIDES", e) else "MODEL"
+            lines = codes[blk].split("\n")
+            return e + (" | " + blk + " line " + str(n) + ": " + lines[n - 1].strip()[:160] if 0 < n <= len(lines) else "")
         for code in codes.values():
             if re.search(r"(function\s+" + re.escape(fn) + r"\b|\b" + re.escape(fn) + r"\s*[:=]\s*(\(|function|async))", code):
                 lines = code.split("\n")

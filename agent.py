@@ -80,7 +80,7 @@ def main():
     ap.add_argument("--input", required=True)
     ap.add_argument("--output", required=True)
     ap.add_argument("--model", required=True)
-    ap.add_argument("--max-repairs", type=int, default=2)
+    ap.add_argument("--max-repairs", type=int, default=1)
     ap.add_argument("--gen-max-tokens", type=int, default=16000)
     ap.add_argument("--effort", default="", help="optional OpenRouter reasoning effort (low/medium/high); default: model default")
     args = ap.parse_args()

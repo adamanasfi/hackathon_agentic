@@ -26,7 +26,7 @@ Pure JavaScript, NO DOM access. Top-level names declared here are global: the UI
   const TESTS = [{name, state, get: (r, s) => number, expect: number, tol}]; // 3-6 cases incl. every check the brief asks for; 'state' is merged over DEFAULT_STATE. Only use expectations that are EXACT and obvious without a calculator (e.g. 0, 1, 1/n, 2 bits, log2(n), a sum equal to 1, symmetric cases). To verify a general identity, make get() return an independent recomputation's error, e.g. get: (r, s) => Math.abs(r.out[0][1] - (r.w[0][0]*s.V[0][1] + r.w[0][1]*s.V[1][1])), expect: 0, tol: 1e-9. Never hand-compute messy decimals. Set tol to match the claim: exact identities 1e-9; values that are only approximately equal because of ε, saturation or finite iterations (e.g. "≈ 1") need a loose tol such as 1e-2. The same applies to invariants: they must hold for EVERY control setting, so build tolerances in.
   const PRESETS = {key: {...state}};          // named example states used by slides and explorations
 Optional: function step(s) { return nextState or null; } — ONLY if the mechanism is genuinely iterative (an update rule, an algorithm, dynamics). The template then shows ▶Run / Step once / Reset and animates it: it starts from {...DEFAULT_STATE, ...readState()}, repeatedly calls step, and passes each new state to render. Iteration variables (t, current vector, history arrays for plots) live only in DEFAULT_STATE and the states step returns — never in controls; compute(s) must also work at their initial values. Optional consts STEP_LABEL (button text), MAX_ITERS, STEP_MS. Keep iterations tiny and toy-sized.
-Use L for numerics: L.dot, L.matmul(A,B) (also matrix·vector), L.transpose, L.softmax(v or rows, T=1) (max-subtracted), L.sum, L.mean, L.normalize, L.rowSums, L.map(A,f), L.scale, L.add, L.sub, L.zeros(r,c?), L.range(n) / L.range(n,a,b), L.log2, L.xlogx(p, base=2) (0 when p=0), L.logsumexp, L.argmax, L.norm, L.max, L.min, L.ones, L.abs, L.cumsum, L.clip(A,a,b), L.sigmoid, L.round(x,d), L.rng(seed) -> uniform(), L.randn(rngFn). L and V are the only helper objects; nothing else exists in them. Write tiny constants in exponent form (1e-8), never as long decimals.
+Use L for numerics: L.dot, L.matmul(A,B) (also matrix·vector), L.transpose, L.softmax(v or rows, T=1) (max-subtracted), L.sum, L.mean, L.normalize, L.rowSums, L.map(A,f), L.scale, L.add, L.sub, L.zeros(r,c?), L.range(n) / L.range(n,a,b), L.log2, L.xlogx(p, base=2) (0 when p=0), L.log, L.exp, L.sqrt, L.logsumexp, L.argmax, L.norm, L.max, L.min, L.ones, L.abs, L.cumsum, L.clip(A,a,b), L.sigmoid, L.round(x,d), L.rng(seed) -> uniform(), L.randn(rngFn). L and V are the only helper objects; nothing else exists in them. Write tiny constants in exponent form (1e-8), never as long decimals.
 compute must be total: handle zeros, empty/degenerate inputs and edge cases without NaN (e.g. 0·log 0 = 0, guard divisions, subtract max before exp). Use the paper's notation in names/comments.
 @@PLAYGROUND
 HTML only (no script) for the SANDBOX slide, which shows the complete mechanism with all controls. Layout: <div class="play"><div class="card">controls</div><div>visuals + readouts</div></div>. Each control: <div class="ctrl"><label for="ID">…</label><input …><div class="hint">…</div></div>. Use <input type="range" min max step value> (the template adds a live value display), <input type="number">, <select>, <input type="checkbox">, or an empty <div id="…"></div> filled by V.editGrid. Give >=2 meaningful controls. Visual/readout containers are empty divs with ids, e.g. <div class="viz" id="chart"></div>, <div class="readout" id="nums"></div>. Every id must be unique, and EVERY id the UI touches must be declared here (or created by the UI itself). All controls live here; slides borrow them by id (see SLIDES.controls).
@@ -53,9 +53,21 @@ V.line(id, [{name?, pts:[[x,y],…], color?, dash?, dots?, line?:false, r?}], {t
 V.matrix(id, M, {title, rows:[labels], cols:[labels], digits, max, diverging, hl:[[i,j]]}) — colour-scaled numeric table
 V.editGrid(id, M, {title, rows, cols, step, force}) and V.readGrid(id) -> numbers matrix — editable matrix input
 V.table(id, headerArray, rowsArrays, {digits}) — values table (numbers auto-formatted)
+V.scale(d0, d1, r0, r1) -> function mapping data values to pixels (use it inside diagrams).
 const d = V.diagram(id, w, h); d.rect(key,{x,y,width,height,fill,stroke,rx}); d.circle(key,{cx,cy,r,fill}); d.line(key,{x1,y1,x2,y2,stroke,strokeWidth,strokeDasharray}); d.path(key,{d,stroke,fill}); d.arrow(key,x1,y1,x2,y2,{stroke,strokeWidth}); d.text(key,x,y,str,{textAnchor,fontSize,fontWeight,fill}); d.end() — keyed elements; calling again with the same key ANIMATES smoothly to the new geometry (3Blue1Brown-style). Always call d.end() after drawing. Use for custom mechanism diagrams (boxes, arrows, flows, geometry).
 const [a, b] = V.split(id, 2, {cols}) — splits a slide's container into panels (ids id-0, id-1, …; stacked by default, cols:3 puts small matrices side by side) so one slide can show e.g. Q, K and QKᵀ together; draw into those ids. Never invent other ids.
-All charts animate between renders automatically. For readouts set innerHTML, e.g. V.$("nums").innerHTML = `<div><small>H (bits)</small><span class="big">${V.fmt(r.H)}</span></div>`.
+All charts animate between renders automatically.
+
+# Worked example (format only — your content must follow the brief)
+  const TESTS = [{name: "two equal outcomes give 1 bit", state: {p: [0.5, 0.5]}, get: (r) => r.H, expect: 1, tol: 1e-9}];
+  { title: "Surprise of one outcome", text: "Rare outcomes carry more <b>surprise</b>: −log₂ p grows as p shrinks.", controls: ["p1"],
+    draw: (id, s, r) => {
+      const d = V.diagram(id, 640, 300), X = V.scale(0, 1, 60, 600), Y = V.scale(0, 7, 260, 30);
+      d.line("ax", {x1: 60, y1: 260, x2: 600, y2: 260, class: "ax"});
+      r.surprise.forEach((u, i) => { d.rect("b" + i, {x: X(s.p[i]) - 12, y: Y(u), width: 24, height: 260 - Y(u), fill: V.color(i), rx: 4});
+        d.text("t" + i, X(s.p[i]), Y(u) - 8, V.fmt(u, 2) + " bits", {textAnchor: "middle"}); });
+      d.end();
+    } } For readouts set innerHTML, e.g. V.$("nums").innerHTML = `<div><small>H (bits)</small><span class="big">${V.fmt(r.H)}</span></div>`.
 
 # Quality rules (most important first)
 1. Scientific fidelity: implement exactly the mechanism and notation of the excerpt (cite Sec./Eq.). Never invent paper results, numbers, or claims. If the excerpt is silent, say the detail is your simplification.
@@ -64,7 +76,7 @@ All charts animate between renders automatically. For readouts set innerHTML, e.
 4. Teaching: define every symbol before use; plain language for the audience; intuition before formalism. Explorations give concrete settings and the numbers to expect, and both work via their presets.
 5. Robustness: every control works across its whole range; no NaN/Infinity shown; small sizes (e.g. 2-5 items) so values stay readable.
 6. Self-contained: no external URLs, fonts, images, imports, fetch or libraries. NO LaTeX anywhere (nothing renders $…$ or \frac). Math as HTML (<sub>, <sup>, <span class="frac"><span>num</span><span>den</span></span>, Unicode √ Σ · × − ≤ ≈).
-7. Be concise: total output roughly 4000-7000 tokens. No comments beyond brief ones.
+7. Be concise: total output roughly 7000-10000 tokens; short slide texts, compact code, no comments beyond brief ones.
 """
 
 USER = """Create the explainer page for this case.
