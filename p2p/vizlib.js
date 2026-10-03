@@ -95,7 +95,7 @@
       if (p.drag) draggable(e, svg, p.drag);
     });
     d.end();
-    return { X, Y, scale: s };
+    return Object.assign(d, { X, Y, scale: s });
   }
 
   /* ---- V.network: layered neural network graph ---- */
@@ -137,6 +137,7 @@
       if (ln) d.text("ln" + l, nx(l), H - 8, ln, { textAnchor: "middle", fontSize: 12, fill: o.active === l ? GOLD : MUTED });
     }
     d.end();
+    if (!d.X) { d.X = (v) => v; d.Y = (v) => v; }
     return d;
   }
 
@@ -170,7 +171,7 @@
       if (fin(n.value)) d.text("nv" + i, pos[i][0], pos[i][1] + rad[i] + 15, num(n.value, o.digits === undefined ? 3 : o.digits), { textAnchor: "middle", fontSize: 12, fill: INK });
     });
     d.end();
-    return { pos };
+    return Object.assign(d, { pos, X: (v) => v, Y: (v) => v });
   }
 
   /* ---- V.flow: stages of an algorithm / pipeline with live values ---- */
@@ -195,6 +196,7 @@
       }
     });
     d.end();
+    if (!d.X) { d.X = (v) => v; d.Y = (v) => v; }
     return d;
   }
 
@@ -220,7 +222,7 @@
       if (w.label) d.text("wl" + k, x0 + w.c * cs, y0 + w.r * cs - 7, w.label, { fill: w.color || GOLD, fontSize: 12, fontWeight: 650 });
     });
     d.end();
-    return { cell: cs, x0, y0, X: (j) => x0 + j * cs + cs / 2, Y: (i) => y0 + i * cs + cs / 2 };
+    return Object.assign(d, { cell: cs, x0, y0, X: (j) => x0 + j * cs + cs / 2, Y: (i) => y0 + i * cs + cs / 2 });
   }
 
   /* ---- V.curve: function curve with a ball, tangent and trail (optimisation, calculus, losses) ---- */
@@ -258,6 +260,7 @@
       d.text("lgt" + gi, lx + 12, ly, (g.label || "group " + (gi + 1)) + ": " + Math.round(g.n || 0), { fontSize: 13, fill: INK });
     });
     d.end();
+    if (!d.X) { d.X = (v) => v; d.Y = (v) => v; }
     return d;
   }
 
@@ -313,6 +316,7 @@
       x += w + gap;
     });
     d.end();
+    if (!d.X) { d.X = (v) => v; d.Y = (v) => v; }
     return d;
   }
 
@@ -352,7 +356,7 @@
     });
     d.svg._map = { ix: (px) => lo + ((px - m) * (hi - lo)) / (W - 2 * m), iy: () => 0, snap: o.snap };
     d.end();
-    return { X };
+    return Object.assign(d, { X, Y: () => axisY });
   }
 
   /* write into an editable grid cell (for drag callbacks) */

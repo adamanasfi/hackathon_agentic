@@ -404,6 +404,7 @@ const V = (function () {
     });
     if (o.xlabel) d.text("xl", m.l + pw / 2, H - 8, o.xlabel, { "text-anchor": "middle", "font-size": 12 });
     d.end();
+    d.Y = Y; d.X = (i) => m.l + slot * i + slot / 2;
     return d;
   }
 
