@@ -287,7 +287,7 @@ HARNESS = r"""
   function cmp(label, s){
     var r; try { r = compute(full(s)); } catch (e) { __err('compute(' + label + ') threw: ' + msg(e)); return null; }
     if (!r || typeof r !== 'object') { __err('compute(' + label + ') must return an object'); return null; }
-    var nf = nonfinite(r, 'r'); if (nf.length) __err('compute(' + label + ') gives non-finite values: ' + nf.slice(0, 4).join(', '));
+    var nf = nonfinite(r, 'r'); if (nf.length) __err('compute(' + label + ') gives non-finite values: ' + nf.slice(0, 4).join(', ') + ' — input state: ' + JSON.stringify(full(s)).slice(0, 260) + ' (check array lengths/shapes match)');
     if (has('invariants')) { try { (invariants(full(s), r) || []).forEach(function(c){ if (!c.ok) __err('invariant "' + c.label + '" fails for ' + label + (c.detail ? ' (' + c.detail + ')' : '')); }); } catch (e) { __err('invariants(' + label + ') threw: ' + msg(e)); } }
     return r; }
   var r0 = cmp('DEFAULT_STATE', S0);
