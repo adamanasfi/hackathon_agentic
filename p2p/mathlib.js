@@ -36,7 +36,12 @@ const L = (function () {
   const sigmoid = (x) => 1 / (1 + Math.exp(-x));
   const round = (x, d) => { const k = Math.pow(10, d === undefined ? 3 : d); return Math.round(x * k) / k; };
   function rng(seed) { let s = seed >>> 0 || 1; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
-  function randn(r) { const u = Math.max(1e-12, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function randn(r, rows, cols) {
+    if (typeof r !== "function") { cols = rows; rows = r; r = Math.random; }
+    const one = () => { const u = Math.max(1e-12, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    if (rows === undefined) return one();
+    return cols === undefined ? Array.from({ length: rows }, one) : Array.from({ length: rows }, () => Array.from({ length: cols }, one));
+  }
   const max = (v, w) => (typeof v === "number" ? Math.max(v, w === undefined ? -Infinity : w) : Math.max(...(isM(v) ? v.flat() : v)));
   const min = (v, w) => (typeof v === "number" ? Math.min(v, w === undefined ? Infinity : w) : Math.min(...(isM(v) ? v.flat() : v)));
   const ones = (r, c) => map(zeros(r, c), () => 1);
@@ -44,7 +49,7 @@ const L = (function () {
   const cumsum = (v) => { let s = 0; return v.map((x) => (s += x)); };
   const clip = (A, a, b) => map(A, (x) => Math.min(b, Math.max(a, x)));
   const fmt = (x, d) => (typeof x === "number" && isFinite(x) ? x.toFixed(d === undefined ? 3 : d) : String(x));
-  const fill = (n, v) => Array(n).fill(v === undefined ? 0 : v);
+  const fill = (n, v) => (Array.isArray(n) ? map(n, () => (v === undefined ? 0 : v)) : Array(Math.max(0, n | 0)).fill(v === undefined ? 0 : v));
   const equals = (a, b, tol) => (Array.isArray(a) && Array.isArray(b) ? a.length === b.length && a.every((x, i) => equals(x, b[i], tol)) : typeof a === "number" && typeof b === "number" ? Math.abs(a - b) <= (tol === undefined ? 1e-9 : tol) : a === b);
   const api = { equals, fill, log: Math.log, exp: Math.exp, sqrt: Math.sqrt, pow: Math.pow, fmt, range, zeros, ones, sum, mean, max, min, abs, cumsum, clip, dot, transpose, matmul, map, scale, add, sub, softmax, logsumexp, log2, xlogx, normalize, argmax, norm, rowSums, shape, sigmoid, round, rng, randn };
   if (typeof __err === "function") return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; __err("L." + String(k) + " does not exist (available: " + Object.keys(t).join(", ") + ")"); return () => 0; } });
