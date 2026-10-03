@@ -171,71 +171,81 @@ def run(args, trace):
 
     # ---- check / repair loop
     best, best_n, prev_errors = None, None, set()
-    for rnd in range(args.max_repairs + 2):
-        fixes = checks.sanitize(blocks)
-        if fixes:
-            trace("check", "sanitize", "fixed", fixes=fixes, round=rnd)
-        t = time.time()
-        res = checks.check(blocks)
-        n_err = severity(res["errors"])
-        trace("check", "run_checks", "pass" if not n_err else "fail", round=rnd, errors=res["errors"], warnings=res["warnings"],
-              tests=res["report"].get("tests"), info=res["report"].get("info"), elapsed_s=round(time.time() - t, 2))
-        if best_n is None or n_err <= best_n:
-            best, best_n = dict(blocks), n_err
-        else:
-            trace("revise", "rollback", "kept_previous", reason=f"revision error score {n_err} vs {best_n} (fatal errors weigh 100)", round=rnd)
-            blocks = dict(best)
-        if best_n == 0 or (rnd >= args.max_repairs and not (rnd == args.max_repairs and best_n >= 100 and llm.requests < 8)):
-            break  # one extra round is allowed only while a fatal error survives
-        if all(re.match(r'TEST "', e) or (re.match(r'invariant "', e) and " for control #" not in e) for e in res["errors"]):
-            trace("revise", "stop", "expectations_only", round=rnd,
-                  reason="only model-proposed test/invariant expectations disagree with the executed computation; pruning them instead of spending tokens")
-            break
-        if rnd > 0 and set(res["errors"]) == prev_errors:
-            trace("revise", "stop", "no_progress", reason="revision left the same errors; not spending more tokens", round=rnd)
-            break
-        prev_errors = set(res["errors"])
-        names = blocks_for(res["errors"] if n_err else [], blocks)
-        if not names:
-            break
-        if llm.time_left() < 120:
-            trace("revise", "skip", "time_budget", time_left_s=round(llm.time_left()))
-            break
-        shown = dict(blocks)
-        context = list(names)
-        if set(names) & {"UI", "EXPLORE"}:
-            if "PLAYGROUND" not in context and blocks.get("PLAYGROUND"):
-                context.append("PLAYGROUND")  # ids the fixed blocks must match (small)
-            if "MODEL" not in context and blocks.get("MODEL"):
-                context.append("MODEL")
-                shown["MODEL"] = model_summary(blocks, res["report"].get("info") or {})
-        ranked = sorted(res["errors"], key=lambda e: -weight(e))
-        msg = prompts.REPAIR.format(problems="\n".join(("- [FATAL: page is dead until fixed] " if weight(e) >= 100 else "- ") + e for e in ranked[:25]) + ("\nAlso (warnings):\n" + "\n".join("- " + w for w in res["warnings"][:8]) if res["warnings"] else ""),
-                                    blocks=fmt_blocks(shown, [b for b in prompts.BLOCKS if b in context]), names=", ".join(names))
-        est = sum(len(blocks[n]) // 2 if blocks.get(n) else 3000 for n in names) + 2500
-        trace("revise", "request", "started", round=rnd + 1, blocks=names, n_errors=n_err)
-        try:
-            fix_text, finish = llm.chat("revise", [system, {"role": "user", "content": msg}], max_tokens=max(5000, min(14000, est)), extra=xtra)
-        except (BudgetError, RuntimeError) as e:
-            trace("revise", "request", "aborted", error=str(e)[:300])
-            break
-        dbg(args, f"revise{rnd + 1}_raw.txt", fix_text)
-        fixed = parse_blocks(fix_text, truncated=finish == "length")
-        fixed = {k: v for k, v in fixed.items() if k in names and v.strip()}
-        blocks = dict(blocks)
-        blocks.update(fixed)
-        blocks, edited, failed = apply_edits(blocks, fix_text)
-        trace("revise", "apply", "ok" if (fixed or edited) else "nothing_applied", round=rnd + 1, replaced=sorted(fixed),
-              edited=edited, failed_edits=failed, finish_reason=finish)
+    try:
+        for rnd in range(args.max_repairs + 2):
+            fixes = checks.sanitize(blocks)
+            if fixes:
+                trace("check", "sanitize", "fixed", fixes=fixes, round=rnd)
+            t = time.time()
+            res = checks.check(blocks)
+            n_err = severity(res["errors"])
+            trace("check", "run_checks", "pass" if not n_err else "fail", round=rnd, errors=res["errors"], warnings=res["warnings"],
+                  tests=res["report"].get("tests"), info=res["report"].get("info"), elapsed_s=round(time.time() - t, 2))
+            if best_n is None or n_err <= best_n:
+                best, best_n = dict(blocks), n_err
+            else:
+                trace("revise", "rollback", "kept_previous", reason=f"revision error score {n_err} vs {best_n} (fatal errors weigh 100)", round=rnd)
+                blocks = dict(best)
+            if best_n == 0 or (rnd >= args.max_repairs and not (rnd == args.max_repairs and best_n >= 100 and llm.requests < 8)):
+                break  # one extra round is allowed only while a fatal error survives
+            if all(re.match(r'TEST "', e) or (re.match(r'invariant "', e) and " for control #" not in e) for e in res["errors"]):
+                trace("revise", "stop", "expectations_only", round=rnd,
+                      reason="only model-proposed test/invariant expectations disagree with the executed computation; pruning them instead of spending tokens")
+                break
+            if rnd > 0 and set(res["errors"]) == prev_errors:
+                trace("revise", "stop", "no_progress", reason="revision left the same errors; not spending more tokens", round=rnd)
+                break
+            prev_errors = set(res["errors"])
+            names = blocks_for(res["errors"] if n_err else [], blocks)
+            if not names:
+                break
+            if llm.time_left() < 120:
+                trace("revise", "skip", "time_budget", time_left_s=round(llm.time_left()))
+                break
+            shown = dict(blocks)
+            context = list(names)
+            if set(names) & {"UI", "EXPLORE"}:
+                if "PLAYGROUND" not in context and blocks.get("PLAYGROUND"):
+                    context.append("PLAYGROUND")  # ids the fixed blocks must match (small)
+                if "MODEL" not in context and blocks.get("MODEL"):
+                    context.append("MODEL")
+                    shown["MODEL"] = model_summary(blocks, res["report"].get("info") or {})
+            ranked = sorted(res["errors"], key=lambda e: -weight(e))
+            msg = prompts.REPAIR.format(problems="\n".join(("- [FATAL: page is dead until fixed] " if weight(e) >= 100 else "- ") + e for e in ranked[:25]) + ("\nAlso (warnings):\n" + "\n".join("- " + w for w in res["warnings"][:8]) if res["warnings"] else ""),
+                                        blocks=fmt_blocks(shown, [b for b in prompts.BLOCKS if b in context]), names=", ".join(names))
+            est = sum(len(blocks[n]) // 2 if blocks.get(n) else 3000 for n in names) + 2500
+            trace("revise", "request", "started", round=rnd + 1, blocks=names, n_errors=n_err)
+            try:
+                fix_text, finish = llm.chat("revise", [system, {"role": "user", "content": msg}], max_tokens=max(5000, min(14000, est)), extra=xtra)
+            except (BudgetError, RuntimeError) as e:
+                trace("revise", "request", "aborted", error=str(e)[:300])
+                break
+            dbg(args, f"revise{rnd + 1}_raw.txt", fix_text)
+            fixed = parse_blocks(fix_text, truncated=finish == "length")
+            fixed = {k: v for k, v in fixed.items() if k in names and v.strip()}
+            blocks = dict(blocks)
+            blocks.update(fixed)
+            blocks, edited, failed = apply_edits(blocks, fix_text)
+            trace("revise", "apply", "ok" if (fixed or edited) else "nothing_applied", round=rnd + 1, replaced=sorted(fixed),
+                  edited=edited, failed_edits=failed, finish_reason=finish)
+    except Exception as e:  # a checker/sanitizer bug must never cost the page: keep what we have and write it
+        trace("check", "internal_error", "continuing", error=f"{type(e).__name__}: {str(e)[:300]}",
+              note="writing the best version available")
+        if best is None:
+            best, best_n = dict(blocks), 999
 
-    blocks = best
-    final = checks.check(blocks)
-    dropped = sorted({m.group(1) for e in final["errors"] for m in [re.match(r'TEST "(.*)" (?:failed|threw)', e)] if m})
-    bad_inv = sorted({m.group(1) for e in final["errors"] for m in [re.match(r'invariant "(.*)" fails for ', e)] if m})
-    if dropped or bad_inv:  # unverifiable model-proposed expectations: exclude from the page, disclose on page and in trace
-        blocks["MODEL"] += "\nconst __DROP_TESTS = " + json.dumps(dropped) + ";\nconst __DROP_INV = " + json.dumps(bad_inv) + ";"
-        trace("check", "prune_expectations", "excluded", tests=dropped, invariants=bad_inv,
-              reason="model-proposed expectation did not match the executed computation")
+    blocks = best if best is not None else blocks
+    try:
+        final = checks.check(blocks)
+        dropped = sorted({m.group(1) for e in final["errors"] for m in [re.match(r'TEST "(.*)" (?:failed|threw)', e)] if m})
+        bad_inv = sorted({m.group(1) for e in final["errors"] for m in [re.match(r'invariant "(.*)" fails for ', e)] if m})
+        if dropped or bad_inv:  # unverifiable model-proposed expectations: exclude from the page, disclose on page and in trace
+            blocks["MODEL"] = blocks.get("MODEL", "") + "\nconst __DROP_TESTS = " + json.dumps(dropped) + ";\nconst __DROP_INV = " + json.dumps(bad_inv) + ";"
+            trace("check", "prune_expectations", "excluded", tests=dropped, invariants=bad_inv,
+                  reason="model-proposed expectation did not match the executed computation")
+    except Exception as e:
+        final = {"errors": ["final check unavailable"]}
+        trace("check", "internal_error", "continuing", stage_detail="final check", error=f"{type(e).__name__}: {str(e)[:300]}")
     if os.environ.get("P2P_DEBUG"):  # dev only: keep raw blocks to re-assemble after template changes
         json.dump(blocks, open(os.path.join(args.output, "blocks.json"), "w"), indent=1)
     # ---- write

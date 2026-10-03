@@ -147,6 +147,10 @@ passing calculation.
   what remains.
 - Responses are streamed. A degenerate repetition loop (e.g. endless `0000…`) is detected and cut short.
 - A 402 "can only afford N tokens" error is retried with a smaller ceiling. A 429 is retried with backoff.
+- Fail-safe: an unexpected internal error in the checker or sanitizer is logged as `internal_error`, and the agent
+  still writes the best page it has. We tested this with an injected checker failure: the page was written and the
+  run exited 0. Bad input or a missing API key exits with code 2; a failed generation exits 1 with the error in the
+  trace.
 - The trace logs per-call prompt, completion, reasoning and cached tokens, elapsed seconds, finish reason and the
   OpenRouter generation id, so usage can be verified against API records. No credentials or hidden reasoning are
   logged.
