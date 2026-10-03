@@ -316,6 +316,45 @@
     return d;
   }
 
+  /* ---- V.numberline: positions, intervals and distances on one axis ---- */
+  function numberline(id, o) {
+    o = o || {};
+    const P = (o.points || []).filter((p) => fin(p.x)), S = (o.spans || []).filter((q) => fin(q.from) && fin(q.to));
+    const xs = P.map((p) => p.x).concat(...S.map((q) => [q.from, q.to]), fin(o.min) ? [o.min] : [], fin(o.max) ? [o.max] : []);
+    let lo = fin(o.min) ? o.min : Math.min(...xs), hi = fin(o.max) ? o.max : Math.max(...xs);
+    if (!(hi > lo)) { lo -= 1; hi += 1; }
+    if (!fin(o.min) || !fin(o.max)) { const pad = (hi - lo) * 0.12; if (!fin(o.min)) lo -= pad; if (!fin(o.max)) hi += pad; }
+    if (o.sticky !== false) [lo, hi] = sticky(id, "x", lo, hi);
+    const above = S.filter((q) => q.side !== "below"), below = S.filter((q) => q.side === "below");
+    const W = o.w || 600, m = 44, top = (o.title ? 34 : 10) + 32 * above.length, axisY = top + 92, H = o.h || axisY + 58 + 34 * below.length + (o.xlabel ? 26 : 0);
+    const d = diagram(id, W, H, "\u0001numberline\u0001");
+    const X = (v) => m + ((W - 2 * m) * (v - lo)) / (hi - lo);
+    if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    d.line("axis", { x1: m - 10, y1: axisY, x2: W - m + 10, y2: axisY, stroke: "#4b5563", strokeWidth: 2 });
+    ticks(lo, hi, 8).forEach((t, i) => { d.line("tk" + i, { x1: X(t), y1: axisY, x2: X(t), y2: axisY + 6, stroke: "#4b5563" }); d.text("tl" + i, X(t), axisY + 30, String(+t.toPrecision(6)), { textAnchor: "middle", fontSize: 13, fill: MUTED }); });
+    if (o.xlabel) d.text("xl", W / 2, H - 8, o.xlabel, { textAnchor: "middle", fill: MUTED, fontSize: 13 });
+    const bracket = (q, k, y, dir) => {
+      const a = X(Math.min(q.from, q.to)), b = X(Math.max(q.from, q.to)), c = q.color || MUTED;
+      d.path("sp" + k, { d: "M" + a + " " + (y + 7 * dir) + " L" + a + " " + y + " L" + b + " " + y + " L" + b + " " + (y + 7 * dir), stroke: c, strokeWidth: 2 });
+      if (q.label) d.text("spl" + k, (a + b) / 2, y - (dir > 0 ? 8 : -20), q.label, { textAnchor: "middle", fill: c, fontSize: 14, fontWeight: 600 });
+    };
+    above.forEach((q, i) => bracket(q, "a" + i, axisY - 74 - 32 * i, 1));
+    below.forEach((q, i) => bracket(q, "b" + i, axisY + 50 + 34 * i, -1));
+    const order = P.map((p, i) => i).sort((a, b) => P[a].x - P[b].x), rows = [];
+    order.forEach((i) => {
+      const p = P[i], c = p.color || color(i), x = X(p.x), r = p.r || 13, lab = p.label || "", w = String(lab).length * 8;
+      let row = 0; while (rows[row] !== undefined && rows[row] > x - w / 2 - 6) row++; rows[row] = x + w / 2;
+      const ly = axisY - r - 10 - 20 * row;
+      if (row) d.line("pk" + i, { x1: x, y1: axisY - r, x2: x, y2: ly + 4, stroke: c, strokeWidth: 1, opacity: 0.6 });
+      d.circle("p" + i, { cx: x, cy: axisY, r, fill: c, stroke: BG, strokeWidth: 2, opacity: p.opacity === undefined ? 1 : p.opacity });
+      if (lab) d.text("pl" + i, x, ly, lab, { textAnchor: "middle", fill: c, fontSize: 14, fontWeight: 650 });
+      if (p.drag) draggable(d.circle("ph" + i, { cx: x, cy: axisY, r: r + 6, fill: c, fillOpacity: 0.15 }), d.svg, (vx) => p.drag(vx));
+    });
+    d.svg._map = { ix: (px) => lo + ((px - m) * (hi - lo)) / (W - 2 * m), iy: () => 0, snap: o.snap };
+    d.end();
+    return { X };
+  }
+
   /* write into an editable grid cell (for drag callbacks) */
   function setCell(gridId, i, j, v) {
     const h = host(gridId); if (!h) return;
@@ -323,5 +362,5 @@
     if (inp) inp.value = +(+v).toFixed(3);
   }
 
-  Object.assign(V, { space, network, graph, flow, pixels, curve, waffle, transform, pipeline, setCell });
+  Object.assign(V, { space, network, graph, flow, pixels, curve, waffle, transform, pipeline, numberline, setCell });
 })();

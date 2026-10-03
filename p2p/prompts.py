@@ -56,12 +56,18 @@ Ask for each slide: what kind of object is this, and what is the most direct pic
 - Grid-structured data with a local operation applied at each position -> V.pixels (a window that moves with a control).
 - A chain of array-valued transformations -> V.pipeline (all stages and arrows in ONE picture).
 - A sequence of stages carrying scalar values -> V.flow.
+- Positions, estimates, thresholds, intervals or distances along ONE axis (where a value lands between others) -> V.numberline (big markers, labelled spans showing the distances that matter).
 - A scalar function of a parameter: its shape, slope, minimum, or repeated update steps -> V.curve (ball, tangent, trail).
 - Proportions of a population, conditional counts, chance -> V.waffle (+ bars).
 - A linear map acting on 2-D space -> V.transform.
 - Physical or geometric set-ups (circuits, forces, signals, trajectories, timelines, trees) -> draw them directly with V.diagram primitives; a signal or time series -> V.line.
 - A distribution or per-item quantity -> V.bars. A matrix ONLY when the matrix itself is the object of study, paired with a geometric view.
 Use at least 3 different kinds of visual across the slides; a slide may combine a structural view with a small chart via V.split.
+Perception rules (apply to every picture):
+- Encode the key relationship of the slide as something the eye compares directly — a length, a position between two marks, an area, an angle — not only as numbers in labels; a ratio or fraction should appear as a visible part of a whole.
+- The main marks are big and the picture fills its canvas; one message per picture; label marks directly beside them (no floating or overlapping labels, no legends when a direct label fits).
+- Switching scenarios must produce a visibly different picture (positions, sizes or shapes move); test it mentally on your scenarios.
+- The picture should be understandable with the slide text hidden.
 
 # Helper library V (already loaded)
 V.$(id); V.num(id) -> parseFloat of control (checkbox -> 0/1); V.val(id) -> raw value (checkbox -> boolean); V.set(id, v); V.fmt(x, digits=3); V.clamp(x,a,b); V.color(i) categorical colour; V.resize(arr, n) / V.resize(M, rows, cols). Nothing else exists in V. The template already displays invariants() and TESTS — do not render them.
@@ -74,6 +80,7 @@ V.space(id, {vectors:[{x,y,label,color,from:[x0,y0],opacity,drag:(x,y)=>{…}}],
 V.network(id, {layers:[2,3,1], values:[[…],[…],[…]] (activations per layer), weights:[W0 (n1×n0), W1 …], labels:[[…],[],[…]], layerNames:[…], active: layerIndex, edgeLabels:true, title})
 V.graph(id, {nodes:[{id,label,value,color,x?,y?,active}], edges:[{from,to,w,label,color}], title, digits}) — circular layout unless x,y in [0,1] given.
 V.flow(id, {steps:[{label, value, note, color}], active: i, arrowLabels:[…], title})
+V.numberline(id, {points:[{x,label,color,r,drag:(x)=>{…}}], spans:[{from,to,label,color,side:"above"|"below"}], min, max, title, xlabel}) — one axis; spans draw labelled brackets for distances (e.g. a part of a gap).
 V.pipeline(id, {stages:[{label, M: matrix (or value), digits, window:{r,c,h,w}, note}], arrows:["conv", "pool"], active: i, title}) — matrices side by side with labelled arrows; window highlights a receptive field.
 V.pixels(id, M, {window:{r,c,h,w,label} or windows:[…], values:true, gray:false, max, title})
 V.curve(id, {f: x => y, xmin, xmax, ball:{x,label}, tangent:{x}, trail:[x…], title, xlabel, ylabel})
