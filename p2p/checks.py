@@ -348,7 +348,14 @@ HARNESS = r"""
       if (!sl.title) __warn('SLIDES[' + i + '] has no title');
       if (sl.text && String(sl.text).replace(/<[^>]*>/g, '').split(/\s+/).length > 110) __warn('SLIDES[' + i + '] text is long; keep <= 60 words');
       if (sl.preset && !(sl.preset in P)) __err('SLIDES[' + i + '] uses unknown preset ' + sl.preset);
-      (sl.controls || []).forEach(function(id){ if (!(id in __ids)) __err('SLIDES[' + i + '].controls lists #' + id + ' but no PLAYGROUND element has that id'); });
+      (sl.controls || []).forEach(function(id){ if (!(id in __ids)) __err('SLIDES[' + i + '].controls lists #' + id + ' but no PLAYGROUND element has that id'); else if (id in __grids) __warn('SLIDES[' + i + '].controls includes the grid editor #' + id + '; use choices on slides instead'); });
+      if ((sl.controls || []).length > 2) __warn('SLIDES[' + i + '] borrows ' + sl.controls.length + ' controls; use choices and at most 2 sliders');
+      var outs = {};
+      (sl.choices || []).forEach(function(c, k){
+        if (!c || (!c.state && !(c.preset in P))) { __err('SLIDES[' + i + '].choices[' + k + '] needs a preset (PRESETS key) or a state object'); return; }
+        var st = full(c.state || P[c.preset]), r;
+        try { r = compute(st); sl.draw('slide-viz-' + i, st, r); } catch (e) { __err('SLIDES[' + i + '].choices[' + k + '] ("' + c.label + '") breaks compute/draw: ' + msg(e)); return; }
+        var key = JSON.stringify(r); if (outs[key] !== undefined) __warn('SLIDES[' + i + '] choices "' + outs[key] + '" and "' + c.label + '" give the same result; make each scenario show something different'); outs[key] = c.label; });
       var states = [['DEFAULT_STATE', S0]].concat(Object.keys(P).map(function(k){ return ['PRESETS.' + k, P[k]]; }));
       states.forEach(function(st){ var c = full(st[1]), r; try { r = compute(c); } catch (e) { return; }
         try { sl.draw('slide-viz-' + i, c, r); } catch (e) { __err('SLIDES[' + i + '].draw threw at ' + st[0] + ': ' + msg(e)); } });

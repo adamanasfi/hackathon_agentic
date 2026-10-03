@@ -65,6 +65,14 @@ def blocks_for(errors, blocks):
     return [b for b in prompts.BLOCKS if b in need]
 
 
+FATAL = re.compile(r"block failed to load|is not defined|compute\(DEFAULT_STATE\) threw|render\(DEFAULT_STATE\) threw|block \w+ is missing")
+
+
+def severity(errors):
+    """Weighted error score: anything that kills the page counts far more than cosmetic or expectation issues."""
+    return sum(100 if FATAL.search(e) else 1 if re.match(r'(TEST "|invariant ")', e) else 5 for e in errors)
+
+
 def model_summary(blocks, info):
     names = re.findall(r"^(?:const|let|var|function)\s+([A-Za-z_$][\w$]*)", blocks.get("MODEL", ""), re.M)
     return ("(unchanged; summary) declares: " + ", ".join(names) + "\nDEFAULT_STATE keys: " + ", ".join(info.get("state_keys", []))
@@ -142,13 +150,13 @@ def run(args, trace):
             trace("check", "sanitize", "fixed", fixes=fixes, round=rnd)
         t = time.time()
         res = checks.check(blocks)
-        n_err = len(res["errors"])
+        n_err = severity(res["errors"])
         trace("check", "run_checks", "pass" if not n_err else "fail", round=rnd, errors=res["errors"], warnings=res["warnings"],
               tests=res["report"].get("tests"), info=res["report"].get("info"), elapsed_s=round(time.time() - t, 2))
         if best_n is None or n_err <= best_n:
             best, best_n = dict(blocks), n_err
         else:
-            trace("revise", "rollback", "kept_previous", reason=f"revision had {n_err} errors vs {best_n}", round=rnd)
+            trace("revise", "rollback", "kept_previous", reason=f"revision error score {n_err} vs {best_n} (fatal errors weigh 100)", round=rnd)
             blocks = dict(best)
         if best_n == 0 or rnd == args.max_repairs:
             break
@@ -209,9 +217,9 @@ def run(args, trace):
         f.write(page)
     ok = all(blocks.get(b, "").strip() for b in CORE)
     tot = llm.totals()
-    trace("write", "index.html", "ok" if ok else "incomplete", bytes=len(page.encode("utf-8")), remaining_errors=best_n)
-    trace("done", "summary", "success" if ok else "failure", elapsed_s=round(time.time() - T0, 2), remaining_errors=best_n, **tot)
-    print(json.dumps({"ok": ok, "remaining_errors": best_n, "elapsed_s": round(time.time() - T0, 1), **tot}))
+    trace("write", "index.html", "ok" if ok else "incomplete", bytes=len(page.encode("utf-8")), remaining_errors=len(final["errors"]), error_score=best_n)
+    trace("done", "summary", "success" if ok else "failure", elapsed_s=round(time.time() - T0, 2), remaining_errors=len(final["errors"]), error_score=best_n, **tot)
+    print(json.dumps({"ok": ok, "remaining_errors": len(final["errors"]), "error_score": best_n, "elapsed_s": round(time.time() - T0, 1), **tot}))
     return 0 if ok else 1
 
 

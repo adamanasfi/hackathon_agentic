@@ -3,7 +3,7 @@ const L = (function () {
   const isM = (A) => Array.isArray(A) && Array.isArray(A[0]);
   const range = (n, a, b) => (b === undefined ? Array.from({ length: n }, (_, i) => i) : Array.from({ length: n }, (_, i) => a + (n === 1 ? 0 : ((b - a) * i) / (n - 1))));
   const zeros = (r, c) => (c === undefined ? Array(r).fill(0) : Array.from({ length: r }, () => Array(c).fill(0)));
-  const sum = (v) => v.reduce((a, b) => a + b, 0);
+  const sum = (v) => (typeof v === "number" ? v : (isM(v) ? v.flat() : v).reduce((a, b) => a + b, 0));
   const mean = (v) => (v.length ? sum(v) / v.length : 0);
   const dot = (a, b) => a.reduce((s, x, i) => s + x * (b[i] || 0), 0);
   const transpose = (A) => (A.length ? A[0].map((_, j) => A.map((r) => r[j])) : []);
@@ -13,10 +13,11 @@ const L = (function () {
     if (A[0].length !== B.length) throw new Error("L.matmul: shapes " + A.length + "x" + A[0].length + " and " + B.length + "x" + B[0].length + " do not match");
     return A.map((r) => B[0].map((_, j) => r.reduce((s, x, k) => s + x * B[k][j], 0)));
   }
-  const map = (A, f) => (isM(A) ? A.map((r, i) => r.map((x, j) => f(x, i, j))) : A.map((x, i) => f(x, i)));
+  const map = (A, f) => (typeof A === "number" ? f(A, 0) : isM(A) ? A.map((r, i) => r.map((x, j) => f(x, i, j))) : A.map((x, i) => f(x, i)));
   const scale = (A, k) => map(A, (x) => x * k);
-  const add = (A, B) => map(A, (x, i, j) => x + (j === undefined ? B[i] : B[i][j]));
-  const sub = (A, B) => map(A, (x, i, j) => x - (j === undefined ? B[i] : B[i][j]));
+  const at = (B, i, j) => (typeof B === "number" ? B : j === undefined ? B[i] : B[i][j]);
+  const add = (A, B) => map(A, (x, i, j) => x + at(B, i, j));
+  const sub = (A, B) => map(A, (x, i, j) => x - at(B, i, j));
   function softmax(v, T) {
     T = T === undefined ? 1 : T;
     if (isM(v)) return v.map((r) => softmax(r, T));
@@ -36,8 +37,8 @@ const L = (function () {
   const round = (x, d) => { const k = Math.pow(10, d === undefined ? 3 : d); return Math.round(x * k) / k; };
   function rng(seed) { let s = seed >>> 0 || 1; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
   function randn(r) { const u = Math.max(1e-12, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
-  const max = (v) => Math.max(...(isM(v) ? v.flat() : v));
-  const min = (v) => Math.min(...(isM(v) ? v.flat() : v));
+  const max = (v, w) => (typeof v === "number" ? Math.max(v, w === undefined ? -Infinity : w) : Math.max(...(isM(v) ? v.flat() : v)));
+  const min = (v, w) => (typeof v === "number" ? Math.min(v, w === undefined ? Infinity : w) : Math.min(...(isM(v) ? v.flat() : v)));
   const ones = (r, c) => map(zeros(r, c), () => 1);
   const abs = (A) => map(A, Math.abs);
   const cumsum = (v) => { let s = 0; return v.map((x) => (s += x)); };

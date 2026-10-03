@@ -122,6 +122,14 @@ ul.checks li{padding:3px 0;font-size:.93rem}
 #errors{display:none;background:#2a1414;border:1px solid var(--bad);color:#ffb4ae;border-radius:8px;padding:8px 12px;margin:8px 28px;font-size:.85rem;white-space:pre-wrap;max-height:80px;overflow:auto}
 .disclaimer{font-size:.88rem;color:var(--muted);border-left:2px solid var(--line);padding:6px 14px;margin:18px 0}
 code{font-family:var(--mono);background:var(--panel2);border-radius:4px;padding:0 5px;color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 6px}
+.chips-l{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.chip{background:transparent;border:1px solid #30363d;color:var(--ink);border-radius:99px;padding:6px 14px;font-weight:550;font-size:.88rem;margin:0}
+.chip:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-1px)}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#071014}
+details.fine{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+details.fine summary{cursor:pointer;color:var(--muted);font-size:.88rem;margin-bottom:8px}
+details.fine summary:hover{color:var(--teal)}
 /* ---------- bottom nav ---------- */
 .nav{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 16px;background:var(--bg);border-top:1px solid var(--line)}
 .dots{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:60vw}
@@ -563,13 +571,25 @@ const V = (function () {
   const track = $("track"), play = $("play"), source = $("source");
   const esc = (t) => String(t === undefined ? "" : t);
 
+  /* ---- scenario chips: one click = a meaningful new situation, animated ---- */
+  const human = (k) => String(k).replace(/[_-]+/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase());
+  const CH = [];
+  function chipsHTML(list, tag) {
+    if (!Array.isArray(list) || !list.length) return "";
+    return "<div class='chips' role='group' aria-label='Scenarios'><span class='chips-l'>Try a scenario</span>" + list.map((c) => {
+      const st = c.state || P[c.preset]; if (!st) return "";
+      CH.push(st);
+      return "<button class='chip' data-chip='" + (CH.length - 1) + "' title='" + esc(c.note || "").replace(/'/g, "&#39;") + "'>" + esc(c.label || human(c.preset)) + "</button>";
+    }).join("") + "</div>";
+  }
+
   /* ---- concept slides from SLIDES ---- */
   const CS = has("SLIDES") && Array.isArray(SLIDES) ? SLIDES : [];
   CS.forEach((sl, i) => {
     const sec = document.createElement("section");
     sec.className = "slide concept"; sec.dataset.title = esc(sl.title) || "Step " + (i + 1); sec.dataset.j = i;
     sec.innerHTML = "<div class='cslide'><div class='stage'><div class='viz' id='slide-viz-" + i + "'></div></div><div class='side'><span class='kicker'>Step " + (i + 1) + " of " + CS.length + "</span><h2>" + esc(sl.title) +
-      "</h2><div class='stext'>" + esc(sl.text) + "</div><div class='slide-ctrls' id='slide-ctrls-" + i + "'></div>" + (sl.preset && P[sl.preset] ? "<button class='ghost' data-preset='" + sl.preset + "' data-stay='1'>↺ Reset this example</button>" : "") + "</div></div>";
+      "</h2><div class='stext'>" + esc(sl.text) + "</div>" + chipsHTML(sl.choices, i) + "<div class='slide-ctrls' id='slide-ctrls-" + i + "'></div></div></div>";
     track.insertBefore(sec, play);
   });
 
@@ -686,6 +706,20 @@ const V = (function () {
     if (on) track.style.transform = "none"; else go(cur);
   };
 
+  /* ---- playground scenario bar from all presets ---- */
+  const pk = Object.keys(P);
+  if (pk.length) {
+    const bar = document.createElement("div");
+    bar.innerHTML = chipsHTML(pk.map((k) => ({ preset: k, label: human(k) })), "play");
+    play.querySelector(".in > h2").after(bar.firstChild || document.createTextNode(""));
+  }
+  document.querySelectorAll(".chip[data-chip]").forEach((b) => b.addEventListener("click", () => {
+    const st = CH[+b.getAttribute("data-chip")];
+    V.apply(st);
+    b.parentNode.querySelectorAll(".chip").forEach((x) => x.classList.toggle("on", x === b));
+  }));
+  track.addEventListener("input", (e) => { if (e.target && e.target.closest && !e.target.closest(".chips")) document.querySelectorAll(".chip.on").forEach((x) => x.classList.remove("on")); });
+
   /* ---- presets ---- */
   document.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
     const k = b.getAttribute("data-preset");
@@ -733,6 +767,15 @@ const V = (function () {
   document.querySelectorAll(".calc[data-get][data-at]").forEach((el) => {
     const st = full(P[el.getAttribute("data-at")] || {});
     try { calcFill(el, st, compute(st)); } catch (e) { el.textContent = "?"; }
+  });
+  /* matrix editors are fine-tuning tools: fold them so scenarios stay the main interaction */
+  play.querySelectorAll(".grid-in").forEach((g) => {
+    const box = g.closest(".ctrl") || g;
+    if (box.closest("details")) return;
+    const det = document.createElement("details"); det.className = "fine";
+    const lab = box.querySelector("label");
+    det.innerHTML = "<summary>Fine-tune " + (lab ? lab.textContent : "values") + "</summary>";
+    box.parentNode.insertBefore(det, box); det.appendChild(box);
   });
   go(0);
 
