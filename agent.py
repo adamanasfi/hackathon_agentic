@@ -71,8 +71,8 @@ FATAL = re.compile(r"block failed to load|is not defined|compute\(DEFAULT_STATE\
 
 
 def weight(e):
-    if FATAL.search(e):
-        return 100
+    if FATAL.search(e) or re.search(r"has no member '|does not exist \(available|does not exist in the helper library", e):
+        return 100  # calling a helper/method that does not exist always throws in the browser
     if re.match(r'(TEST "|invariant ")', e):
         return 1
     if re.match(r"SLIDES\[\d+\]\.draw threw at DEFAULT", e) or "setState then readState" in e or "choices[" in e:
