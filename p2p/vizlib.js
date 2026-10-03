@@ -1,7 +1,7 @@
 /* ---------- Semantic visual primitives (template, paper-agnostic) ----------
    3Blue1Brown-style building blocks on top of V.diagram: every element is keyed, so re-rendering animates. */
 (function () {
-  const { diagram, color, fmt, ticks, clamp, line, sticky } = V;
+  const { diagram, color, fmt, ticks, clamp, line, sticky, fitW } = V;
   const INK = V.ink, MUTED = V.muted, BG = V.bg, GOLD = "#e2b86b", TEAL = "#4fb3bf", CORAL = "#e07a5f";
   const fin = (v) => typeof v === "number" && isFinite(v);
   const num = (v, d) => (fin(v) ? fmt(v, d === undefined ? 2 : d) : String(v === undefined ? "" : v));
@@ -27,7 +27,7 @@
   /* ---- V.space: 2-D vector space (embeddings, similarity, attention geometry, linear algebra) ---- */
   function space(id, o) {
     o = o || {};
-    const W = o.w || 640, H = o.h || 440, top = o.title ? 26 : 8, m = 26;
+    const W = o.w || fitW(id, 640), H = o.h || Math.round(W * 0.69), top = o.title ? 26 : 8, m = 26;
     const d = diagram(id, W, H, "\u0001space\u0001"), svg = d.svg;
     const vs = o.vectors || [], ps = o.points || [], ls = o.lines || [];
     const xs = [0], ys = [0];
@@ -102,7 +102,7 @@
   function network(id, o) {
     o = o || {};
     const layers = (o.layers || []).map((n) => Math.max(1, n | 0)), Lc = layers.length;
-    const maxN = Math.max(1, ...layers), W = o.w || 640, top = o.title ? 28 : 10;
+    const maxN = Math.max(1, ...layers), W = o.w || fitW(id, 640), top = o.title ? 28 : 10;
     const gap = clamp(300 / maxN, 34, 70), H = o.h || Math.max(260, top + 50 + gap * maxN);
     const d = diagram(id, W, H, "\u0001network\u0001"), m = 60;
     const nx = (l) => (Lc === 1 ? W / 2 : m + ((W - 2 * m) * l) / (Lc - 1));
@@ -144,7 +144,7 @@
   /* ---- V.graph: weighted directed graph (PageRank, Markov chains, message passing) ---- */
   function graph(id, o) {
     o = o || {};
-    const N = o.nodes || [], E = o.edges || [], W = o.w || 640, H = o.h || 420, top = o.title ? 28 : 6;
+    const N = o.nodes || [], E = o.edges || [], W = o.w || fitW(id, 640), H = o.h || Math.round(W * 0.66), top = o.title ? 28 : 6;
     const d = diagram(id, W, H, "\u0001graph\u0001");
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const idx = new Map(N.map((n, i) => [n.id === undefined ? i : n.id, i]));
@@ -330,7 +330,7 @@
     if (!fin(o.min) || !fin(o.max)) { const pad = (hi - lo) * 0.12; if (!fin(o.min)) lo -= pad; if (!fin(o.max)) hi += pad; }
     if (o.sticky !== false) [lo, hi] = sticky(id, "x", lo, hi);
     const above = S.filter((q) => q.side !== "below"), below = S.filter((q) => q.side === "below");
-    const W = o.w || 600, m = 44, top = (o.title ? 34 : 10) + 32 * above.length, axisY = top + 92, H = o.h || axisY + 58 + 34 * below.length + (o.xlabel ? 26 : 0);
+    const W = o.w || fitW(id, 600), m = 44, top = (o.title ? 34 : 10) + 32 * above.length, axisY = top + 92, H = o.h || axisY + 58 + 34 * below.length + (o.xlabel ? 26 : 0);
     const d = diagram(id, W, H, "\u0001numberline\u0001");
     const X = (v) => m + ((W - 2 * m) * (v - lo)) / (hi - lo);
     if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });

@@ -344,6 +344,12 @@ const V = (function () {
     return d;
   }
 
+  /* responsive canvas: lay a chart out at its container's real pixel width (labels stay full size in narrow panels) */
+  function fitW(id, def) {
+    const h = $(id), cw = h ? h.clientWidth : 0;
+    return cw > 120 ? Math.max(300, Math.min(def, Math.round(cw - 8))) : def;
+  }
+
   /* stable scales: a chart's range only grows across re-renders, so switching scenarios moves the data
      against fixed axes instead of silently re-zooming (which would hide the change) */
   function sticky(id, key, lo, hi) {
@@ -382,7 +388,7 @@ const V = (function () {
   /* --- bar chart --- */
   function bars(id, items, o) {
     o = o || {};
-    const W = o.w || 640, H = o.h || 300, m = { l: 52, r: 16, t: o.title ? 30 : 14, b: 46 };
+    const W = o.w || fitW(id, 640), H = o.h || 300, m = { l: 52, r: 16, t: o.title ? 30 : 14, b: 46 };
     const d = diagram(id, W, H, "\u0001bars\u0001");
     const vals = items.map((it) => (isFinite(it.value) ? it.value : 0));
     const refs = o.ref || [];
@@ -416,7 +422,7 @@ const V = (function () {
   /* --- line / scatter plot --- */
   function line(id, series, o) {
     o = o || {};
-    const W = o.w || 640, H = o.h || 340, m = { l: 56, r: 18, t: o.title ? 30 : 14, b: 46 };
+    const W = o.w || fitW(id, 640), H = o.h || 340, m = { l: 56, r: 18, t: o.title ? 30 : 14, b: 46 };
     const d = diagram(id, W, H, "\u0001line\u0001");
     const xs = [], ys = [];
     series.forEach((s) => (s.pts || []).forEach((p) => { if (isFinite(p[0]) && isFinite(p[1])) { xs.push(p[0]); ys.push(p[1]); } }));
@@ -573,7 +579,7 @@ const V = (function () {
   /* linear map from data domain [d0,d1] to pixel range [r0,r1] */
   const scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-  const api = { sticky, ink: INK, muted: MUTED, bg: BG, $, $$, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
+  const api = { fitW, sticky, ink: INK, muted: MUTED, bg: BG, $, $$, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
   const warned = new Set();
   /* unknown helpers degrade to no-ops instead of breaking the page */
   return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; if (!warned.has(k)) { warned.add(k); console.warn("V." + String(k) + " is not a helper"); } return () => ""; } });
