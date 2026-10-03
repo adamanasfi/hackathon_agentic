@@ -153,43 +153,41 @@ passing calculation.
 
 ## Measured results
 
-All runs used `google/gemini-2.5-flash` with the final prompt. Error counts were re-checked with the final library.
-Every run stays inside 10 requests, 30k completion tokens and 10 minutes, and every page loads and runs in
-Chromium without JavaScript errors.
+**Final batch:** each case was run once through `agent.py` with exactly
+`python agent.py --input <case>.json --output <dir> --model google/gemini-2.5-flash`, on the final commit, with
+nothing post-processed. Every run exited 0, wrote exactly `index.html` and `trace.jsonl`, stayed inside 10 requests,
+30k completion tokens and 10 minutes, and loaded in Chromium without JavaScript errors.
 
-**Held-out cases**, written after the prompt was finalised and never referenced by it:
-
-| Case | Calls | Total tokens | Time | Visuals the agent chose | Remaining issues |
-|---|---|---|---|---|---|
-| Scalar Kalman update (Kalman 1960) | 1 | 14.1k | 38 s | prior/likelihood/posterior bell curves, `numberline` for the gain, variance bars | none |
-| Sampling and aliasing (Shannon 1949, Thm 1) | 3 | 44.4k | 73 s | sinusoid and sample plots, `numberline` | none (after a library fix) |
-| Huffman construction (Huffman 1952) | 2 | 35.3k | 81 s | tree built merge by merge, bars | 1 minor |
-
-**Practice cases** (the two public examples plus seven of our own):
-
-| Case | Calls | Total tokens | Time | Remaining issues |
+| Case | Calls | Total tokens | Time | Final status |
 |---|---|---|---|---|
-| Bayes' rule, base-rate fallacy (showcase example below) | 1 | 14.8k | 38 s | none |
-| MLP forward pass (Rumelhart et al. 1986, Eq. 1–2) | 1 | 18.1k | 55 s | minor |
-| Shannon entropy (Sec. 6) | 2 | 27.5k | 45 s | none |
-| Scaled dot-product attention (Sec. 3.2.1) | 2 | 31.8k | 58 s | none |
-| Convolution + sub-sampling (LeCun et al. 1998, Sec. II.A) | 2 | 31.8k | 55 s | 3 minor |
-| Batch Normalization (Alg. 1) | 2 | 33.1k | 57 s | minor |
-| word2vec analogies (Sec. 1, 5) | 2 | 34.2k | 63 s | model-proposed self-checks pruned |
-| Adam bias correction (Alg. 1, iterative) | 2 | 52.8k | 104 s | minor |
-| PageRank (Sec. 2.4, 2.6, iterative) | 3 | 56.4k | 93 s | edge cases (e.g. changing the page count) |
+| **Held-out:** scalar Kalman update (Kalman 1960) | 1 | 17.2k | 51 s | clean (example output below) |
+| **Held-out:** sampling and aliasing (Shannon 1949, Thm 1) | 2 | 36.7k | 70 s | clean |
+| **Held-out:** Huffman construction (Huffman 1952) | 1 | 14.7k | 41 s | 1 minor issue |
+| Scaled dot-product attention (Sec. 3.2.1) | 2 | 37.2k | 72 s | clean |
+| Shannon entropy (Sec. 6) | 3 | 38.1k | 55 s | clean |
+| Adam bias correction (Alg. 1, iterative) | 1 | 16.7k | 51 s | clean |
+| Bayes' rule, base-rate fallacy | 1 | 17.3k | 51 s | 1 minor issue |
+| MLP forward pass (Rumelhart et al. 1986, Eq. 1–2) | 1 | 16.3k | 48 s | 4 minor issues |
+| Convolution + sub-sampling (LeCun et al. 1998, Sec. II.A) | 1 | 16.4k | 49 s | 4 minor issues |
+| word2vec analogies (Sec. 1, 5) | 2 | 40.3k | 79 s | minor issues |
+| Batch Normalization (Alg. 1) | 2 | 37.6k | 74 s | minor issues |
+| PageRank (Sec. 2.4, 2.6, iterative) | 3 | 61.6k | 104 s | **failed:** model-written transition matrix gives NaN; repairs did not fix it, so the best (first) version was kept |
+
+The held-out cases were written after the prompt was finalised and are never referenced by it. "Minor issues" are
+non-fatal checker findings, such as an edge case at a control extreme or a pruned model-written self-check.
+PageRank is our hardest case and the one whose quality varies most between runs.
 
 We also verified:
 - a clean-room install (fresh clone, fresh venv, exact command above);
 - a run where every network request except OpenRouter was blocked (the source fetch failed in 0.05 s and
   generation completed from the case text);
-- a second model family (`openai/gpt-4.1-mini`: entropy in 1 call, 10.8k tokens, clean).
+- a second model family (`openai/gpt-4.1-mini`).
 
-Failures we observed during development were always model-written code errors the repair round could not fix.
-Each recurring pattern was turned into a deterministic library fix rather than a prompt rule.
+During development, failures were always model-written code errors the repair round could not fix. Each
+recurring pattern was turned into a deterministic library fix rather than a prompt rule.
 
-**Example input/output pair:** [examples/output/bayes/](examples/output/bayes/) holds `case.json`, `index.html` and
-`trace.jsonl`, exactly as the agent wrote them.
+**Example input/output pair:** [examples/output/kalman/](examples/output/kalman/) holds `case.json`, `index.html`
+and `trace.jsonl` from the final batch, exactly as the agent wrote them.
 
 ## Files
 
@@ -206,8 +204,8 @@ Each recurring pattern was turned into a deterministic library fix rather than a
 | `p2p/vizlib.js`, `p2p/mathlib.js` | Drawing tools and numeric helpers embedded in every page |
 | `examples/*.json` | Practice inputs (the two public examples plus seven of ours) |
 | `examples/heldout/*.json` | Held-out inputs, used only for testing |
-| `examples/output/bayes/` | Example input/output pair with its trace |
-| `tools/` | Development-only scripts, not used by the agent: browser smoke test, slide screenshots and contact sheets, re-assembly of saved blocks, and an A/B script for comparing a one-shot prompt |
+| `examples/output/kalman/` | Example input/output pair with its trace |
+| `tools/` | Development-only scripts, never used by the agent: browser smoke test, slide screenshots and contact sheets, an A/B script for a one-shot prompt, and `reassemble.py`, which rebuilds a saved debug run with the current library so library fixes could be compared on identical model output during development. None of the reported results use it. |
 
 ## Credits and reuse
 - No third-party code is vendored. The template, drawing and maths libraries, checks and prompts were written for

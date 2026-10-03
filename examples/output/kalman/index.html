@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bayes&#x27; Theorem in Diagnostics</title>
+<title>Kalman Filter Measurement Update (Scalar)</title>
 <style>
 :root{--bg:#0d1117;--panel:#131922;--panel2:#171e29;--ink:#e6edf3;--ink2:#c3ccd6;--muted:#8b949e;--line:#262e3a;--gold:#e2b86b;--teal:#4fb3bf;--coral:#e07a5f;--ok:#7fb77e;--bad:#e5534b;--warn:#e2b86b;--hl:#e2b86b;--r:12px;--mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;--sans:"DM Sans","Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
 *{box-sizing:border-box}
@@ -149,40 +149,45 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 </style>
 </head>
 <body>
-<header class="top"><div class="row"><div class="logo"></div><h1>Bayes&#x27; Theorem in Diagnostics</h1><div class="cite">Source: Bayes (1763). An Essay towards solving a Problem in the Doctrine of Chances · Proposition 3 and 5 (conditional probability), stated in modern notation · <a href="https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053" target="_blank" rel="noopener">https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053</a> · Audience: Engineering undergraduate with basic probability.</div>
+<header class="top"><div class="row"><div class="logo"></div><h1>Kalman Filter Measurement Update (Scalar)</h1><div class="cite">Source: Kalman (1960). A New Approach to Linear Filtering and Prediction Problems · Optimal estimate update (scalar form of the filter equations) · <a href="https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf" target="_blank" rel="noopener">https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf</a> · Audience: Engineering undergraduate who knows mean, variance and the normal distribution.</div>
 <div class="tools"><button class="ghost" id="flowbtn" title="Show all slides as one scrolling page">View as page</button></div></div>
 <div class="prog"><div id="bar"></div></div></header>
 <div id="errors"></div>
 <main id="deck"><div id="track">
 <section class="slide" data-title="The idea"><div class="in">
-<div class="hero"><span class="kicker">Interactive lesson</span><h2>Bayes&#x27; Theorem in Diagnostics</h2><p class="sum">Learners will see how prior probability, test sensitivity, and false positive rate combine to determine the probability of disease after a positive test, using a population-based visual.</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
+<div class="hero"><span class="kicker">Interactive lesson</span><h2>Kalman Filter Measurement Update (Scalar)</h2><p class="sum">See how the Kalman filter optimally combines a prior belief and a new measurement to produce a more certain posterior estimate.</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
 <div id="intro-cards">
 <div class="card">
   <h3>The idea</h3>
-  <p>Imagine you get a positive result from a medical test. How likely is it that you actually have the disease? Bayes' Theorem helps us answer this by combining what we already know (the disease's prevalence) with new evidence (the test result).</p>
-  <p>It's a way to update our beliefs about an event based on new information.</p>
+  Imagine you're trying to guess the temperature in a room. You have a thermometer (a measurement) and your own feeling (a prior belief). The Kalman filter is a smart way to combine these two pieces of information, especially when both are a bit uncertain, to get the best possible estimate. It's like finding the sweet spot between what you thought and what you just saw.
 </div>
 <div class="card">
   <h3>Why it matters</h3>
-  <p>Bayes' Theorem is fundamental in many fields, from medical diagnostics and spam filtering to machine learning and artificial intelligence. In medicine, it helps patients and doctors interpret test results accurately, especially for rare conditions where intuition can be misleading (the "base-rate fallacy").</p>
+  The Kalman filter is fundamental in many engineering applications, from guiding spacecraft and drones to tracking objects in computer vision and even predicting financial markets. It provides an optimal way to estimate the state of a dynamic system from noisy measurements. This specific excerpt focuses on the core "measurement update" step, where a new observation refines an existing estimate.
 </div>
 <div class="card">
   <h3>The key equation</h3>
-  <div class="eq">P(D|+) = <span class="frac"><span>P(+|D) P(D)</span><span>P(+)</span></span></div>
-  <p>This computes the <b>posterior probability</b> of having the Disease (D) given a positive test (+).</p>
-  <p>Where P(+) is the total probability of a positive test:</p>
-  <div class="eq">P(+) = P(+|D) P(D) + P(+|~D) P(~D)</div>
+  <div class="eq">
+    K = P⁻ / (P⁻ + R)
+  </div>
+  <div class="eq">
+    x̂ = x̂⁻ + K (z − x̂⁻)
+  </div>
+  <div class="eq">
+    P = (1 − K) P⁻
+  </div>
+  These equations compute the <b>Kalman Gain K</b>, the <b>posterior mean x̂</b> (updated estimate), and the <b>posterior variance P</b> (updated uncertainty) from a prior estimate and a new measurement.
 </div>
 <div class="card">
   <h3>Symbols</h3>
   <table class="sym">
-    <tr><td>P(D)</td><td>Prior probability of having the Disease</td><td>[0, 1]</td></tr>
-    <tr><td>P(~D)</td><td>Prior probability of NOT having the Disease</td><td>[0, 1]</td></tr>
-    <tr><td>P(+)</td><td>Total probability of a positive test result</td><td>[0, 1]</td></tr>
-    <tr><td>P(-)&nbsp;</td><td>Total probability of a negative test result</td><td>[0, 1]</td></tr>
-    <tr><td>P(+|D)</td><td>Sensitivity: P(positive test | Disease)</td><td>[0, 1]</td></tr>
-    <tr><td>P(+|~D)</td><td>False Positive Rate: P(positive test | NO Disease)</td><td>[0, 1]</td></tr>
-    <tr><td>P(D|+)</td><td>Posterior probability: P(Disease | positive test)</td><td>[0, 1]</td></tr>
+    <tr><td>x̂⁻</td><td>Prior mean (estimate before measurement)</td><td>Scalar, units of state</td></tr>
+    <tr><td>P⁻</td><td>Prior variance (uncertainty of prior estimate)</td><td>Scalar, units of state²</td></tr>
+    <tr><td>z</td><td>Measurement</td><td>Scalar, units of state</td></tr>
+    <tr><td>R</td><td>Measurement noise variance</td><td>Scalar, units of state²</td></tr>
+    <tr><td>K</td><td>Kalman Gain</td><td>Scalar, unitless (0 ≤ K ≤ 1)</td></tr>
+    <tr><td>x̂</td><td>Posterior mean (updated estimate)</td><td>Scalar, units of state</td></tr>
+    <tr><td>P</td><td>Posterior variance (uncertainty of updated estimate)</td><td>Scalar, units of state²</td></tr>
   </table>
 </div>
 </div></div></section>
@@ -192,29 +197,29 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 <div class="play">
   <div class="card">
     <div class="ctrl">
-      <label for="p_disease">P(Disease)</label>
-      <input type="range" id="p_disease" min="0" max="1" step="0.01" value="0.1">
-      <div class="hint">Prior probability of having the disease.</div>
+      <label for="x_prior_mean">Prior Mean (x̂⁻)</label>
+      <input type="range" id="x_prior_mean" min="-5" max="5" step="0.1" value="0">
+      <div class="hint">Your current best estimate of the state.</div>
     </div>
     <div class="ctrl">
-      <label for="p_pos_given_disease">P(+|Disease)</label>
-      <input type="range" id="p_pos_given_disease" min="0" max="1" step="0.01" value="0.95">
-      <div class="hint">Sensitivity: Probability of a positive test given disease.</div>
+      <label for="p_prior_var">Prior Variance (P⁻)</label>
+      <input type="range" id="p_prior_var" min="0.01" max="5" step="0.01" value="1">
+      <div class="hint">Uncertainty in your prior estimate.</div>
     </div>
     <div class="ctrl">
-      <label for="p_pos_given_no_disease">P(+|No Disease)</label>
-      <input type="range" id="p_pos_given_no_disease" min="0" max="1" step="0.01" value="0.05">
-      <div class="hint">False Positive Rate: Probability of a positive test given no disease.</div>
+      <label for="z_measurement">Measurement (z)</label>
+      <input type="range" id="z_measurement" min="-5" max="5" step="0.1" value="1">
+      <div class="hint">The new observation.</div>
     </div>
     <div class="ctrl">
-      <label for="population">Population Size</label>
-      <input type="number" id="population" min="100" max="10000" step="100" value="1000">
-      <div class="hint">Total number of people in our hypothetical population.</div>
+      <label for="r_noise_var">Measurement Noise Variance (R)</label>
+      <input type="range" id="r_noise_var" min="0.01" max="5" step="0.01" value="0.5">
+      <div class="hint">Uncertainty in the measurement.</div>
     </div>
   </div>
-  <div class="card">
-    <div class="viz" id="bayes_waffle"></div>
-    <div class="readout" id="bayes_readouts"></div>
+  <div class="visuals">
+    <div class="viz" id="gaussian_plot"></div>
+    <div class="readout" id="results"></div>
   </div>
 </div>
 <div class="card" id="livebox" hidden><h3>Live checks (recomputed on every change)</h3><ul class="checks" id="live"></ul></div>
@@ -225,19 +230,17 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
   <div class="card from-paper">
     <h3>Stated in the paper</h3>
     <ul>
-      <li>"The probability that two subsequent events will both happen is a ratio compounded of the probability of the 1st, and the probability of the 2nd on supposition the 1st happens." (Proposition 3, modern: P(A and B) = P(A) P(B|A))</li>
-      <li>"If there be two subsequent events, the probability of the 2nd b/N and the probability of both together P/N, and it being first discovered that the 2nd event has happened, from hence I guess that the 1st event has also happened, the probability I am in the right is P/b." (Proposition 5, modern: P(A|B) = P(A and B) / P(B))</li>
-      <li>The modern statement of Bayes' Theorem, P(A|B) = P(B|A) P(A) / P(B), is derived directly from these propositions.</li>
+      <li>"For a scalar state with prior estimate x̂⁻ and prior variance P⁻, and a measurement z with noise variance R, the optimal (minimum-variance) linear update is: K = P⁻ / (P⁻ + R); x̂ = x̂⁻ + K (z − x̂⁻); P = (1 − K) P⁻." (Section: Optimal estimate update, scalar form)</li>
+      <li>"The gain K weighs the measurement residual according to the relative uncertainty of the prediction and the measurement." (Section: Optimal estimate update, scalar form)</li>
     </ul>
   </div>
   <div class="card ours">
     <h3>Our simplifications &amp; examples</h3>
     <ul>
-      <li>We use a medical diagnostic test as a concrete example (Disease D, Positive test +).</li>
-      <li>We fix the population size at 1000 for the waffle chart visualization to make counts intuitive.</li>
-      <li>The waffle chart is an analogy to represent probabilities as proportions of a total population.</li>
-      <li>We use modern notation P(D), P(+|D), etc., which is a restatement of Bayes' original work in contemporary probabilistic language.</li>
-      <li>The specific values for prevalence, sensitivity, and false positive rates are chosen for illustrative purposes.</li>
+      <li>We focus exclusively on the scalar measurement update step, omitting the prediction step and the multi-dimensional (matrix) forms of the equations.</li>
+      <li>We assume Gaussian noise for both the prior and measurement likelihood to visually represent them as bell curves, which is a standard assumption in Kalman filtering for optimal linear estimation.</li>
+      <li>The specific numerical ranges for sliders (e.g., -5 to 5 for means, 0.01 to 5 for variances) are chosen for clear visualization and to demonstrate edge cases.</li>
+      <li>The "bell curve" visualization for Gaussian distributions is an analogy to help build intuition for mean and variance as location and spread.</li>
     </ul>
   </div>
 </div>
@@ -247,26 +250,26 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 </div></section>
 </div></main>
 <div id="explore-src" hidden>
-<div class="card explore" data-show-slide="3" data-show-preset="highPrevalence">
-  <h3>Exploration 1: High Prevalence, Good Test</h3>
-  <p><b>Try:</b> Set P(Disease) to <b>0.5</b>, P(+|Disease) to <b>0.95</b>, and P(+|No Disease) to <b>0.05</b>.</p>
-  <p><b>Watch:</b> Observe the "Diseased & Test +" group (color <span style="color:${V.color(0)}">■</span>) and "Healthy & Test +" group (color <span style="color:${V.color(2)}">■</span>). The total number of positive tests is <span class="calc" data-at="highPrevalence" data-get="r.n_pos_total"></span>. The posterior probability P(D|+) is <span class="calc" data-at="highPrevalence" data-get="r.p_disease_given_pos" data-d="3"></span>.</p>
-  <p><b>Why:</b> With a high prevalence and a reasonably accurate test, most positive results genuinely indicate disease. The large number of diseased individuals means even a small false negative rate doesn't hide the true positives much.</p>
-  <button data-preset="highPrevalence">Try it in the playground</button>
+<div class="card explore" data-show-slide="6" data-show-preset="highMeasurementTrust">
+  <h3>Exploration 1: Trusting the Measurement</h3>
+  <p><b>Try:</b> Set the <b>Measurement Noise Variance (R)</b> to a very small value, e.g., <b>0.01</b>. Keep <b>Prior Variance (P⁻)</b> at <b>1</b>.</p>
+  <p><b>Watch:</b> The <b>Kalman Gain K</b> will approach <span class="calc" data-at="highMeasurementTrust" data-get="r.K" data-d="3"></span>. The <b>posterior mean x̂</b> will be very close to the <b>measurement z</b> (<span class="calc" data-at="highMeasurementTrust" data-get="s.z_measurement" data-d="1"></span>), and the <b>posterior variance P</b> will be very small (<span class="calc" data-at="highMeasurementTrust" data-get="r.p_posterior_var" data-d="3"></span>). The posterior Gaussian curve will be narrow and centered on the measurement.</p>
+  <p><b>Why:</b> When the measurement is highly certain (low R), the Kalman filter gives it almost all the weight (K ≈ 1), effectively ignoring the prior estimate and trusting the measurement completely. The uncertainty of the combined estimate becomes very low.</p>
+  <button data-preset="highMeasurementTrust">Try it in the playground</button>
 </div>
 
-<div class="card explore" data-show-slide="3" data-show-preset="rareDisease">
-  <h3>Exploration 2: Rare Disease, Good Test (Base-Rate Fallacy)</h3>
-  <p><b>Try:</b> Set P(Disease) to <b>0.01</b>, P(+|Disease) to <b>0.99</b>, and P(+|No Disease) to <b>0.01</b>.</p>
-  <p><b>Watch:</b> Notice how many people are in the "Diseased & Test +" group (<span class="calc" data-at="rareDisease" data-get="r.n_D_pos"></span>) versus the "Healthy & Test +" group (<span class="calc" data-at="rareDisease" data-get="r.n_nD_pos"></span>). Even though the test is 99% accurate, the posterior P(D|+) is only <span class="calc" data-at="rareDisease" data-get="r.p_disease_given_pos" data-d="3"></span>.</p>
-  <p><b>Why:</b> When a disease is very rare, even a low false positive rate can lead to many healthy people testing positive. These "false alarms" can outnumber the true positives, making a positive test less indicative of actual disease than one might intuitively expect.</p>
-  <button data-preset="rareDisease">Try it in the playground</button>
+<div class="card explore" data-show-slide="6" data-show-preset="highPriorTrust">
+  <h3>Exploration 2: Trusting the Prior</h3>
+  <p><b>Try:</b> Set the <b>Prior Variance (P⁻)</b> to a very small value, e.g., <b>0.01</b>. Keep <b>Measurement Noise Variance (R)</b> at <b>1</b>.</p>
+  <p><b>Watch:</b> The <b>Kalman Gain K</b> will approach <span class="calc" data-at="highPriorTrust" data-get="r.K" data-d="3"></span>. The <b>posterior mean x̂</b> will be very close to the <b>prior mean x̂⁻</b> (<span class="calc" data-at="highPriorTrust" data-get="s.x_prior_mean" data-d="1"></span>), and the <b>posterior variance P</b> will be very close to the <b>prior variance P⁻</b> (<span class="calc" data-at="highPriorTrust" data-get="r.p_posterior_var" data-d="3"></span>). The posterior Gaussian curve will be narrow and centered on the prior mean.</p>
+  <p><b>Why:</b> When the prior estimate is highly certain (low P⁻), the Kalman filter gives it almost all the weight (K ≈ 0), effectively ignoring the new measurement and trusting the prior estimate. The uncertainty of the combined estimate remains close to the prior uncertainty.</p>
+  <button data-preset="highPriorTrust">Try it in the playground</button>
 </div>
 
-<div class="card caution" data-show-slide="3" data-show-preset="rareDisease">
-  <h3>Limitation / common misunderstanding: The Base-Rate Fallacy</h3>
-  <p>A common mistake is to assume that a highly accurate test (high sensitivity, low false positive rate) automatically means a high probability of disease after a positive result. This is the <b>base-rate fallacy</b>.</p>
-  <p>As shown in Exploration 2, if the disease is rare (low base rate or prior probability), the number of healthy individuals who falsely test positive can be substantial, even with a very good test. This dilutes the meaning of a positive test, leading to a much lower posterior probability of disease than many people expect.</p>
+<div class="card caution" data-show-slide="5" data-show-preset="typicalCase">
+  <h3>Limitation / common misunderstanding</h3>
+  <p>A common misconception is that combining information might sometimes increase uncertainty. However, the Kalman filter's optimal update guarantees that the <b>posterior variance (P) is always less than or equal to both the prior variance (P⁻) and the measurement noise variance (R)</b>. You can observe this in the "Updating the Variance" slide: the posterior variance bar is always the shortest. This means that combining two pieces of information, even if they disagree, always leads to a more certain estimate (or at least not less certain).</p>
+  <button data-preset="typicalCase">Try it in the playground</button>
 </div>
 </div>
 <nav class="nav"><button class="ghost" id="prev">← Back</button><div class="dots" id="dots"></div><span id="counter"></span><button id="next">Next →</button></nav>
@@ -1114,128 +1117,75 @@ const L = (function () {
 <script>
 /* ---------- MODEL (generated) ---------- */
 const DEFAULT_STATE = {
-  population: 1000,
-  p_disease: 0.1, // P(D)
-  p_pos_given_disease: 0.95, // P(+|D) (sensitivity)
-  p_pos_given_no_disease: 0.05, // P(+|~D) (false positive rate)
+  x_prior_mean: 0,
+  p_prior_var: 1,
+  z_measurement: 1,
+  r_noise_var: 0.5,
 };
 
 function compute(s) {
-  const N = s.population;
-  const pD = s.p_disease;
-  const p_pos_D = s.p_pos_given_disease;
-  const p_pos_nD = s.p_pos_given_no_disease;
+  const x_prior_mean = s.x_prior_mean;
+  const p_prior_var = s.p_prior_var;
+  const z_measurement = s.z_measurement;
+  const r_noise_var = s.r_noise_var;
 
-  // Derived probabilities
-  const p_no_disease = 1 - pD; // P(~D)
-  const p_neg_D = 1 - p_pos_D; // P(-|D) (false negative rate)
-  const p_neg_nD = 1 - p_pos_nD; // P(-|~D) (specificity)
+  // Ensure variances are non-negative
+  const P_prior_safe = Math.max(1e-9, p_prior_var);
+  const R_safe = Math.max(1e-9, r_noise_var);
 
-  // Joint probabilities
-  const p_D_pos = pD * p_pos_D; // P(D and +)
-  const p_nD_pos = p_no_disease * p_pos_nD; // P(~D and +)
-  const p_D_neg = pD * p_neg_D; // P(D and -)
-  const p_nD_neg = p_no_disease * p_neg_nD; // P(~D and -)
+  // Kalman Gain K = P⁻ / (P⁻ + R)
+  const K = P_prior_safe / (P_prior_safe + R_safe);
 
-  // Evidence (total probability of positive test)
-  const p_pos = p_D_pos + p_nD_pos; // P(+)
+  // Posterior mean x̂ = x̂⁻ + K (z − x̂⁻)
+  const x_posterior_mean = x_prior_mean + K * (z_measurement - x_prior_mean);
 
-  // Posterior probability
-  let p_disease_given_pos = 0;
-  if (p_pos > 1e-9) { // Guard against division by zero
-    p_disease_given_pos = p_D_pos / p_pos; // P(D|+)
-  } else if (pD > 0 && p_pos_D > 0) { // If P(+) is zero but P(D and +) is not, something is wrong
-    p_disease_given_pos = 1; // This case should ideally not happen with valid inputs
-  }
+  // Posterior variance P = (1 − K) P⁻
+  const p_posterior_var = (1 - K) * P_prior_safe;
 
-  // Population counts
-  const n_D = Math.round(N * pD);
-  const n_nD = N - n_D;
-
-  const n_D_pos = Math.round(n_D * p_pos_D);
-  const n_nD_pos = Math.round(n_nD * p_pos_nD);
-  const n_D_neg = n_D - n_D_pos;
-  const n_nD_neg = n_nD - n_nD_pos;
-
-  const n_pos_total = n_D_pos + n_nD_pos;
-  const n_neg_total = n_D_neg + n_nD_neg;
+  // Gaussian PDF helper
+  const gaussian_pdf = (x, mean, variance) => {
+    if (variance <= 0) return 0; // Avoid division by zero or negative variance
+    const std_dev = Math.sqrt(variance);
+    return (1 / (std_dev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / std_dev, 2));
+  };
 
   return {
-    p_no_disease, p_neg_D, p_neg_nD,
-    p_D_pos, p_nD_pos, p_D_neg, p_nD_neg,
-    p_pos,
-    p_disease_given_pos,
-    n_D, n_nD, n_D_pos, n_nD_pos, n_D_neg, n_nD_neg,
-    n_pos_total, n_neg_total,
+    K,
+    x_posterior_mean,
+    p_posterior_var,
+    P_prior_safe,
+    R_safe,
+    gaussian_pdf,
   };
 }
 
 function invariants(s, r) {
-  const checks = [];
-  // Check that all population groups sum to the total population
-  const total_pop_calculated = r.n_D_pos + r.n_nD_pos + r.n_D_neg + r.n_nD_neg;
-  checks.push({
-    label: "Total population",
-    ok: Math.abs(total_pop_calculated - s.population) < 1, // Allow for rounding
-    detail: `Sum of groups: ${total_pop_calculated}, Expected: ${s.population}`
-  });
-
-  // Check that P(D|+) is 0 if P(D) is 0
-  if (s.p_disease < 1e-9) {
-    checks.push({
-      label: "P(D)=0 implies P(D|+)=0",
-      ok: r.p_disease_given_pos < 1e-9,
-      detail: `P(D)=${V.fmt(s.p_disease)}, P(D|+)=${V.fmt(r.p_disease_given_pos)}`
-    });
-  }
-
-  // Check that P(D|+) is 1 if P(D) is 1 and test is positive
-  if (s.p_disease > 1 - 1e-9 && s.p_pos_given_disease > 1e-9) {
-    checks.push({
-      label: "P(D)=1 implies P(D|+)=1",
-      ok: Math.abs(r.p_disease_given_pos - 1) < 1e-9,
-      detail: `P(D)=${V.fmt(s.p_disease)}, P(D|+)=${V.fmt(r.p_disease_given_pos)}`
-    });
-  }
-
-  // Check that P(+) is sum of P(D and +) and P(~D and +)
-  checks.push({
-    label: "P(+) consistency",
-    ok: Math.abs(r.p_pos - (r.p_D_pos + r.p_nD_pos)) < 1e-9,
-    detail: `P(+)=${V.fmt(r.p_pos)}, P(D and +) + P(~D and +)=${V.fmt(r.p_D_pos + r.p_nD_pos)}`
-  });
-
-  return checks;
+  return [
+    {
+      label: "Kalman Gain K is between 0 and 1",
+      ok: r.K >= 0 && r.K <= 1,
+      detail: `K = ${V.fmt(r.K)}`,
+    },
+    {
+      label: "Posterior variance P is never larger than prior P⁻",
+      ok: r.p_posterior_var <= r.P_prior_safe + 1e-9, // Add tolerance for floating point
+      detail: `P = ${V.fmt(r.p_posterior_var)}, P⁻ = ${V.fmt(r.P_prior_safe)}`,
+    },
+    {
+      label: "Posterior variance P is never larger than measurement noise R",
+      ok: r.p_posterior_var <= r.R_safe + 1e-9, // Add tolerance for floating point
+      detail: `P = ${V.fmt(r.p_posterior_var)}, R = ${V.fmt(r.R_safe)}`,
+    },
+  ];
 }
 
 
 
 const PRESETS = {
-  typicalCase: {
-    p_disease: 0.1,
-    p_pos_given_disease: 0.95,
-    p_pos_given_no_disease: 0.05,
-  },
-  highPrevalence: {
-    p_disease: 0.5,
-    p_pos_given_disease: 0.95,
-    p_pos_given_no_disease: 0.05,
-  },
-  rareDisease: {
-    p_disease: 0.01,
-    p_pos_given_disease: 0.99,
-    p_pos_given_no_disease: 0.01,
-  },
-  uselessTest: {
-    p_disease: 0.1,
-    p_pos_given_disease: 0.5,
-    p_pos_given_no_disease: 0.5,
-  },
-  perfectTest: {
-    p_disease: 0.1,
-    p_pos_given_disease: 1.0,
-    p_pos_given_no_disease: 0.0,
-  },
+  typicalCase: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 1, r_noise_var: 0.5 },
+  highMeasurementTrust: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 5, r_noise_var: 0.1 },
+  highPriorTrust: { x_prior_mean: 0, p_prior_var: 0.1, z_measurement: 5, r_noise_var: 1 },
+  measurementFarAway: { x_prior_mean: -2, p_prior_var: 0.8, z_measurement: 3, r_noise_var: 0.2 },
 };
 </script>
 <script>
@@ -1243,262 +1193,349 @@ const PRESETS = {
 var TESTS = [], __TESTS_ERROR = null;
 try { TESTS = [
   {
-    name: "Prior is 0",
-    state: { p_disease: 0 },
-    get: (r) => r.p_disease_given_pos,
-    expect: 0,
-    tol: 1e-9
+    name: "Equal variances: K=0.5, x̂=midpoint, P=P⁻/2",
+    state: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 2, r_noise_var: 1 },
+    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
+    expect: [0.5, 1, 0.5],
+    tol: 1e-9,
   },
   {
-    name: "Prior is 1",
-    state: { p_disease: 1 },
-    get: (r) => r.p_disease_given_pos,
-    expect: 1,
-    tol: 1e-9
+    name: "Measurement noise R -> 0: K=1, x̂=z, P=0",
+    state: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 5, r_noise_var: 1e-9 },
+    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
+    expect: [1, 5, 0],
+    tol: 1e-6, // Looser tolerance for near-zero R
   },
   {
-    name: "Perfect test, P(D)=0.5",
-    state: { p_disease: 0.5, p_pos_given_disease: 1, p_pos_given_no_disease: 0 },
-    get: (r) => r.p_disease_given_pos,
-    expect: 1,
-    tol: 1e-9
+    name: "Prior variance P⁻ -> 0: K=0, x̂=x̂⁻, P=P⁻",
+    state: { x_prior_mean: 10, p_prior_var: 1e-9, z_measurement: 0, r_noise_var: 1 },
+    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
+    expect: [0, 10, 1e-9],
+    tol: 1e-6, // Looser tolerance for near-zero P_prior
   },
   {
-    name: "Useless test, P(D)=0.3",
-    state: { p_disease: 0.3, p_pos_given_disease: 0.5, p_pos_given_no_disease: 0.5 },
-    get: (r) => r.p_disease_given_pos,
-    expect: 0.3,
-    tol: 1e-9
+    name: "Prior and measurement far apart",
+    state: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 10, r_noise_var: 1 },
+    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
+    expect: [0.5, 5, 0.5],
+    tol: 1e-9,
   },
   {
-    name: "Population sum",
-    state: { population: 100, p_disease: 0.2, p_pos_given_disease: 0.8, p_pos_given_no_disease: 0.1 },
-    get: (r, s) => r.n_D_pos + r.n_nD_pos + r.n_D_neg + r.n_nD_neg,
-    expect: 100,
-    tol: 1
+    name: "Prior and measurement close",
+    state: { x_prior_mean: 0, p_prior_var: 1, z_measurement: 0.1, r_noise_var: 1 },
+    get: (r) => [r.K, r.x_posterior_mean, r.p_posterior_var],
+    expect: [0.5, 0.05, 0.5],
+    tol: 1e-9,
   },
-  {
-    name: "Base-rate fallacy example",
-    state: { p_disease: 0.01, p_pos_given_disease: 0.99, p_pos_given_no_disease: 0.01 },
-    get: (r) => r.p_disease_given_pos,
-    expect: 0.5, // P(D|+) = (0.99 * 0.01) / (0.99 * 0.01 + 0.01 * 0.99) = 0.0099 / (0.0099 + 0.0099) = 0.5
-    tol: 1e-3
-  }
 ]; } catch (e) { __TESTS_ERROR = String(e && e.message || e); }
 </script>
 <script>
 /* ---------- UI (generated) ---------- */
 function readState() {
   return {
-    population: V.num("population"),
-    p_disease: V.num("p_disease"),
-    p_pos_given_disease: V.num("p_pos_given_disease"),
-    p_pos_given_no_disease: V.num("p_pos_given_no_disease"),
+    x_prior_mean: V.num("x_prior_mean"),
+    p_prior_var: V.num("p_prior_var"),
+    z_measurement: V.num("z_measurement"),
+    r_noise_var: V.num("r_noise_var"),
   };
 }
 
 function setState(s) {
-  V.set("population", s.population);
-  V.set("p_disease", s.p_disease);
-  V.set("p_pos_given_disease", s.p_pos_given_disease);
-  V.set("p_pos_given_no_disease", s.p_pos_given_no_disease);
+  V.set("x_prior_mean", s.x_prior_mean);
+  V.set("p_prior_var", s.p_prior_var);
+  V.set("z_measurement", s.z_measurement);
+  V.set("r_noise_var", s.r_noise_var);
 }
 
 function render(s, r) {
-  const N = s.population;
+  const x_min = Math.min(s.x_prior_mean - 3 * Math.sqrt(r.P_prior_safe), s.z_measurement - 3 * Math.sqrt(r.R_safe), r.x_posterior_mean - 3 * Math.sqrt(r.p_posterior_var)) - 1;
+  const x_max = Math.max(s.x_prior_mean + 3 * Math.sqrt(r.P_prior_safe), s.z_measurement + 3 * Math.sqrt(r.R_safe), r.x_posterior_mean + 3 * Math.sqrt(r.p_posterior_var)) + 1;
 
-  const groups = [
-    { n: r.n_D_pos, label: "Diseased & Test +", color: V.color(0) },
-    { n: r.n_nD_pos, label: "Healthy & Test +", color: V.color(2) },
-    { n: r.n_D_neg, label: "Diseased & Test -", color: V.color(1) },
-    { n: r.n_nD_neg, label: "Healthy & Test -", color: V.color(3) },
-  ];
+  const pts_prior = [];
+  const pts_measurement = [];
+  const pts_posterior = [];
+  for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
+    pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
+    pts_measurement.push([x, r.gaussian_pdf(x, s.z_measurement, r.R_safe)]);
+    pts_posterior.push([x, r.gaussian_pdf(x, r.x_posterior_mean, r.p_posterior_var)]);
+  }
 
-  V.waffle("bayes_waffle", {
-    groups: groups,
-    cols: Math.round(Math.sqrt(N)), // Make it roughly square
-    title: `Population of ${N} people`
+  V.line("gaussian_plot", [
+    { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
+    { name: "Measurement Likelihood (z, R)", pts: pts_measurement, color: V.color(2) },
+    { name: "Posterior (x̂, P)", pts: pts_posterior, color: V.color(1), line: true },
+  ], {
+    title: "Combining Gaussian Beliefs",
+    xlabel: "State Value",
+    ylabel: "Probability Density",
+    xmin: x_min, xmax: x_max,
+    ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1]), ...pts_measurement.map(p => p[1]), ...pts_posterior.map(p => p[1])) * 1.1,
+    points: [
+      { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
+      { x: s.z_measurement, y: r.gaussian_pdf(s.z_measurement, s.z_measurement, r.R_safe), label: "z", color: V.color(2), r: 4 },
+      { x: r.x_posterior_mean, y: r.gaussian_pdf(r.x_posterior_mean, r.x_posterior_mean, r.p_posterior_var), label: "x̂", color: V.color(1), r: 4 },
+    ]
   });
 
-  V.$("bayes_readouts").innerHTML = `
-    <div>
-      <h3>Probabilities:</h3>
-      <p>P(Disease) = <b>${V.fmt(s.p_disease)}</b></p>
-      <p>P(+|Disease) = <b>${V.fmt(s.p_pos_given_disease)}</b> (Sensitivity)</p>
-      <p>P(+|No Disease) = <b>${V.fmt(s.p_pos_given_no_disease)}</b> (False Positive Rate)</p>
-      <p>P(+) = <b>${V.fmt(r.p_pos)}</b> (Total positive tests)</p>
-      <p>P(Disease|+) = <b>${V.fmt(r.p_disease_given_pos)}</b> (Posterior probability)</p>
-    </div>
-    <div>
-      <h3>Counts (out of ${N}):</h3>
-      <p>Diseased: <b>${r.n_D}</b></p>
-      <p>Healthy: <b>${r.n_nD}</b></p>
-      <p>Diseased & Test +: <b>${r.n_D_pos}</b></p>
-      <p>Healthy & Test +: <b>${r.n_nD_pos}</b></p>
-      <p>Diseased & Test -: <b>${r.n_D_neg}</b></p>
-      <p>Healthy & Test -: <b>${r.n_nD_neg}</b></p>
-      <p>Total Test +: <b>${r.n_pos_total}</b></p>
-      <p>Total Test -: <b>${r.n_neg_total}</b></p>
-    </div>
+  V.$("results").innerHTML = `
+    <div><small>Kalman Gain</small><span class="big" style="color:${V.color(3)}">${V.fmt(r.K)}</span></div>
+    <div><small>Posterior Mean</small><span class="big" style="color:${V.color(1)}">${V.fmt(r.x_posterior_mean)}</span></div>
+    <div><small>Posterior Variance</small><span class="big" style="color:${V.color(1)}">${V.fmt(r.p_posterior_var)}</span></div>
   `;
 }
 
 const SLIDES = [
   {
-    title: "How many people have the disease?",
-    text: `Imagine a population of <b>${DEFAULT_STATE.population}</b> people. We want to know the probability that someone has a certain disease, <b>P(D)</b>. This is called the <i>prior probability</i> or <i>prevalence</i>.`,
-    choices: [
-      { label: "Low Prevalence", preset: "rareDisease" },
-      { label: "Typical Prevalence", preset: "typicalCase" },
-      { label: "High Prevalence", preset: "highPrevalence" },
-    ],
-    controls: ["p_disease"],
+    title: "Combining Beliefs with the Kalman Filter",
+    text: "The Kalman filter's measurement update combines two sources of information: your current best estimate (the <b>prior belief</b>) and a new observation (the <b>measurement likelihood</b>). Both are represented as Gaussian distributions, characterized by a mean and a variance. The result is a new, more certain estimate: the <b>posterior belief</b>.",
     draw: (id, s, r) => {
-      const N = s.population;
-      const groups = [
-        { n: r.n_D, label: "Diseased", color: V.color(0) },
-        { n: r.n_nD, label: "Healthy", color: V.color(3) },
-      ];
-      V.waffle(id, {
-        groups: groups,
-        cols: Math.round(Math.sqrt(N)),
-        title: `Population of ${N} people`,
-        note: `P(D) = ${V.fmt(s.p_disease)}`
+      const x_min = Math.min(s.x_prior_mean - 3 * Math.sqrt(r.P_prior_safe), s.z_measurement - 3 * Math.sqrt(r.R_safe), r.x_posterior_mean - 3 * Math.sqrt(r.p_posterior_var)) - 1;
+      const x_max = Math.max(s.x_prior_mean + 3 * Math.sqrt(r.P_prior_safe), s.z_measurement + 3 * Math.sqrt(r.R_safe), r.x_posterior_mean + 3 * Math.sqrt(r.p_posterior_var)) + 1;
+
+      const pts_prior = [];
+      const pts_measurement = [];
+      const pts_posterior = [];
+      for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
+        pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
+        pts_measurement.push([x, r.gaussian_pdf(x, s.z_measurement, r.R_safe)]);
+        pts_posterior.push([x, r.gaussian_pdf(x, r.x_posterior_mean, r.p_posterior_var)]);
+      }
+
+      V.line(id, [
+        { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
+        { name: "Measurement Likelihood (z, R)", pts: pts_measurement, color: V.color(2) },
+        { name: "Posterior (x̂, P)", pts: pts_posterior, color: V.color(1), line: true },
+      ], {
+        title: "Prior, Measurement, and Posterior",
+        xlabel: "State Value",
+        ylabel: "Probability Density",
+        xmin: x_min, xmax: x_max,
+        ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1]), ...pts_measurement.map(p => p[1]), ...pts_posterior.map(p => p[1])) * 1.1,
+        points: [
+          { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
+          { x: s.z_measurement, y: r.gaussian_pdf(s.z_measurement, s.z_measurement, r.R_safe), label: "z", color: V.color(2), r: 4 },
+          { x: r.x_posterior_mean, y: r.gaussian_pdf(r.x_posterior_mean, r.x_posterior_mean, r.p_posterior_var), label: "x̂", color: V.color(1), r: 4 },
+        ]
       });
-    }
-  },
-  {
-    title: "How accurate is the test?",
-    text: `Now, let's introduce a diagnostic test. Its accuracy is defined by two probabilities:
-           <ul>
-             <li><b>P(+|D)</b>: The probability of a positive test given the person <b>has</b> the disease (<i>sensitivity</i>).</li>
-             <li><b>P(+|~D)</b>: The probability of a positive test given the person <b>does not</b> have the disease (<i>false positive rate</i>).</li>
-           </ul>
-           These probabilities tell us how many people in each group (diseased or healthy) will test positive.`,
-    choices: [
-      { label: "Highly Accurate", preset: "typicalCase" },
-      { label: "Perfect Test", preset: "perfectTest" },
-      { label: "Useless Test", preset: "uselessTest" },
-    ],
-    controls: ["p_pos_given_disease", "p_pos_given_no_disease"],
-    draw: (id, s, r) => {
-      const N = s.population;
-      const groups = [
-        { n: r.n_D_pos, label: "Diseased & Test +", color: V.color(0) },
-        { n: r.n_D_neg, label: "Diseased & Test -", color: V.color(1) },
-        { n: r.n_nD_pos, label: "Healthy & Test +", color: V.color(2) },
-        { n: r.n_nD_neg, label: "Healthy & Test -", color: V.color(3) },
-      ];
-      V.waffle(id, {
-        groups: groups,
-        cols: Math.round(Math.sqrt(N)),
-        title: `Test Results for ${N} people`,
-        note: `P(+|D) = ${V.fmt(s.p_pos_given_disease)}, P(+|~D) = ${V.fmt(s.p_pos_given_no_disease)}`
-      });
-    }
-  },
-  {
-    title: "What is the total evidence for a positive test?",
-    text: `When someone tests positive, we need to know the overall probability of a positive test, <b>P(+)</b>. This is the sum of positive tests from both the diseased and healthy groups.
-           <br><b>P(+) = P(D and +) + P(~D and +)</b>`,
+    },
     choices: [
       { label: "Typical Case", preset: "typicalCase" },
-      { label: "Rare Disease, Accurate Test", preset: "rareDisease" },
+      { label: "Measurement Far Away", preset: "measurementFarAway" },
+      { label: "High Measurement Trust", preset: "highMeasurementTrust" },
     ],
-    draw: (id, s, r) => {
-      const N = s.population;
-      const groups = [
-        { n: r.n_D_pos, label: "Diseased & Test +", color: V.color(0) },
-        { n: r.n_nD_pos, label: "Healthy & Test +", color: V.color(2) },
-        { n: r.n_D_neg + r.n_nD_neg, label: "Test -", color: V.color(3), opacity: 0.3 }, // Dim negative tests
-      ];
-      V.waffle(id, {
-        groups: groups,
-        cols: Math.round(Math.sqrt(N)),
-        title: `Total Positive Tests`,
-        note: `P(+) = ${V.fmt(r.p_pos)}`
-      });
-    }
+    controls: ["x_prior_mean", "z_measurement"]
   },
   {
-    title: "What is the probability of disease given a positive test?",
-    text: `This is the crucial question: if you test positive, what is the probability you actually have the disease? This is the <i>posterior probability</i>, <b>P(D|+)</b>.
-           <br>It's the proportion of diseased people among all those who tested positive.`,
-    choices: [
-      { label: "Typical Case", preset: "typicalCase" },
-      { label: "Rare Disease, Accurate Test", preset: "rareDisease" },
-      { label: "High Prevalence, Accurate Test", preset: "highPrevalence" },
-    ],
+    title: "The Prior Belief: x̂⁻ and P⁻",
+    text: "Your current best estimate of the system's state is the <b>prior mean</b> x̂⁻. Its uncertainty is captured by the <b>prior variance</b> P⁻. Together, they form a Gaussian probability distribution, representing your belief before seeing any new data.",
     draw: (id, s, r) => {
-      const N = s.population;
-      const groups = [
-        { n: r.n_D_pos, label: "Diseased & Test +", color: V.color(0) },
-        { n: r.n_nD_pos, label: "Healthy & Test +", color: V.color(2) },
-        { n: r.n_D_neg + r.n_nD_neg, label: "Test -", color: V.color(3), opacity: 0.1 }, // Dim negative tests even more
-      ];
-      V.waffle(id, {
-        groups: groups,
-        cols: Math.round(Math.sqrt(N)),
-        title: `P(Disease|+) = ${V.fmt(r.p_disease_given_pos)}`,
-        note: `Among those who tested positive, ${V.fmt(r.p_disease_given_pos * 100)}% are diseased.`
+      const x_min = s.x_prior_mean - 4 * Math.sqrt(r.P_prior_safe);
+      const x_max = s.x_prior_mean + 4 * Math.sqrt(r.P_prior_safe);
+      const pts_prior = [];
+      for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
+        pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
+      }
+      V.line(id, [
+        { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
+      ], {
+        title: "Prior Belief",
+        xlabel: "State Value",
+        ylabel: "Probability Density",
+        xmin: x_min, xmax: x_max,
+        ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1])) * 1.1,
+        points: [
+          { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
+        ]
       });
-    }
+    },
+    choices: [
+      { label: "Narrow Prior", state: { p_prior_var: 0.1, x_prior_mean: 0 } },
+      { label: "Wide Prior", state: { p_prior_var: 2, x_prior_mean: 0 } },
+      { label: "Shifted Prior", state: { p_prior_var: 1, x_prior_mean: 2 } },
+    ],
+    controls: ["x_prior_mean", "p_prior_var"]
   },
   {
-    title: "Bayes' Theorem: Combining Prior and Evidence",
-    text: `Bayes' Theorem formally combines these probabilities:
-           <div class="eq">P(D|+) = <span class="frac"><span>P(+|D) P(D)</span><span>P(+)</span></span></div>
-           Where P(+) is the total probability of a positive test:
-           <div class="eq">P(+) = P(+|D) P(D) + P(+|~D) P(~D)</div>
-           Each term corresponds to a group in our population.`,
-    choices: [
-      { label: "See the numbers", preset: "typicalCase" },
-    ],
+    title: "The Measurement Likelihood: z and R",
+    text: "A new <b>measurement</b> z provides additional information. However, measurements are noisy. The <b>measurement noise variance</b> R quantifies this uncertainty. We model the measurement as a Gaussian distribution centered at z with variance R.",
     draw: (id, s, r) => {
-      const N = s.population;
-      const d = V.diagram(id, 600, 400);
+      const x_min = Math.min(s.x_prior_mean - 3 * Math.sqrt(r.P_prior_safe), s.z_measurement - 3 * Math.sqrt(r.R_safe)) - 1;
+      const x_max = Math.max(s.x_prior_mean + 3 * Math.sqrt(r.P_prior_safe), s.z_measurement + 3 * Math.sqrt(r.R_safe)) + 1;
 
-      const totalWidth = 500;
-      const totalHeight = 300;
-      const x0 = 50;
-      const y0 = 50;
+      const pts_prior = [];
+      const pts_measurement = [];
+      for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
+        pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
+        pts_measurement.push([x, r.gaussian_pdf(x, s.z_measurement, r.R_safe)]);
+      }
+      V.line(id, [
+        { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
+        { name: "Measurement Likelihood (z, R)", pts: pts_measurement, color: V.color(2) },
+      ], {
+        title: "Prior and Measurement Likelihood",
+        xlabel: "State Value",
+        ylabel: "Probability Density",
+        xmin: x_min, xmax: x_max,
+        ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1]), ...pts_measurement.map(p => p[1])) * 1.1,
+        points: [
+          { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
+          { x: s.z_measurement, y: r.gaussian_pdf(s.z_measurement, s.z_measurement, r.R_safe), label: "z", color: V.color(2), r: 4 },
+        ]
+      });
+    },
+    choices: [
+      { label: "Precise Measurement", state: { r_noise_var: 0.1, z_measurement: 1 } },
+      { label: "Noisy Measurement", state: { r_noise_var: 2, z_measurement: 1 } },
+      { label: "Measurement Far From Prior", state: { r_noise_var: 0.5, z_measurement: 4 } },
+    ],
+    controls: ["z_measurement", "r_noise_var"]
+  },
+  {
+    title: "The Kalman Gain K: Weighing Information Sources",
+    text: "The <b>Kalman Gain K</b> determines how much we trust the new measurement versus our prior estimate. It's a weighting factor between 0 and 1. If the measurement is very certain (small R), K approaches 1, giving more weight to the measurement. If the prior is very certain (small P⁻), K approaches 0, giving more weight to the prior. <div class='eq'>K = P⁻ / (P⁻ + R)</div>",
+    draw: (id, s, r) => {
+      const [left, right] = V.split(id, 2, { cols: 2 });
 
-      // Total population rectangle
-      d.rect("total_pop", { x: x0, y: y0, width: totalWidth, height: totalHeight, fill: V.muted, stroke: V.ink, strokeWidth: 2 });
-      d.text("total_pop_label", x0 + totalWidth / 2, y0 + totalHeight + 20, `Total Population (${N})`, { textAnchor: "middle", fill: V.ink });
+      V.bars(left, [
+        { label: "P⁻", value: r.P_prior_safe, color: V.color(0) },
+        { label: "R", value: r.R_safe, color: V.color(2) },
+      ], {
+        title: "Relative Uncertainties",
+        ylabel: "Variance",
+        max: Math.max(r.P_prior_safe, r.R_safe, 1) * 1.2,
+        digits: 2
+      });
 
-      // Diseased (P(D))
-      const widthD = totalWidth * s.p_disease;
-      d.rect("diseased_group", { x: x0, y: y0, width: widthD, height: totalHeight, fill: V.color(0), opacity: 0.2, stroke: V.color(0), strokeWidth: 2 });
-      d.text("p_d_label", x0 + widthD / 2, y0 + totalHeight + 40, `P(D) = ${V.fmt(s.p_disease)}`, { textAnchor: "middle", fill: V.color(0) });
+      V.numberline(right, {
+        points: [
+          { x: 0, label: "0", color: V.ink },
+          { x: r.K, label: "K = " + V.fmt(r.K, 2), color: V.color(3), r: 6 },
+          { x: 1, label: "1", color: V.ink },
+        ],
+        spans: [
+          { from: 0, to: r.K, label: "Weight on Measurement", color: V.color(2), side: "above" },
+          { from: r.K, to: 1, label: "Weight on Prior", color: V.color(0), side: "below" },
+        ],
+        min: -0.1, max: 1.1,
+        title: "Kalman Gain K"
+      });
+    },
+    choices: [
+      { label: "Equal Uncertainty", state: { p_prior_var: 1, r_noise_var: 1 } },
+      { label: "Trust Measurement More", state: { p_prior_var: 1, r_noise_var: 0.1 } },
+      { label: "Trust Prior More", state: { p_prior_var: 0.1, r_noise_var: 1 } },
+    ],
+    controls: ["p_prior_var", "r_noise_var"]
+  },
+  {
+    title: "Updating the Mean: x̂",
+    text: "The <b>posterior mean</b> x̂ is a weighted average of the prior mean x̂⁻ and the measurement z. The Kalman Gain K acts as the weighting factor. If K is high, x̂ moves closer to z; if K is low, x̂ stays closer to x̂⁻. <div class='eq'>x̂ = x̂⁻ + K (z − x̂⁻)</div> This can also be written as x̂ = (1-K)x̂⁻ + Kz.",
+    draw: (id, s, r) => {
+      const x_min = Math.min(s.x_prior_mean, s.z_measurement, r.x_posterior_mean) - 1;
+      const x_max = Math.max(s.x_prior_mean, s.z_measurement, r.x_posterior_mean) + 1;
 
-      // Healthy (P(~D))
-      const widthND = totalWidth * r.p_no_disease;
-      d.rect("healthy_group", { x: x0 + widthD, y: y0, width: widthND, height: totalHeight, fill: V.color(3), opacity: 0.2, stroke: V.color(3), strokeWidth: 2 });
-      d.text("p_nd_label", x0 + widthD + widthND / 2, y0 + totalHeight + 40, `P(~D) = ${V.fmt(r.p_no_disease)}`, { textAnchor: "middle", fill: V.color(3) });
+      const d = V.diagram(id, 700, 250);
+      const Y = 120;
+      const X = V.scale(x_min, x_max, 50, 650);
 
-      // P(+|D) * P(D) = P(D and +)
-      const heightD_pos = totalHeight * s.p_pos_given_disease;
-      d.rect("d_pos_area", { x: x0, y: y0, width: widthD, height: heightD_pos, fill: V.color(0), opacity: 0.8, stroke: V.color(0), strokeWidth: 2 });
-      d.text("p_d_pos_label", x0 + widthD / 2, y0 + heightD_pos / 2, `P(D and +) = ${V.fmt(r.p_D_pos)}`, { textAnchor: "middle", fill: V.ink, fontSize: 14 });
+      d.line("axis", { x1: X(x_min), y1: Y, x2: X(x_max), y2: Y, stroke: V.ink, strokeWidth: 1 });
 
-      // P(+|~D) * P(~D) = P(~D and +)
-      const heightND_pos = totalHeight * s.p_pos_given_no_disease;
-      d.rect("nd_pos_area", { x: x0 + widthD, y: y0, width: widthND, height: heightND_pos, fill: V.color(2), opacity: 0.8, stroke: V.color(2), strokeWidth: 2 });
-      d.text("p_nd_pos_label", x0 + widthD + widthND / 2, y0 + heightND_pos / 2, `P(~D and +) = ${V.fmt(r.p_nD_pos)}`, { textAnchor: "middle", fill: V.ink, fontSize: 14 });
+      d.circle("x_prior_mean", { cx: X(s.x_prior_mean), cy: Y, r: 8, fill: V.color(0) });
+      d.text("x_prior_mean_label", X(s.x_prior_mean), Y - 25, `x̂⁻ = ${V.fmt(s.x_prior_mean)}`, { textAnchor: "middle", fill: V.color(0) });
 
-      // P(+)
-      const totalPosAreaWidth = totalWidth;
-      const totalPosAreaHeight = (r.p_D_pos + r.p_nD_pos) * totalHeight; // This is P(+) * totalHeight
-      d.rect("p_pos_total_area", { x: x0, y: y0, width: totalPosAreaWidth, height: totalPosAreaHeight, fill: V.ink, opacity: 0.1, stroke: V.ink, strokeWidth: 1, strokeDasharray: "5,5" });
-      d.text("p_pos_label", x0 + totalPosAreaWidth + 20, y0 + totalPosAreaHeight / 2, `P(+) = ${V.fmt(r.p_pos)}`, { textAnchor: "start", fill: V.ink });
+      d.circle("z_measurement", { cx: X(s.z_measurement), cy: Y, r: 8, fill: V.color(2) });
+      d.text("z_measurement_label", X(s.z_measurement), Y - 25, `z = ${V.fmt(s.z_measurement)}`, { textAnchor: "middle", fill: V.color(2) });
 
-      // P(D|+)
-      d.arrow("posterior_arrow", x0 + totalWidth / 2, y0 + totalHeight + 70, x0 + totalWidth / 2, y0 + totalHeight + 50, { stroke: V.color(4), strokeWidth: 2 });
-      d.text("posterior_label", x0 + totalWidth / 2, y0 + totalHeight + 90, `P(D|+) = ${V.fmt(r.p_disease_given_pos)}`, { textAnchor: "middle", fill: V.color(4), fontWeight: "bold" });
+      d.arrow("residual_arrow", X(s.x_prior_mean), Y + 50, X(s.z_measurement), Y + 50, { stroke: V.muted, strokeWidth: 2, strokeDasharray: "5 5" });
+      d.text("residual_label", X(s.x_prior_mean + (s.z_measurement - s.x_prior_mean) / 2), Y + 70, `(z - x̂⁻) = ${V.fmt(s.z_measurement - s.x_prior_mean)}`, { textAnchor: "middle", fill: V.muted });
+
+      d.arrow("k_residual_arrow", X(s.x_prior_mean), Y + 100, X(s.x_prior_mean + r.K * (s.z_measurement - s.x_prior_mean)), Y + 100, { stroke: V.color(3), strokeWidth: 3 });
+      d.text("k_residual_label", X(s.x_prior_mean + r.K * (s.z_measurement - s.x_prior_mean) / 2), Y + 120, `K(z - x̂⁻) = ${V.fmt(r.K * (s.z_measurement - s.x_prior_mean))}`, { textAnchor: "middle", fill: V.color(3) });
+
+      d.circle("x_posterior_mean", { cx: X(r.x_posterior_mean), cy: Y, r: 10, fill: V.color(1) });
+      d.text("x_posterior_mean_label", X(r.x_posterior_mean), Y + 25, `x̂ = ${V.fmt(r.x_posterior_mean)}`, { textAnchor: "middle", fill: V.color(1), fontWeight: "bold" });
 
       d.end();
-    }
+    },
+    choices: [
+      { label: "K = 0.5", state: { p_prior_var: 1, r_noise_var: 1, x_prior_mean: 0, z_measurement: 2 } },
+      { label: "K ≈ 1 (Trust Z)", state: { p_prior_var: 1, r_noise_var: 0.01, x_prior_mean: 0, z_measurement: 2 } },
+      { label: "K ≈ 0 (Trust X̂⁻)", state: { p_prior_var: 0.01, r_noise_var: 1, x_prior_mean: 0, z_measurement: 2 } },
+    ],
+    controls: ["x_prior_mean", "z_measurement"]
+  },
+  {
+    title: "Updating the Variance: P",
+    text: "The <b>posterior variance</b> P represents the uncertainty of our new estimate. It is always less than or equal to both the prior variance P⁻ and the measurement noise R, meaning the update always reduces uncertainty. <div class='eq'>P = (1 − K) P⁻</div> This formula shows that as K approaches 1 (trusting the measurement more), P approaches 0 (very certain). If K approaches 0 (trusting the prior more), P approaches P⁻.",
+    draw: (id, s, r) => {
+      V.bars(id, [
+        { label: "P⁻ (Prior Variance)", value: r.P_prior_safe, color: V.color(0) },
+        { label: "R (Measurement Noise)", value: r.R_safe, color: V.color(2) },
+        { label: "P (Posterior Variance)", value: r.p_posterior_var, color: V.color(1) },
+      ], {
+        title: "Variance Reduction",
+        ylabel: "Variance",
+        max: Math.max(r.P_prior_safe, r.R_safe, 1) * 1.2,
+        digits: 3,
+        ref: [
+          { value: r.P_prior_safe, label: "P⁻", color: V.color(0) },
+          { value: r.R_safe, label: "R", color: V.color(2) },
+        ]
+      });
+    },
+    choices: [
+      { label: "Equal Uncertainty", state: { p_prior_var: 1, r_noise_var: 1 } },
+      { label: "Measurement Very Certain", state: { p_prior_var: 1, r_noise_var: 0.1 } },
+      { label: "Prior Very Certain", state: { p_prior_var: 0.1, r_noise_var: 1 } },
+    ],
+    controls: ["p_prior_var", "r_noise_var"]
+  },
+  {
+    title: "The Full Measurement Update",
+    text: "The Kalman filter measurement update combines the prior belief (x̂⁻, P⁻) and the measurement likelihood (z, R) to produce the posterior belief (x̂, P). The Kalman Gain K balances their influence. The posterior is always narrower (less uncertain) than either input, representing a more informed estimate. <div class='eq'>K = P⁻ / (P⁻ + R)</div> <div class='eq'>x̂ = x̂⁻ + K (z − x̂⁻)</div> <div class='eq'>P = (1 − K) P⁻</div>",
+    draw: (id, s, r) => {
+      const x_min = Math.min(s.x_prior_mean - 3 * Math.sqrt(r.P_prior_safe), s.z_measurement - 3 * Math.sqrt(r.R_safe), r.x_posterior_mean - 3 * Math.sqrt(r.p_posterior_var)) - 1;
+      const x_max = Math.max(s.x_prior_mean + 3 * Math.sqrt(r.P_prior_safe), s.z_measurement + 3 * Math.sqrt(r.R_safe), r.x_posterior_mean + 3 * Math.sqrt(r.p_posterior_var)) + 1;
+
+      const pts_prior = [];
+      const pts_measurement = [];
+      const pts_posterior = [];
+      for (let x = x_min; x <= x_max; x += (x_max - x_min) / 200) {
+        pts_prior.push([x, r.gaussian_pdf(x, s.x_prior_mean, r.P_prior_safe)]);
+        pts_measurement.push([x, r.gaussian_pdf(x, s.z_measurement, r.R_safe)]);
+        pts_posterior.push([x, r.gaussian_pdf(x, r.x_posterior_mean, r.p_posterior_var)]);
+      }
+
+      V.line(id, [
+        { name: "Prior (x̂⁻, P⁻)", pts: pts_prior, color: V.color(0) },
+        { name: "Measurement Likelihood (z, R)", pts: pts_measurement, color: V.color(2) },
+        { name: "Posterior (x̂, P)", pts: pts_posterior, color: V.color(1), line: true },
+      ], {
+        title: "Complete Kalman Measurement Update",
+        xlabel: "State Value",
+        ylabel: "Probability Density",
+        xmin: x_min, xmax: x_max,
+        ymin: 0, ymax: Math.max(...pts_prior.map(p => p[1]), ...pts_measurement.map(p => p[1]), ...pts_posterior.map(p => p[1])) * 1.1,
+        points: [
+          { x: s.x_prior_mean, y: r.gaussian_pdf(s.x_prior_mean, s.x_prior_mean, r.P_prior_safe), label: "x̂⁻", color: V.color(0), r: 4 },
+          { x: s.z_measurement, y: r.gaussian_pdf(s.z_measurement, s.z_measurement, r.R_safe), label: "z", color: V.color(2), r: 4 },
+          { x: r.x_posterior_mean, y: r.gaussian_pdf(r.x_posterior_mean, r.x_posterior_mean, r.p_posterior_var), label: "x̂", color: V.color(1), r: 4 },
+        ],
+        vlines: [
+          { x: r.x_posterior_mean, label: `x̂ = ${V.fmt(r.x_posterior_mean)}`, color: V.color(1) }
+        ],
+        hlines: [
+          { y: 0.05, label: `K = ${V.fmt(r.K)}`, color: V.color(3) },
+          { y: 0.02, label: `P = ${V.fmt(r.p_posterior_var)}`, color: V.color(1) }
+        ]
+      });
+    },
+    choices: [
+      { label: "Typical Case", preset: "typicalCase" },
+      { label: "High Measurement Trust", preset: "highMeasurementTrust" },
+      { label: "High Prior Trust", preset: "highPriorTrust" },
+    ],
+    controls: ["x_prior_mean", "p_prior_var"]
   },
 ];
 </script>
@@ -1661,8 +1698,9 @@ const SLIDES = [
     play.querySelector(".in > h2").after(bar.firstChild || document.createTextNode(""));
   }
   document.querySelectorAll(".chip[data-chip]").forEach((b) => b.addEventListener("click", () => {
-    const st = CH[+b.getAttribute("data-chip")];
-    let cur = {}; try { cur = readState(); } catch (e) {}
+    let st = CH[+b.getAttribute("data-chip")];
+    let cur = {}; try { cur = full(readState()); } catch (e) {}
+    if (typeof st === "function") { try { st = st(cur, compute(cur)) || {}; } catch (e) { showErr("scenario: " + e.message); st = {}; } }
     V.apply(Object.assign({}, cur, st));
     b.parentNode.querySelectorAll(".chip").forEach((x) => x.classList.toggle("on", x === b));
   }));
