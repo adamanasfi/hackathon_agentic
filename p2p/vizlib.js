@@ -218,7 +218,7 @@
       if (w.label) d.text("wl" + k, x0 + w.c * cs, y0 + w.r * cs - 7, w.label, { fill: w.color || GOLD, fontSize: 12, fontWeight: 650 });
     });
     d.end();
-    return { cell: cs, x0, y0 };
+    return { cell: cs, x0, y0, X: (j) => x0 + j * cs + cs / 2, Y: (i) => y0 + i * cs + cs / 2 };
   }
 
   /* ---- V.curve: function curve with a ball, tangent and trail (optimisation, calculus, losses) ---- */

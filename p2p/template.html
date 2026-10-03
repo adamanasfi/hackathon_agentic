@@ -475,6 +475,7 @@ const V = (function () {
         td.className = hl.has(i + "," + j) ? "hlc" : "";
       }
     }
+    return t;
   }
 
   /* --- editable numeric grid --- */
@@ -484,6 +485,7 @@ const V = (function () {
     const host = $(id);
     if (!host) throw new Error("V.editGrid: no element with id '" + id + "'");
     host._flat = M.length > 0 && !M.some(Array.isArray);
+    host._rowLabels = o.rows;
     if (host._flat) M = [M];
     M = M.map((r) => (Array.isArray(r) ? r : [r]));
     const R = M.length, C = R ? M[0].length : 0;
@@ -510,7 +512,10 @@ const V = (function () {
       inp.classList.toggle("bad", !isFinite(v));
       (out[i] = out[i] || [])[j] = isFinite(v) ? v : 0;
     });
-    return host._flat ? out[0] || [] : out;
+    if (host._flat) return out[0] || [];
+    const labsR = host._rowLabels || [];
+    out.data = out; out.values = out; out.rows = out.map((r, i) => [labsR[i] === undefined ? i : labsR[i]].concat(r));
+    return out;
   }
 
   function table(id, head, rows, o) {
@@ -519,6 +524,7 @@ const V = (function () {
     const dg = o.digits === undefined ? 3 : o.digits;
     const cell = (v, th) => { const n = typeof v === "number"; const tag = th ? "th" : "td"; return "<" + tag + (n ? " class='num'" : "") + ">" + (n ? fmt(v, dg) : v) + "</" + tag + ">"; };
     host.innerHTML = "<table class='vals'>" + (head ? "<tr>" + head.map((h) => cell(h, true)).join("") + "</tr>" : "") + rows.map((r) => "<tr>" + r.map((v) => cell(v)).join("") + "</tr>").join("") + "</table>";
+    return host.firstChild;
   }
 
   function resize(M, rows, cols, fill) {
@@ -729,7 +735,8 @@ const V = (function () {
   }
   document.querySelectorAll(".chip[data-chip]").forEach((b) => b.addEventListener("click", () => {
     const st = CH[+b.getAttribute("data-chip")];
-    V.apply(st);
+    let cur = {}; try { cur = readState(); } catch (e) {}
+    V.apply(Object.assign({}, cur, st));
     b.parentNode.querySelectorAll(".chip").forEach((x) => x.classList.toggle("on", x === b));
   }));
   track.addEventListener("input", (e) => { if (e.target && e.target.closest && !e.target.closest(".chips")) document.querySelectorAll(".chip.on").forEach((x) => x.classList.remove("on")); });

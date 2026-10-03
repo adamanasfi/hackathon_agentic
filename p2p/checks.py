@@ -103,6 +103,14 @@ def sanitize(blocks):
         if miss:
             blocks["PLAYGROUND"] = pg + "\n<div class=\"auto-viz\">" + "".join(f'<div class="viz" id="{i}"></div>' for i in miss) + "</div>"
             fixes.append(f"created missing display containers {miss}")
+    ui0 = blocks.get("UI", "")
+    def _strip_s(m):
+        body = re.sub(r"\s*,?\s*[A-Za-z_$][\w$]*\s*:\s*s\.[\w$.\[\]]+\s*(?=[,}])", "", m.group(1))
+        return "state: {" + re.sub(r"^\s*,", "", body) + "}"
+    ui1 = re.sub(r"state:\s*\{([^{}]*)\}", _strip_s, ui0)
+    if ui1 != ui0:
+        blocks["UI"] = ui1
+        fixes.append("removed references to the live state s inside scenario literals (chips patch the current state)")
     decl = re.compile(r"^(?:const|let|var|function)\s+([A-Za-z_$][\w$]*)", re.M)
     model_names = set(decl.findall(blocks.get("MODEL", "")))
     lines, dropped = blocks.get("UI", "").split("\n"), []
@@ -226,11 +234,14 @@ var V = (function(){
       if (bad === s.pts.length && bad > 0) __err("V.line('" + id + "'): series " + i + ' has no finite points'); else if (bad) __warn("V.line('" + id + "'): series " + i + ' has ' + bad + ' non-finite points'); });
     return {X: function(){ return 0; }, Y: function(){ return 0; }}; }
   function matrix(id, M, o){ __need(id, 'V.matrix'); if (!Array.isArray(M) || !M.every(Array.isArray)) { __err("V.matrix('" + id + "'): M is not a 2-D array of numbers. Signature: V.matrix(id, [[...], ...], {rows, cols, digits, title})"); return; }
-    M.forEach(function(r, i){ r.forEach(function(v, j){ if (typeof v === 'number' && !isFinite(v)) __err("V.matrix('" + id + "'): cell [" + i + ',' + j + '] is ' + v); }); }); }
+    M.forEach(function(r, i){ r.forEach(function(v, j){ if (typeof v === 'number' && !isFinite(v)) __err("V.matrix('" + id + "'): cell [" + i + ',' + j + '] is ' + v); }); }); return __absorb('table'); }
+  var __glab = {};
   function editGrid(id, M, o){ __need(id, 'V.editGrid'); if (!Array.isArray(M)) { __err("V.editGrid('" + id + "'): M must be an array (1-D or 2-D)"); return; }
-    __grids[id] = M.map(function(r){ return Array.isArray(r) ? r.map(Number) : Number(r); }); }
-  function readGrid(id){ return (__grids[id] || []).map(function(r){ return Array.isArray(r) ? r.slice() : r; }); }
-  function table(id, head, rows){ __need(id, 'V.table'); if (!Array.isArray(rows)) __err('V.table: rows must be an array'); else rows.forEach(function(r){ (r || []).forEach(function(v){ if (typeof v === 'number' && !isFinite(v)) __err("V.table('" + id + "') shows " + v); }); }); }
+    __grids[id] = M.map(function(r){ return Array.isArray(r) ? r.map(Number) : Number(r); }); __glab[id] = (o && Array.isArray(o.rows)) ? o.rows : []; }
+  function readGrid(id){ var g = __grids[id] || [], out = g.map(function(r){ return Array.isArray(r) ? r.slice() : r; });
+    if (g.length && !g.some(Array.isArray)) return out;
+    out.data = out; out.values = out; out.rows = out.map(function(r, i){ return [__glab[id] && __glab[id][i] !== undefined ? __glab[id][i] : i].concat(r); }); return out; }
+  function table(id, head, rows){ var __el = __ids[__resolve(id)]; __need(id, 'V.table'); if (!Array.isArray(rows)) __err('V.table: rows must be an array'); else rows.forEach(function(r){ (r || []).forEach(function(v){ if (typeof v === 'number' && !isFinite(v)) __err("V.table('" + id + "') shows " + v); }); }); return __el || __absorb('table'); }
   function resize(M, rows, cols, fill){ fill = fill === undefined ? 0 : fill; var A = Array.isArray(M) ? M : [], out = [], i, j;
     for (i = 0; i < rows; i++) { if (cols === undefined) out.push(A[i] === undefined || A[i] === null ? fill : A[i]);
       else { var row = []; for (j = 0; j < cols; j++) row.push(Array.isArray(A[i]) && A[i][j] !== undefined && A[i][j] !== null ? A[i][j] : fill); out.push(row); } } return out; }
@@ -257,7 +268,7 @@ var V = (function(){
     if (!Array.isArray(M) || !M.length) { __err(f + ': M must be a 2-D array of numbers'); return {}; }
     M.forEach(function(r, i){ (Array.isArray(r) ? r : [r]).forEach(function(v, j){ if (typeof v !== 'number' || !isFinite(v)) __err(f + ': cell [' + i + ',' + j + '] is ' + v); }); });
     o = o || {}; (o.windows || (o.window ? [o.window] : [])).forEach(function(w){ if (!w || !(w.r >= 0) || !(w.c >= 0) || w.r + (w.h || 1) > M.length || w.c + (w.w || 1) > (M[0] || []).length) __warn(f + ': window outside the grid'); });
-    return {cell: 30, x0: 0, y0: 0}; }
+    return {cell: 30, x0: 0, y0: 0, X: function(j){ return j * 30; }, Y: function(i){ return i * 30; }}; }
   function curve(id, o){ __need(id, 'V.curve'); o = o || {}; var f = "V.curve('" + id + "')";
     if (typeof o.f !== 'function' && !Array.isArray(o.pts)) { __err(f + ': needs f: x => y (with xmin, xmax) or pts: [[x, y], ...]'); return {}; }
     if (typeof o.f === 'function') { var ok = 0, a = o.xmin === undefined ? -5 : o.xmin, b = o.xmax === undefined ? 5 : o.xmax;
