@@ -71,7 +71,13 @@ FATAL = re.compile(r"block failed to load|is not defined|compute\(DEFAULT_STATE\
 
 
 def weight(e):
-    return 100 if FATAL.search(e) else 1 if re.match(r'(TEST "|invariant ")', e) else 20 if re.match(r"SLIDES\[\d+\]\.draw threw at DEFAULT", e) else 5
+    if FATAL.search(e):
+        return 100
+    if re.match(r'(TEST "|invariant ")', e):
+        return 1
+    if re.match(r"SLIDES\[\d+\]\.draw threw at DEFAULT", e) or "setState then readState" in e or "choices[" in e:
+        return 40  # broken scenario buttons / presets: the main interaction silently does nothing
+    return 5
 
 
 def severity(errors):

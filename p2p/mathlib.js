@@ -45,7 +45,8 @@ const L = (function () {
   const clip = (A, a, b) => map(A, (x) => Math.min(b, Math.max(a, x)));
   const fmt = (x, d) => (typeof x === "number" && isFinite(x) ? x.toFixed(d === undefined ? 3 : d) : String(x));
   const fill = (n, v) => Array(n).fill(v === undefined ? 0 : v);
-  const api = { fill, log: Math.log, exp: Math.exp, sqrt: Math.sqrt, pow: Math.pow, fmt, range, zeros, ones, sum, mean, max, min, abs, cumsum, clip, dot, transpose, matmul, map, scale, add, sub, softmax, logsumexp, log2, xlogx, normalize, argmax, norm, rowSums, shape, sigmoid, round, rng, randn };
+  const equals = (a, b, tol) => (Array.isArray(a) && Array.isArray(b) ? a.length === b.length && a.every((x, i) => equals(x, b[i], tol)) : typeof a === "number" && typeof b === "number" ? Math.abs(a - b) <= (tol === undefined ? 1e-9 : tol) : a === b);
+  const api = { equals, fill, log: Math.log, exp: Math.exp, sqrt: Math.sqrt, pow: Math.pow, fmt, range, zeros, ones, sum, mean, max, min, abs, cumsum, clip, dot, transpose, matmul, map, scale, add, sub, softmax, logsumexp, log2, xlogx, normalize, argmax, norm, rowSums, shape, sigmoid, round, rng, randn };
   if (typeof __err === "function") return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; __err("L." + String(k) + " does not exist (available: " + Object.keys(t).join(", ") + ")"); return () => 0; } });
   return api;
 })();
