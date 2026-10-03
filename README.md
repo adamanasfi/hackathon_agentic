@@ -36,8 +36,8 @@ case.json
   │ 4. CHECK     static checks + EXECUTION of the generated JS in QuickJS against a stub DOM built from
   │              the generated HTML (see below)
   │ 5. REVISE    if checks fail: send only the failing blocks and the error list, and receive search/replace
-  │              EDITs (or whole blocks if missing). Up to 2 rounds. Stops early when a round makes no
-  │              progress or only model-proposed expectations disagree. Keeps the best version seen.
+  │              EDITs (or whole blocks if missing). One round by default (`--max-repairs`). Skipped when only
+  │              model-proposed expectations disagree. Keeps the best version seen.
   │ 6. WRITE     assemble into the generic template → index.html. The trace records every stage.
 ```
 
@@ -103,6 +103,23 @@ calculation.
   the OpenRouter generation id, so usage can be verified against API records. No credentials or hidden
   reasoning are logged.
 
+## Measured results (development runs, `google/gemini-2.5-flash`, final code)
+
+| Practice case | LLM calls | Total tokens | Wall time | Remaining issues |
+|---|---|---|---|---|
+| Shannon entropy (Sec. 6) | 1 | 11.7k | 26 s | none: every check passes |
+| Attention (Sec. 3.2.1) | 1 | 16.0k | 45 s | one model-proposed test pruned |
+| PageRank (Sec. 2.4/2.6, iterative ▶ Run) | 2 | 27.1k | 55 s | none |
+| Batch Normalization (Alg. 1) | 2 | 36.7k | 76 s | one model-proposed invariant pruned |
+| Adam bias correction (Alg. 1, iterative) | 2 | 35.3k | 77 s | one helper misuse (since added to `V`) |
+
+We also tested `openai/gpt-4.1-mini` (entropy: 1 call, 10.8k tokens, clean) and a run where every network request
+except OpenRouter was blocked: the source fetch failed in 0.05 s, the failure was logged, and generation
+completed from the case text.
+
+**Example input/output pair:** [examples/output/entropy/](examples/output/entropy/) holds `case.json`,
+`index.html` and `trace.jsonl`, exactly as the agent wrote them.
+
 ## Files
 
 | Path | Purpose |
@@ -116,7 +133,7 @@ calculation.
 | `p2p/source.py` | Excerpt handling and best-effort source fetch |
 | `p2p/template.html`, `p2p/mathlib.js` | Generic page template and helper libraries |
 | `examples/*.json` | Practice inputs (our own; the two public examples plus three others) |
-| `examples/output/` | One example input/output pair with its trace |
+| `examples/output/entropy/` | One example input/output pair with its trace |
 | `tools/` | Development-only scripts (browser smoke test, re-assembly); not used by the agent |
 
 ## Credits and reuse

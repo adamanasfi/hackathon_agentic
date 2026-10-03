@@ -226,10 +226,10 @@ var V = (function(){
   function resize(M, rows, cols, fill){ fill = fill === undefined ? 0 : fill; var A = Array.isArray(M) ? M : [], out = [], i, j;
     for (i = 0; i < rows; i++) { if (cols === undefined) out.push(A[i] === undefined || A[i] === null ? fill : A[i]);
       else { var row = []; for (j = 0; j < cols; j++) row.push(Array.isArray(A[i]) && A[i][j] !== undefined && A[i][j] !== null ? A[i][j] : fill); out.push(row); } } return out; }
-  var api = {$: $, fmt: fmt, num: num, val: val, set: set, clamp: function(x, a, b){ return Math.min(b, Math.max(a, x)); }, color: function(){ return '#000'; },
+  var api = {$: $, $$: function(){ return []; }, fmt: fmt, num: num, val: val, set: set, clamp: function(x, a, b){ return Math.min(b, Math.max(a, x)); }, color: function(){ return '#000'; },
     diagram: diagram, bars: bars, line: line, matrix: matrix, editGrid: editGrid, readGrid: readGrid, table: table, ticks: function(){ return [0, 1]; }, resize: resize, split: split, scale: function(d0, d1, r0, r1){ return function(v){ return r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0); }; }, stage: Infinity, syncOut: function(){}, update: function(){}, apply: function(){} };
   return new Proxy(api, {get: function(t, k){ if (k in t || typeof k === 'symbol') return t[k];
-    __err('V.' + String(k) + ' does not exist in the helper library (available: $, fmt, num, val, set, clamp, color, resize, split, scale, bars, line, matrix, editGrid, readGrid, table, diagram). The template already shows invariants() and TESTS; do not render them yourself.');
+    __err('V.' + String(k) + ' does not exist in the helper library (available: $, $$, fmt, num, val, set, clamp, color, resize, split, scale, bars, line, matrix, editGrid, readGrid, table, diagram). The template already shows invariants() and TESTS; do not render them yourself.');
     return function(){ return ''; }; }});
 })();
 """

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>%%TITLE%%</title>
+<title>Shannon Entropy</title>
 <style>
 :root{--bg:#eef1f8;--card:#fff;--ink:#0f172a;--ink2:#334155;--muted:#64748b;--line:#e2e8f0;--accent:#4f46e5;--accent2:#0ea5e9;--ok:#16a34a;--bad:#dc2626;--warn:#d97706;--hl:#f59e0b;--soft:#eef2ff;--shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.08);--r:16px}
 *{box-sizing:border-box}
@@ -126,32 +126,115 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 </style>
 </head>
 <body>
-<header class="top"><div class="row"><div class="logo"></div><h1>%%TITLE%%</h1><div class="cite">%%CITE%%</div>
+<header class="top"><div class="row"><div class="logo"></div><h1>Shannon Entropy</h1><div class="cite">Source: Shannon (1948). A Mathematical Theory of Communication · Section 6, Choice, Uncertainty and Entropy · <a href="https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf" target="_blank" rel="noopener">https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf</a> · Audience: Engineering undergraduate with basic probability; no information theory background.</div>
 <div class="tools"><button class="ghost" id="flowbtn" title="Show all slides as one scrolling page">View as page</button></div></div>
 <div class="prog"><div id="bar"></div></div></header>
 <div id="errors"></div>
 <main id="deck"><div id="track">
 <section class="slide" data-title="The idea"><div class="in">
-<div class="hero"><span class="kicker">Interactive lesson</span><h2>%%TITLE%%</h2><p class="sum">%%SUMMARY%%</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
+<div class="hero"><span class="kicker">Interactive lesson</span><h2>Shannon Entropy</h2><p class="sum">Learners will be able to see how the probability distribution of outcomes determines the uncertainty (entropy) of a system, measured in bits.</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
 <div id="intro-cards">
-%%INTRO%%
+<div class="card">
+  <h3>The idea</h3>
+  Imagine you're trying to predict the outcome of an event, like a dice roll or a coin flip. Shannon Entropy measures how much "surprise" or "uncertainty" is involved in that prediction. It's like asking: "How many yes/no questions, on average, do I need to ask to figure out the outcome?"
+</div>
+<div class="card">
+  <h3>Why it matters</h3>
+  In the paper, Shannon uses entropy to quantify the information content of messages, laying the foundation for modern digital communication. In practice, it's used in data compression (e.g., ZIP files), machine learning (e.g., decision trees), and even in biology to measure genetic diversity.
+</div>
+<div class="card">
+  <h3>The key equation</h3>
+  <div class="eq">
+    H = − Σ<sub>i=1</sub><sup>N</sup> pᵢ log₂ pᵢ
+  </div>
+  This equation calculates the average uncertainty (H) of a discrete random variable with N possible outcomes, where pᵢ is the probability of each outcome.
+</div>
+<div class="card">
+  <h3>Symbols</h3>
+  <table class="sym">
+    <tr><td>H</td><td>Shannon Entropy</td><td>bits</td></tr>
+    <tr><td>N</td><td>Number of possible outcomes</td><td>integer</td></tr>
+    <tr><td>pᵢ</td><td>Probability of outcome i</td><td>[0, 1], sums to 1</td></tr>
+    <tr><td>log₂</td><td>Logarithm base 2</td><td></td></tr>
+    <tr><td>Σ</td><td>Summation</td><td></td></tr>
+  </table>
+</div>
 </div></div></section>
 <section class="slide" id="play" data-title="Playground"><div class="in">
 <span class="kicker">Sandbox</span><h2>Playground: the full mechanism</h2>
 <div id="learnbar" hidden></div>
-%%PLAYGROUND%%
+<div class="play">
+  <div class="card">
+    <div class="ctrl">
+      <label for="numOutcomes">Number of Outcomes (N)</label>
+      <input type="range" id="numOutcomes" min="2" max="5" step="1" value="3">
+      <div class="hint">Adjust the number of possible events.</div>
+    </div>
+    <div class="ctrl">
+      <label for="probabilities">Probabilities (pᵢ)</label>
+      <div id="probabilities"></div>
+      <div class="hint">Edit the probability for each outcome. They will be normalized to sum to 1.</div>
+    </div>
+  </div>
+  <div>
+    <div class="viz" id="entropyViz"></div>
+    <div class="readout" id="entropyReadout"></div>
+  </div>
+</div>
 <div class="card" id="livebox" hidden><h3>Live checks (recomputed on every change)</h3><ul class="checks" id="live"></ul></div>
 </div></section>
 <section class="slide" id="source" data-title="Sources &amp; checks"><div class="in">
 <span class="kicker">Grounding</span><h2>What comes from the paper, and what is ours</h2>
-%%GROUNDING%%
+<div class="grid2">
+  <div class="card from-paper">
+    <h3>Stated in the paper</h3>
+    <ul>
+      <li>"H = − Σ pᵢ log pᵢ ... play a central role in information theory as measures of information, choice and uncertainty." (Section 6, page 10)</li>
+      <li>"H = 0 if and only if all the pᵢ but one are zero, this one having the value unity. Thus only when we are certain of the outcome does H vanish." (Section 6, Property 1, page 11)</li>
+      <li>"For a given n, H is a maximum and equal to log n when all the pᵢ are equal (i.e., 1/n)." (Section 6, Property 2, page 11)</li>
+      <li>"If the logarithmic base is 2, they will represent bits per symbol or per second." (Section 7, page 12)</li>
+      <li>The example of H for probabilities (1/2, 1/3, 1/6) is used in Fig. 6. (Section 6, page 10)</li>
+    </ul>
+  </div>
+  <div class="card ours">
+    <h3>Our simplifications &amp; examples</h3>
+    <ul>
+      <li>We fix the logarithm base to 2 to directly measure entropy in "bits", as is common in information theory.</li>
+      <li>We normalize input probabilities to sum to 1, as required by the definition, to handle user input flexibility.</li>
+      <li>We use a small, fixed number of outcomes (2-5) for visual clarity and ease of interaction.</li>
+      <li>The visual representation of probabilities, surprise, and contributions as bar charts is a pedagogical choice to illustrate the components of the sum.</li>
+      <li>The analogy of "yes/no questions" for bits is a common intuitive explanation for entropy.</li>
+    </ul>
+  </div>
+</div>
 <p class="disclaimer">This page is an automatically generated, simplified teaching demonstration. All numbers are computed live in your browser from the formulas shown, using small illustrative inputs; they do not reproduce the paper's experiments or reported results.</p>
 <div class="card" id="selftest"><h3>Built-in calculation checks</h3><p class="note">Known cases evaluated with the same <code>compute()</code> function that drives every slide.</p>
 <table class="vals" id="tests"><tr><th>Case</th><th class="num">Computed</th><th class="num">Expected</th><th>Result</th></tr></table></div>
 </div></section>
 </div></main>
 <div id="explore-src" hidden>
-%%EXPLORE%%
+<div class="card explore" data-show-slide="3" data-show-preset="certain">
+  <h3>Exploration 1: Certainty means zero uncertainty</h3>
+  <p><b>Try:</b> Set the "Number of Outcomes" to 3. Edit the "Probabilities" so that one outcome has a probability of 1, and the others are 0 (e.g., p₁=1, p₂=0, p₃=0).</p>
+  <p><b>Watch:</b> Observe the "Contributions" bars. Only the certain outcome will have a bar, but its height will be <span class="calc" data-at="certain" data-get="r.p_log_p[0]" data-d="3"></span>. The "Total Entropy (H)" will be <span class="calc" data-at="certain" data-get="r.H" data-d="3"></span> bits.</p>
+  <p><b>Why:</b> If an outcome is certain (pᵢ=1), there is no surprise (<span class="calc">−log₂ 1 = 0</span>), and thus no uncertainty. The system provides no new information when the outcome is already known.</p>
+  <button data-preset="certain">Try it in the playground</button>
+</div>
+
+<div class="card explore" data-show-slide="3" data-show-preset="fourEqual">
+  <h3>Exploration 2: Maximum uncertainty with equally likely outcomes</h3>
+  <p><b>Try:</b> Set the "Number of Outcomes" to 4. Edit the "Probabilities" so all outcomes are equally likely (e.g., p₁=0.25, p₂=0.25, p₃=0.25, p₄=0.25).</p>
+  <p><b>Watch:</b> All "Contributions" bars will be equal, each showing <span class="calc" data-at="fourEqual" data-get="r.p_log_p[0]" data-d="3"></span> bits. The "Total Entropy (H)" will be <span class="calc" data-at="fourEqual" data-get="r.H" data-d="3"></span> bits, which is exactly <span class="calc">log₂ 4 = 2</span>.</p>
+  <p><b>Why:</b> Uncertainty is maximized when all outcomes are equally probable. In this case, knowing the outcome requires the maximum average number of yes/no questions, which is <span class="calc">log₂ N</span>.</p>
+  <button data-preset="fourEqual">Try it in the playground</button>
+</div>
+
+<div class="card caution" data-show-slide="0" data-show-preset="skewed">
+  <h3>Limitation / common misunderstanding</h3>
+  <p>Entropy is not just about the number of outcomes. While more outcomes can lead to higher entropy, the distribution of probabilities is crucial. A system with many outcomes but one highly probable outcome (e.g., p₁=0.9, p₂=0.05, p₃=0.05) can have lower entropy than a system with fewer outcomes that are equally likely (e.g., p₁=0.5, p₂=0.5).</p>
+  <p><b>Try:</b> Set "Number of Outcomes" to 3 and probabilities to <span class="calc" data-at="skewed" data-get="s.probabilities" data-d="2"></span>. The entropy is <span class="calc" data-at="skewed" data-get="r.H" data-d="3"></span> bits. Now, change "Number of Outcomes" to 2 and probabilities to [0.5, 0.5]. The entropy is 1 bit. Even with fewer outcomes, the uncertainty can be higher if they are more evenly distributed.</p>
+  <button data-preset="skewed">Try it in the playground</button>
+</div>
 </div>
 <nav class="nav"><button class="ghost" id="prev">← Back</button><div class="dots" id="dots"></div><span id="counter"></span><button id="next">Next →</button></nav>
 <script>
@@ -505,27 +588,356 @@ const V = (function () {
   }
   /* linear map from data domain [d0,d1] to pixel range [r0,r1] */
   const scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0);
-  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-  const api = { $, $$, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
+  const api = { $, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
   const warned = new Set();
   /* unknown helpers degrade to no-ops instead of breaking the page */
   return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; if (!warned.has(k)) { warned.add(k); console.warn("V." + String(k) + " is not a helper"); } return () => ""; } });
 })();
 </script>
 <script>
-%%MATHLIB%%
+/* ---------- L: small, tested numeric helpers (template, paper-agnostic) ---------- */
+const L = (function () {
+  const isM = (A) => Array.isArray(A) && Array.isArray(A[0]);
+  const range = (n, a, b) => (b === undefined ? Array.from({ length: n }, (_, i) => i) : Array.from({ length: n }, (_, i) => a + (n === 1 ? 0 : ((b - a) * i) / (n - 1))));
+  const zeros = (r, c) => (c === undefined ? Array(r).fill(0) : Array.from({ length: r }, () => Array(c).fill(0)));
+  const sum = (v) => v.reduce((a, b) => a + b, 0);
+  const mean = (v) => (v.length ? sum(v) / v.length : 0);
+  const dot = (a, b) => a.reduce((s, x, i) => s + x * (b[i] || 0), 0);
+  const transpose = (A) => (A.length ? A[0].map((_, j) => A.map((r) => r[j])) : []);
+  function matmul(A, B) {
+    if (!isM(B)) return A.map((r) => dot(r, B));
+    if (!A.length || !B.length) return [];
+    if (A[0].length !== B.length) throw new Error("L.matmul: shapes " + A.length + "x" + A[0].length + " and " + B.length + "x" + B[0].length + " do not match");
+    return A.map((r) => B[0].map((_, j) => r.reduce((s, x, k) => s + x * B[k][j], 0)));
+  }
+  const map = (A, f) => (isM(A) ? A.map((r, i) => r.map((x, j) => f(x, i, j))) : A.map((x, i) => f(x, i)));
+  const scale = (A, k) => map(A, (x) => x * k);
+  const add = (A, B) => map(A, (x, i, j) => x + (j === undefined ? B[i] : B[i][j]));
+  const sub = (A, B) => map(A, (x, i, j) => x - (j === undefined ? B[i] : B[i][j]));
+  function softmax(v, T) {
+    T = T === undefined ? 1 : T;
+    if (isM(v)) return v.map((r) => softmax(r, T));
+    if (!v.length) return [];
+    const m = Math.max(...v), e = v.map((x) => Math.exp((x - m) / T)), s = sum(e);
+    return e.map((x) => x / s);
+  }
+  const logsumexp = (v) => { const m = Math.max(...v); return m + Math.log(sum(v.map((x) => Math.exp(x - m)))); };
+  const log2 = (x) => Math.log(x) / Math.LN2;
+  const xlogx = (p, base) => (p > 0 ? (p * Math.log(p)) / Math.log(base || 2) : 0);
+  const normalize = (v) => { const s = sum(v); return s > 0 ? v.map((x) => x / s) : v.map(() => 1 / v.length); };
+  const argmax = (v) => v.reduce((bi, x, i) => (x > v[bi] ? i : bi), 0);
+  const norm = (v) => Math.sqrt(dot(v, v));
+  const rowSums = (A) => A.map(sum);
+  const shape = (A) => (isM(A) ? [A.length, A[0].length] : [A.length]);
+  const sigmoid = (x) => 1 / (1 + Math.exp(-x));
+  const round = (x, d) => { const k = Math.pow(10, d === undefined ? 3 : d); return Math.round(x * k) / k; };
+  function rng(seed) { let s = seed >>> 0 || 1; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+  function randn(r) { const u = Math.max(1e-12, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  const max = (v) => Math.max(...(isM(v) ? v.flat() : v));
+  const min = (v) => Math.min(...(isM(v) ? v.flat() : v));
+  const ones = (r, c) => map(zeros(r, c), () => 1);
+  const abs = (A) => map(A, Math.abs);
+  const cumsum = (v) => { let s = 0; return v.map((x) => (s += x)); };
+  const clip = (A, a, b) => map(A, (x) => Math.min(b, Math.max(a, x)));
+  const fmt = (x, d) => (typeof x === "number" && isFinite(x) ? x.toFixed(d === undefined ? 3 : d) : String(x));
+  const api = { log: Math.log, exp: Math.exp, sqrt: Math.sqrt, pow: Math.pow, fmt, range, zeros, ones, sum, mean, max, min, abs, cumsum, clip, dot, transpose, matmul, map, scale, add, sub, softmax, logsumexp, log2, xlogx, normalize, argmax, norm, rowSums, shape, sigmoid, round, rng, randn };
+  if (typeof __err === "function") return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; __err("L." + String(k) + " does not exist (available: " + Object.keys(t).join(", ") + ")"); return () => 0; } });
+  return api;
+})();
+
 </script>
 <script>
 /* ---------- MODEL (generated) ---------- */
-%%MODEL%%
+const DEFAULT_STATE = {
+  numOutcomes: 3,
+  probabilities: [0.5, 0.3, 0.2],
+};
+
+function compute(s) {
+  const N = s.numOutcomes;
+  let p = V.resize(s.probabilities, N);
+
+  // Normalize probabilities to ensure they sum to 1
+  const sum_p = L.sum(p);
+  if (sum_p === 0) { // Avoid division by zero if all probabilities are zero
+    p = L.zeros(N);
+    p[0] = 1; // Default to one certain outcome
+  } else {
+    p = L.scale(p, 1 / sum_p);
+  }
+
+  const log_p = p.map(val => (val > 1e-9 ? -L.log2(val) : 0)); // -log2(p_i), 0 if p_i is 0
+  const p_log_p = p.map((val, i) => (val > 1e-9 ? -val * L.log2(val) : 0)); // -p_i log2(p_i), 0 if p_i is 0
+
+  const H = L.sum(p_log_p); // Sum of -p_i log2(p_i)
+
+  return {
+    p,
+    log_p,
+    p_log_p,
+    H,
+    sum_p_norm: L.sum(p), // For invariant check
+  };
+}
+
+function invariants(s, r) {
+  return [
+    {
+      label: "Probabilities sum to 1",
+      ok: Math.abs(r.sum_p_norm - 1) < 1e-9,
+      detail: `Sum: ${V.fmt(r.sum_p_norm)}`,
+    },
+    {
+      label: "Entropy is non-negative",
+      ok: r.H >= 0,
+      detail: `H: ${V.fmt(r.H)}`,
+    },
+  ];
+}
+
+
+
+const PRESETS = {
+  twoEqual: { numOutcomes: 2, probabilities: [0.5, 0.5] },
+  fourEqual: { numOutcomes: 4, probabilities: [0.25, 0.25, 0.25, 0.25] },
+  certain: { numOutcomes: 3, probabilities: [1, 0, 0] },
+  skewed: { numOutcomes: 3, probabilities: [0.8, 0.15, 0.05] },
+  paperExample: { numOutcomes: 3, probabilities: [1 / 2, 1 / 3, 1 / 6] },
+};
 </script>
 <script>
 /* ---------- TESTS (generated, isolated so a faulty test cannot break the model) ---------- */
-%%TESTS%%
+var TESTS = [], __TESTS_ERROR = null;
+try { TESTS = [
+  {
+    name: "Two equal outcomes (1 bit)",
+    state: { numOutcomes: 2, probabilities: [0.5, 0.5] },
+    get: (r) => r.H,
+    expect: 1,
+    tol: 1e-9,
+  },
+  {
+    name: "Four equal outcomes (2 bits)",
+    state: { numOutcomes: 4, probabilities: [0.25, 0.25, 0.25, 0.25] },
+    get: (r) => r.H,
+    expect: 2,
+    tol: 1e-9,
+  },
+  {
+    name: "Certain outcome (0 bits)",
+    state: { numOutcomes: 3, probabilities: [1, 0, 0] },
+    get: (r) => r.H,
+    expect: 0,
+    tol: 1e-9,
+  },
+  {
+    name: "Two outcomes, one zero prob (1 bit)",
+    state: { numOutcomes: 3, probabilities: [0.5, 0.5, 0] },
+    get: (r) => r.H,
+    expect: 1,
+    tol: 1e-9,
+  },
+  {
+    name: "Paper example (1/2, 1/3, 1/6)",
+    state: { numOutcomes: 3, probabilities: [1 / 2, 1 / 3, 1 / 6] },
+    get: (r) => r.H,
+    expect: 1.4591479170272448, // - (0.5 log2 0.5 + 0.333 log2 0.333 + 0.166 log2 0.166)
+    tol: 1e-9,
+  },
+  {
+    name: "All zero probabilities (normalized to 1,0,0)",
+    state: { numOutcomes: 3, probabilities: [0, 0, 0] },
+    get: (r) => r.H,
+    expect: 0,
+    tol: 1e-9,
+  },
+]; } catch (e) { __TESTS_ERROR = String(e && e.message || e); }
 </script>
 <script>
 /* ---------- UI (generated) ---------- */
-%%UI%%
+function readState() {
+  const numOutcomes = V.num("numOutcomes");
+  const probabilities = V.readGrid("probabilities");
+  return {
+    numOutcomes: numOutcomes,
+    probabilities: V.resize(probabilities, numOutcomes),
+  };
+}
+
+function setState(s) {
+  V.set("numOutcomes", s.numOutcomes);
+  V.editGrid("probabilities", V.resize(s.probabilities, s.numOutcomes), {
+    rows: L.range(s.numOutcomes).map((i) => `p<sub>${i + 1}</sub>`),
+    cols: ["Value"],
+    step: 0.01,
+    force: true,
+  });
+}
+
+function render(s, r) {
+  const N = s.numOutcomes;
+  const labels = L.range(N).map((i) => `Outcome ${i + 1}`);
+
+  const data = r.p.map((p_val, i) => ({
+    label: labels[i],
+    value: p_val,
+    color: V.color(i),
+  }));
+
+  V.bars(
+    "entropyViz",
+    data,
+    {
+      title: "Probability Distribution",
+      ylabel: "Probability",
+      unit: "",
+      min: 0,
+      max: 1,
+      digits: 2,
+    }
+  );
+
+  V.$("entropyReadout").innerHTML = `
+    <div class="card">
+      <div class="readout-item">
+        <small>Total Entropy (H)</small>
+        <span class="big">${V.fmt(r.H, 3)} bits</span>
+      </div>
+    </div>
+  `;
+}
+
+const SLIDES = [
+  {
+    title: "What is Uncertainty?",
+    text: `Imagine a system with several possible <b>outcomes</b>. Each outcome has a certain <b>probability</b> pᵢ of occurring. If you had to guess the next outcome, how much uncertainty would you feel?`,
+    controls: ["numOutcomes", "probabilities"],
+    preset: "twoEqual",
+    draw: (id, s, r) => {
+      const N = s.numOutcomes;
+      const labels = L.range(N).map((i) => `Outcome ${i + 1}`);
+      const data = r.p.map((p_val, i) => ({
+        label: labels[i],
+        value: p_val,
+        color: V.color(i),
+      }));
+
+      V.bars(
+        id,
+        data,
+        {
+          title: "Probability of Each Outcome (pᵢ)",
+          ylabel: "Probability",
+          unit: "",
+          min: 0,
+          max: 1,
+          digits: 2,
+        }
+      );
+    },
+  },
+  {
+    title: "Surprise: How Unexpected is an Outcome?",
+    text: `The <b>surprise</b> of an outcome is measured by <span class="calc">−log₂ pᵢ</span>. Rare events (low pᵢ) are more surprising and carry more information. Common events (high pᵢ) are less surprising.`,
+    controls: ["numOutcomes", "probabilities"],
+    preset: "skewed",
+    draw: (id, s, r) => {
+      const N = s.numOutcomes;
+      const labels = L.range(N).map((i) => `Outcome ${i + 1}`);
+      const data = r.log_p.map((log_val, i) => ({
+        label: labels[i],
+        value: log_val,
+        color: V.color(i),
+      }));
+
+      V.bars(
+        id,
+        data,
+        {
+          title: "Surprise of Each Outcome (−log₂ pᵢ)",
+          ylabel: "Surprise (bits)",
+          unit: "bits",
+          min: 0,
+          max: L.max(r.log_p) * 1.2 || 5, // Dynamic max, or 5 if all are 0
+          digits: 2,
+        }
+      );
+    },
+  },
+  {
+    title: "Weighted Surprise: Contribution to Total Uncertainty",
+    text: `Each outcome's contribution to the total uncertainty is its <b>probability</b> multiplied by its <b>surprise</b>: <span class="calc">−pᵢ log₂ pᵢ</span>. This accounts for how often we expect to encounter that surprise.`,
+    controls: ["numOutcomes", "probabilities"],
+    preset: "paperExample",
+    draw: (id, s, r) => {
+      const N = s.numOutcomes;
+      const labels = L.range(N).map((i) => `Outcome ${i + 1}`);
+      const data = r.p_log_p.map((val, i) => ({
+        label: labels[i],
+        value: val,
+        color: V.color(i),
+      }));
+
+      V.bars(
+        id,
+        data,
+        {
+          title: "Contribution of Each Outcome (−pᵢ log₂ pᵢ)",
+          ylabel: "Contribution (bits)",
+          unit: "bits",
+          min: 0,
+          max: L.max(r.p_log_p) * 1.2 || 0.6,
+          digits: 3,
+        }
+      );
+    },
+  },
+  {
+    title: "Shannon Entropy: Total Uncertainty",
+    text: `<b>Shannon Entropy (H)</b> is the sum of all weighted surprises: <span class="calc">H = − Σ pᵢ log₂ pᵢ</span>. It quantifies the average uncertainty or information content of the system, measured in bits.`,
+    controls: ["numOutcomes", "probabilities"],
+    preset: "fourEqual",
+    draw: (id, s, r) => {
+      const N = s.numOutcomes;
+      const labels = L.range(N).map((i) => `Outcome ${i + 1}`);
+
+      const [leftId, rightId] = V.split(id, 2, { cols: 2 });
+
+      // Left: Contributions
+      const data_contributions = r.p_log_p.map((val, i) => ({
+        label: labels[i],
+        value: val,
+        color: V.color(i),
+      }));
+      V.bars(
+        leftId,
+        data_contributions,
+        {
+          title: "Contributions (−pᵢ log₂ pᵢ)",
+          ylabel: "Contribution (bits)",
+          unit: "bits",
+          min: 0,
+          max: L.max(r.p_log_p) * 1.2 || 0.6,
+          digits: 3,
+        }
+      );
+
+      // Right: Total Entropy
+      V.bars(
+        rightId,
+        [{ label: "Total Entropy (H)", value: r.H, color: V.color(N) }],
+        {
+          title: "Total Entropy (H)",
+          ylabel: "Entropy (bits)",
+          unit: "bits",
+          min: 0,
+          max: L.log2(N) * 1.2 || 2, // Max entropy is log2(N)
+          digits: 3,
+        }
+      );
+    },
+  },
+];
 </script>
 <script>
 "use strict";
