@@ -58,8 +58,16 @@ slides. The deck runs in this order:
    with a "Try it in the playground" button.
 5. A sources-and-checks slide: from the paper vs. our simplifications, plus the built-in calculation checks.
 
-The template also provides a **visual vocabulary** ([p2p/vizlib.js](p2p/vizlib.js)) of 3Blue1Brown-style semantic
-primitives. The prompt teaches the agent which one fits each kind of concept:
+**Visual design step.** Before writing code, the model writes a **VISUAL PLAN** in its plan block, one line per
+slide: *object → mathematical structure → picture → what changes between scenarios*. The structure decides the
+picture: points with distances, units with weighted links, quantities propagating along edges, grids with local
+operations, functions of a parameter, population proportions, chains of transformations, or physical geometry.
+The choice is never driven by topic names, so it generalises to unseen papers. An optional `--web-search` flag
+(off by default) adds one small call using OpenRouter's server-side web plugin to research how a concept is usually
+visualised. In our tests it cost about 2k tokens and 7 s.
+
+The template provides a **visual vocabulary** ([p2p/vizlib.js](p2p/vizlib.js)) of 3Blue1Brown-style semantic
+primitives:
 
 | Primitive | Used for |
 |---|---|
@@ -67,6 +75,7 @@ primitives. The prompt teaches the agent which one fits each kind of concept:
 | `V.network` | Neural networks: edge width and colour = weight, node fill = activation |
 | `V.graph` | PageRank, Markov chains, message passing: node size = value, weighted arrows |
 | `V.flow` | Multi-stage algorithms, with live values per stage |
+| `V.pipeline` | A chain of matrix transformations, with connecting arrows and receptive-field windows |
 | `V.pixels` | Images, convolution, pooling, with an animated sliding window |
 | `V.curve` | Optimisation and calculus: a ball on the curve, its tangent, and the trail of past steps |
 | `V.waffle` | Probability and base rates: a population of dots |
@@ -134,7 +143,16 @@ calculation.
 | PageRank (Sec. 2.4, 2.6, iterative ▶ Run) | 2 | 41.3k | 92 s | `graph` | 3 minor |
 | Convolution + sub-sampling (LeCun et al., Sec. II.A) | 3 | 57.8k | 105 s | `pixels`, diagram, matrices | 2 minor |
 
-In this final batch, all nine pages load and run in Chromium. Across earlier development batches,
+**Held-out cases.** These were written after the prompt was frozen, from domains the prompt never mentions. The
+default agent (no web search) produced fully clean pages for all three:
+
+| Held-out case | LLM calls | Total tokens | Wall time | Visuals chosen |
+|---|---|---|---|---|
+| Sampling and aliasing (Shannon 1949, Thm 1) | 2 | 26.9k | 54 s | sinusoid and sample plots, bars |
+| Scalar Kalman measurement update (Kalman 1960) | 2 | 23.4k | 41 s | prior, likelihood and posterior bell curves; gain flow |
+| Huffman code construction (Huffman 1952) | 1 | 18.0k | 59 s | tree built merge by merge (`graph`), codeword table, bars |
+
+In the final practice batch, all nine pages load and run in Chromium. Across earlier development batches,
 the occasional failure was always a model-written code error that the repair round could not fix. Such errors are
 logged in the trace, and every recurring pattern was turned into a deterministic library fix.
 
@@ -159,6 +177,7 @@ and `trace.jsonl`, exactly as the agent wrote them.
 | `p2p/source.py` | Excerpt handling and best-effort source fetch |
 | `p2p/template.html`, `p2p/vizlib.js`, `p2p/mathlib.js` | Generic slide-deck template, semantic visual primitives, numeric helpers |
 | `examples/*.json` | Practice inputs written by us (the two public examples plus seven others) |
+| `examples/heldout/*.json` | Held-out inputs, written after the prompt was frozen and used only for testing |
 | `examples/output/bayes/` | One example input/output pair with its trace |
 | `tools/` | Development-only scripts (browser smoke test, re-assembly); not used by the agent |
 
