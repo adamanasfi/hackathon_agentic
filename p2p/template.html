@@ -329,12 +329,33 @@ const V = (function () {
       text: (k, x, y, s, a) => el("text", k, Object.assign({ x, y }, a || {}), String(s)),
       arrow(k, x1, y1, x2, y2, a) {
         a = a || {};
-        const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L, s = a.head || 9;
+        const L = Math.hypot(x2 - x1, y2 - y1) || 1, s = a.head || 9;
+        let bend = a.bend;
+        /* a long, nearly flat connector would run through whatever lies on that line (and overlap sibling
+           arrows): bow it into an arc, away from nearby labels; longer arrows bow further, so they fan out */
+        if (bend === undefined && Math.abs(y2 - y1) < 6 && Math.abs(x2 - x1) > 90) {
+          let above = 0, below = 0;
+          const lo = Math.min(x1, x2), hi = Math.max(x1, x2);
+          for (const e of svg._keys.values()) if (e.tagName === "text") {
+            const ex = +e.getAttribute("x"), ey = +e.getAttribute("y");
+            if (ex >= lo && ex <= hi) { if (ey < y1 && ey > y1 - 70) above++; else if (ey > y1 && ey < y1 + 70) below++; }
+          }
+          /* only when the straight path runs along several labels (e.g. words of a sentence); a plain
+             box-to-box arrow with one label stays straight. Direction is screen-absolute: away from the labels */
+          if (above + below >= 2) bend = (above > below ? 1 : -1) * Math.min(140, 0.32 * L) * (x2 >= x1 ? 1 : -1);
+        }
+        bend = bend || 0;
+        const mx = (x1 + x2) / 2 - ((y2 - y1) / L) * bend, my = (y1 + y2) / 2 + ((x2 - x1) / L) * bend;
+        const tx = bend ? x2 - mx : x2 - x1, ty = bend ? y2 - my : y2 - y1, TL = Math.hypot(tx, ty) || 1, ux = tx / TL, uy = ty / TL;
         const hx = x2 - ux * s, hy = y2 - uy * s;
-        const p = "M" + x1 + " " + y1 + " L" + x2 + " " + y2 + " M" + (hx - uy * s * 0.55) + " " + (hy + ux * s * 0.55) + " L" + x2 + " " + y2 + " L" + (hx + uy * s * 0.55) + " " + (hy - ux * s * 0.55);
-        const b = Object.assign({}, a); delete b.head;
+        const head = " M" + (hx - uy * s * 0.55) + " " + (hy + ux * s * 0.55) + " L" + x2 + " " + y2 + " L" + (hx + uy * s * 0.55) + " " + (hy - ux * s * 0.55);
+        const p = "M" + x1 + " " + y1 + " Q" + mx + " " + my + " " + x2 + " " + y2 + (a.noHead ? "" : head);
+        const b = Object.assign({}, a); delete b.head; delete b.bend; delete b.noHead;
+        try { extent("path", { d: "M" + x1 + " " + y1 + " L" + ((x1 + x2) / 2 + (mx - (x1 + x2) / 2) / 2) + " " + ((y1 + y2) / 2 + (my - (y1 + y2) / 2) / 2) + " L" + x2 + " " + y2 }); } catch (e) {}
         return el("path", k, Object.assign({ d: p, fill: "none", stroke: INK, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, b));
       },
+      /* curved connector: positive bend bows to the left of the direction of travel (above for left-to-right) */
+      curve(k, x1, y1, x2, y2, a) { a = Object.assign({ bend: -0.3 * Math.hypot(x2 - x1, y2 - y1) }, a || {}); return d.arrow(k, x1, y1, x2, y2, a); },
       end() {
         for (const [k, e] of svg._keys) if (!seen.has(k) && (ns ? k.startsWith(ns) : k.charAt(0) !== "\u0001")) { e.remove(); svg._keys.delete(k); anims.delete(e); }
         ext.x0 = Math.max(ext.x0, -0.2 * w); ext.x1 = Math.min(ext.x1, 1.2 * w); ext.y0 = Math.max(ext.y0, -0.2 * h); ext.y1 = Math.min(ext.y1, 1.2 * h);

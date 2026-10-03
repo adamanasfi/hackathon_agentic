@@ -223,12 +223,13 @@ var V = (function(){
       tw = longest * fs * 0.56; x0 = anc === 'middle' ? x - tw / 2 : anc === 'end' ? x - tw : x; grow(k, [x0, x0 + tw], []);
       if (__fin(x) && !a.transform && (x0 < -6 || x0 + tw > w + 6)) __warn("V.diagram('" + id + "') label '" + String(s).slice(0, 30) + "' (~" + Math.round(tw) + 'px wide at x=' + Math.round(x) + ', anchor ' + anc + ') overflows the ' + w + 'px viewBox: shorten it, move it, or enlarge w'); },
     arrow: function(k, x1, y1, x2, y2){ geo(tag('arrow', k), {x1: x1, y1: y1, x2: x2, y2: y2}); reg(k, 1); inb(k, [x1, x2], [y1, y2]); },
+    curve: function(k, x1, y1, x2, y2){ geo(tag('curve', k), {x1: x1, y1: y1, x2: x2, y2: y2}); reg(k, 1); inb(k, [x1, x2], [y1, y2]); },
     end: function(){ var L = __live[__id] || {}; for (var k in L) if (k.charAt(0) !== '\u0001' && !__seen[k]) delete L[k];
       var sw = (ext.x1 - ext.x0) / w, sh = (ext.y1 - ext.y0) / h;
       if (sw > 1.35 || sh > 1.35) __err("V.diagram('" + id + "'): content spans " + Math.round(ext.x1 - ext.x0) + 'x' + Math.round(ext.y1 - ext.y0) + ' but the viewBox is ' + w + 'x' + h + ' (worst: ' + (sw > sh ? ext.kx : ext.ky) + '), so the whole visual is shrunk or clipped. Keep every element and label inside 0..w, 0..h, use short labels (long text belongs in the slide text, not the SVG), or enlarge w/h.'); },
     svg: __absorb('svg') };
     return new Proxy(d, {get: function(t, k){ if (k in t || typeof k === 'symbol') return t[k];
-      __err("V.diagram(...) has no member '" + String(k) + "' (it has only w, h, rect, circle, line, path, text, arrow, end). For coordinate maps use V.scale(d0, d1, r0, r1) which returns a function; V.line returns X/Y maps for plots.");
+      __err("V.diagram(...) has no member '" + String(k) + "' (it has only w, h, rect, circle, line, path, text, arrow, curve, end). For coordinate maps use V.scale(d0, d1, r0, r1) which returns a function; V.line returns X/Y maps for plots.");
       return function(){ return 0; }; }}); }
   function bars(id, items, o){ __need(id, 'V.bars'); __mark(__resolve(id), '\u0001bars', 1); if (!Array.isArray(items)) { __err('V.bars: items must be an array'); return; }
     items.forEach(function(it, i){ if (!it || !__fin(it.value)) __err("V.bars('" + id + "'): item " + i + ' has value=' + (it && it.value) + ' (keys: ' + (it ? Object.keys(it).join(',') : '') + '). Signature: V.bars(id, [{label, value: finite number, color?}, ...], opts) draws ONE bar per item; for two quantities use two charts or interleave items.'); }); }
