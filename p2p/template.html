@@ -344,6 +344,17 @@ const V = (function () {
     return d;
   }
 
+  /* stable scales: a chart's range only grows across re-renders, so switching scenarios moves the data
+     against fixed axes instead of silently re-zooming (which would hide the change) */
+  function sticky(id, key, lo, hi) {
+    const h = $(id);
+    if (!h || !isFinite(lo) || !isFinite(hi)) return [lo, hi];
+    const m = h._sticky || (h._sticky = {}), p = m[key];
+    if (p) { lo = Math.min(lo, p[0]); hi = Math.max(hi, p[1]); }
+    m[key] = [lo, hi];
+    return [lo, hi];
+  }
+
   function ticks(a, b, n) {
     n = n || 5;
     if (!(b > a)) { b = a + 1; }
@@ -373,6 +384,7 @@ const V = (function () {
     let lo = o.min !== undefined ? o.min : Math.min(0, ...vals, ...refs.map((r) => r.value));
     let hi = o.max !== undefined ? o.max : Math.max(0, ...vals, ...refs.map((r) => r.value));
     if (!(hi > lo)) hi = lo + 1;
+    if (o.sticky !== false) [lo, hi] = sticky(id, "y", lo, hi);
     const pw = W - m.l - m.r, ph = H - m.t - m.b;
     const Y = (v) => m.t + ph * (1 - (clamp(v, lo, hi) - lo) / (hi - lo));
     if (o.title) d.text("title", W / 2, 18, o.title, { "text-anchor": "middle", "font-weight": 600 });
@@ -410,6 +422,7 @@ const V = (function () {
     if (x1 <= x0) x1 = x0 + 1;
     if (y1 <= y0) { y0 -= 0.5; y1 += 0.5; }
     if (o.ymin === undefined && o.ymax === undefined) { const pad = (y1 - y0) * 0.06; y0 -= pad; y1 += pad; }
+    if (o.sticky !== false) { [x0, x1] = sticky(id, "x", x0, x1); [y0, y1] = sticky(id, "y", y0, y1); }
     const pw = W - m.l - m.r, ph = H - m.t - m.b;
     const X = (v) => m.l + pw * (v - x0) / (x1 - x0), Y = (v) => m.t + ph * (1 - (v - y0) / (y1 - y0));
     const cx = (v) => clamp(X(v), m.l - 4, W - m.r + 4), cy = (v) => clamp(Y(v), m.t - 4, H - m.b + 4);
@@ -455,7 +468,7 @@ const V = (function () {
     if (!host) throw new Error("V.matrix: no element with id '" + id + "'");
     const R = M.length, C = R ? M[0].length : 0, dg = o.digits === undefined ? 2 : o.digits;
     let mx = o.max;
-    if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (isFinite(v)) mx = Math.max(mx, Math.abs(v)); })); }
+    if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (isFinite(v)) mx = Math.max(mx, Math.abs(v)); })); if (o.sticky !== false) mx = sticky(id, "c", 0, mx)[1]; }
     let t = host.querySelector("table.mx");
     const shape = R + "x" + C + "|" + (o.rows || []).join(",") + "|" + (o.cols || []).join(",") + "|" + (o.title || "");
     if (!t || t._shape !== shape) {
@@ -554,7 +567,7 @@ const V = (function () {
   /* linear map from data domain [d0,d1] to pixel range [r0,r1] */
   const scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-  const api = { ink: INK, muted: MUTED, bg: BG, $, $$, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
+  const api = { sticky, ink: INK, muted: MUTED, bg: BG, $, $$, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
   const warned = new Set();
   /* unknown helpers degrade to no-ops instead of breaking the page */
   return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; if (!warned.has(k)) { warned.add(k); console.warn("V." + String(k) + " is not a helper"); } return () => ""; } });

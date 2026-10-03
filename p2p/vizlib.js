@@ -1,7 +1,7 @@
 /* ---------- Semantic visual primitives (template, paper-agnostic) ----------
    3Blue1Brown-style building blocks on top of V.diagram: every element is keyed, so re-rendering animates. */
 (function () {
-  const { diagram, color, fmt, ticks, clamp, line } = V;
+  const { diagram, color, fmt, ticks, clamp, line, sticky } = V;
   const INK = V.ink, MUTED = V.muted, BG = V.bg, GOLD = "#e2b86b", TEAL = "#4fb3bf", CORAL = "#e07a5f";
   const fin = (v) => typeof v === "number" && isFinite(v);
   const num = (v, d) => (fin(v) ? fmt(v, d === undefined ? 2 : d) : String(v === undefined ? "" : v));
@@ -38,9 +38,8 @@
     let rng = { x0: Math.min(...fx), x1: Math.max(...fx), y0: Math.min(...fy), y1: Math.max(...fy) };
     const pad = (a, b) => { const s = Math.max(b - a, 1e-9) * 0.18 + 0.4; return [a - s, b + s]; };
     [rng.x0, rng.x1] = pad(rng.x0, rng.x1); [rng.y0, rng.y1] = pad(rng.y0, rng.y1);
-    const dragging = vs.concat(ps).some((q) => q.drag);
     if (o.xmin !== undefined) { rng = { x0: o.xmin, x1: o.xmax, y0: o.ymin, y1: o.ymax }; }
-    else if (dragging) { if (!svg._frozen) svg._frozen = rng; else { const f = svg._frozen; rng = { x0: Math.min(f.x0, rng.x0), x1: Math.max(f.x1, rng.x1), y0: Math.min(f.y0, rng.y0), y1: Math.max(f.y1, rng.y1) }; svg._frozen = rng; } }
+    if (o.sticky !== false) { [rng.x0, rng.x1] = sticky(id, "x", rng.x0, rng.x1); [rng.y0, rng.y1] = sticky(id, "y", rng.y0, rng.y1); }
     const s = Math.min((W - 2 * m) / (rng.x1 - rng.x0), (H - top - 2 * m) / (rng.y1 - rng.y0));
     const cx = W / 2 - s * (rng.x0 + rng.x1) / 2, cy = top + (H - top) / 2 + s * (rng.y0 + rng.y1) / 2;
     const X = (x) => cx + s * x, Y = (y) => cy - s * y;
@@ -113,6 +112,7 @@
     const Wt = o.weights || [];
     let wmax = 0;
     Wt.forEach((M) => (M || []).forEach((r) => (r || []).forEach((v) => { if (fin(v)) wmax = Math.max(wmax, Math.abs(v)); })));
+    wmax = sticky(id, "w", 0, wmax)[1];
     const wAt = (l, i, j) => { const M = Wt[l]; if (!M) return undefined; if (M.length === layers[l + 1] && M[0] && M[0].length === layers[l]) return M[j][i]; if (M.length === layers[l] && M[0] && M[0].length === layers[l + 1]) return M[i][j]; return undefined; };
     let ne = 0;
     for (let l = 0; l + 1 < Lc; l++) for (let i = 0; i < layers[l]; i++) for (let j = 0; j < layers[l + 1]; j++) {
@@ -123,6 +123,7 @@
     const A = o.values || [];
     let amax = 0;
     A.forEach((r) => (r || []).forEach((v) => { if (fin(v)) amax = Math.max(amax, Math.abs(v)); }));
+    amax = sticky(id, "a", 0, amax)[1];
     for (let l = 0; l < Lc; l++) {
       for (let i = 0; i < layers[l]; i++) {
         const v = A[l] ? A[l][i] : undefined, t = fin(v) && amax ? Math.abs(v) / amax : 0;
@@ -146,12 +147,12 @@
     const d = diagram(id, W, H, "\u0001graph\u0001");
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const idx = new Map(N.map((n, i) => [n.id === undefined ? i : n.id, i]));
-    const vmax = Math.max(1e-9, ...N.map((n) => (fin(n.value) ? Math.abs(n.value) : 0)));
+    const vmax = sticky(id, "v", 0, Math.max(1e-9, ...N.map((n) => (fin(n.value) ? Math.abs(n.value) : 0))))[1];
     const R0 = Math.min(W, H - top) * 0.36, ccx = W / 2, ccy = top + (H - top) / 2;
     const px = N.some((n) => (fin(n.x) && Math.abs(n.x) > 1.5) || (fin(n.y) && Math.abs(n.y) > 1.5)); // pixel coordinates given
     const pos = N.map((n, i) => fin(n.x) && fin(n.y) ? (px ? [n.x, n.y] : [40 + n.x * (W - 80), top + 30 + n.y * (H - top - 60)]) : [ccx + R0 * Math.cos(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length)), ccy + R0 * Math.sin(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length))]);
     const rad = N.map((n) => (fin(n.value) ? 14 + 22 * Math.sqrt(Math.abs(n.value) / vmax) : 22));
-    const wmax = Math.max(1e-9, ...E.map((e) => (fin(e.w) ? Math.abs(e.w) : 1)));
+    const wmax = sticky(id, "w", 0, Math.max(1e-9, ...E.map((e) => (fin(e.w) ? Math.abs(e.w) : 1))))[1];
     const has = new Set(E.map((e) => idx.get(e.from) + ">" + idx.get(e.to)));
     E.forEach((e, k) => {
       const a = idx.get(e.from), b = idx.get(e.to); if (a === undefined || b === undefined) return;
@@ -205,7 +206,7 @@
     const cs = o.cell || clamp(Math.floor(Math.min(340 / Math.max(R, 1), 560 / Math.max(C, 1))), 10, 52);
     const W = o.w || Math.max(240, C * cs + 2 * m), H = top + R * cs + 2 * m;
     const d = diagram(id, W, H, "\u0001pixels\u0001"), x0 = (W - C * cs) / 2, y0 = top + m;
-    let mx = o.max; if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); }
+    let mx = o.max; if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); mx = sticky(id, "c", 0, mx)[1]; }
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const showV = o.values !== false && cs >= 24;
     M.forEach((r, i) => r.forEach((v, j) => {
@@ -292,7 +293,7 @@
       const [R, C] = dims[k], w = C * cs, y0 = midY - (R * cs) / 2;
       d.text("sl" + k, x + w / 2, y0 - 9, st.label || "", { textAnchor: "middle", fontWeight: 650, fill: st.color || GOLD, fontSize: 13 });
       if (st.M) {
-        let mx = st.max; if (mx === undefined) { mx = 0; st.M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); }
+        let mx = st.max; if (mx === undefined) { mx = 0; st.M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); mx = sticky(id, "c" + k, 0, mx)[1]; }
         st.M.forEach((r, i) => r.forEach((v, j) => {
           const t = fin(v) ? clamp(Math.abs(v) / (mx || 1), 0, 1) : 0;
           d.rect("c" + k + "_" + i + "_" + j, { x: x + j * cs, y: y0 + i * cs, width: cs - 2, height: cs - 2, rx: 3, fill: !fin(v) ? "#5c2323" : (v < 0 ? "rgba(224,122,95," : "rgba(79,179,191,") + (0.07 + 0.85 * t).toFixed(3) + ")" });
