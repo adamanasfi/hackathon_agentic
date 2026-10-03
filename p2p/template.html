@@ -432,7 +432,7 @@ const V = (function () {
       if (p.label) { const R = cx(p.x) > W * 0.7; d.text("ptl" + i, cx(p.x) + (R ? -9 : 9), cy(p.y) - 8, p.label, { "font-size": 12, "font-weight": 600, "text-anchor": R ? "end" : "start" }); }
     });
     d.end();
-    legend($(id), series.filter((s) => s.name).map((s) => ({ name: s.name, color: s.color || color(series.indexOf(s)), dash: s.dash })));
+    legend($(id), series.filter((s) => s.name || s.label).map((s) => ({ name: s.name || s.label, color: s.color || color(series.indexOf(s)), dash: s.dash })));
     d.X = X; d.Y = Y;
     return d;
   }
