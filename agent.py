@@ -171,6 +171,7 @@ def run(args, trace):
 
     # ---- check / repair loop
     best, best_n, prev_errors = None, None, set()
+    nothing_applied = False  # the previous repair reply contained nothing the parser could apply
     try:
         for rnd in range(args.max_repairs + 2):
             fixes = checks.sanitize(blocks)
@@ -192,7 +193,7 @@ def run(args, trace):
                 trace("revise", "stop", "expectations_only", round=rnd,
                       reason="only model-proposed test/invariant expectations disagree with the executed computation; pruning them instead of spending tokens")
                 break
-            if rnd > 0 and set(res["errors"]) == prev_errors:
+            if rnd > 0 and set(res["errors"]) == prev_errors and not (nothing_applied and best_n >= 100):
                 trace("revise", "stop", "no_progress", reason="revision left the same errors; not spending more tokens", round=rnd)
                 break
             prev_errors = set(res["errors"])
@@ -211,7 +212,9 @@ def run(args, trace):
                     context.append("MODEL")
                     shown["MODEL"] = model_summary(blocks, res["report"].get("info") or {})
             ranked = sorted(res["errors"], key=lambda e: -weight(e))
-            msg = prompts.REPAIR.format(problems="\n".join(("- [FATAL: page is dead until fixed] " if weight(e) >= 100 else "- ") + e for e in ranked[:25]) + ("\nAlso (warnings):\n" + "\n".join("- " + w for w in res["warnings"][:8]) if res["warnings"] else ""),
+            retry_note = ("NOTE: your previous reply could not be applied: it contained no complete @@BLOCK and no @@EDIT hunk "
+                          "with the exact lines <<<<<<< SEARCH / ======= / >>>>>>> REPLACE. Reply ONLY in that format.\n\n") if nothing_applied else ""
+            msg = retry_note + prompts.REPAIR.format(problems="\n".join(("- [FATAL: page is dead until fixed] " if weight(e) >= 100 else "- ") + e for e in ranked[:25]) + ("\nAlso (warnings):\n" + "\n".join("- " + w for w in res["warnings"][:8]) if res["warnings"] else ""),
                                         blocks=fmt_blocks(shown, [b for b in prompts.BLOCKS if b in context]), names=", ".join(names))
             est = sum(len(blocks[n]) // 2 if blocks.get(n) else 3000 for n in names) + 2500
             trace("revise", "request", "started", round=rnd + 1, blocks=names, n_errors=n_err)
@@ -226,6 +229,7 @@ def run(args, trace):
             blocks = dict(blocks)
             blocks.update(fixed)
             blocks, edited, failed = apply_edits(blocks, fix_text)
+            nothing_applied = not (fixed or edited)
             trace("revise", "apply", "ok" if (fixed or edited) else "nothing_applied", round=rnd + 1, replaced=sorted(fixed),
                   edited=edited, failed_edits=failed, finish_reason=finish)
     except Exception as e:  # a checker/sanitizer bug must never cost the page: keep what we have and write it

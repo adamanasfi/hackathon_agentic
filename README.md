@@ -40,7 +40,8 @@ case.json
  │              generated HTML (details below)
  │ 5. REVISE    if checks fail: send only the failing blocks and a severity-ranked error list (with the
  │              offending source line quoted); apply search/replace EDITs. One round by default, plus one extra
- │              round only while a page-killing (fatal) error survives. The best version seen is kept.
+ │              round only while a page-killing (fatal) error survives (also when the previous repair reply contained nothing
+ │              applicable: the agent retries once with an explicit format reminder). The best version seen is kept.
  │ 6. WRITE     assemble into the generic template → index.html; disclose any pruned self-checks
 ```
 
