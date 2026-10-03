@@ -50,7 +50,7 @@ class LLM:
             if self.requests >= self.max_requests:
                 raise BudgetError("request budget exhausted")
             mt = min(max_tokens, self.remaining_completion() - 200)
-            if mt < 800:
+            if mt < min(800, max_tokens):
                 raise BudgetError("completion-token budget exhausted")
             tl = self.time_left()
             if tl < 20:

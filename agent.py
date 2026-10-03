@@ -102,6 +102,8 @@ def main():
     ap.add_argument("--model", required=True)
     ap.add_argument("--max-repairs", type=int, default=1)
     ap.add_argument("--gen-max-tokens", type=int, default=16000)
+    ap.add_argument("--web-search", action="store_true",
+                    help="optional: one small extra call using OpenRouter's server-side web plugin to research how this concept is usually visualised")
     ap.add_argument("--effort", default="", help="optional OpenRouter reasoning effort (low/medium/high); default: model default")
     args = ap.parse_args()
 
@@ -142,6 +144,19 @@ def run(args, trace):
     llm = LLM(args.model, key, trace, T0)
     xtra = {"reasoning": {"effort": args.effort, "exclude": True}} if args.effort else None
     system = {"role": "system", "content": prompts.SYSTEM}
+
+    # ---- optional visual-design research (OpenRouter web plugin; off by default to save tokens)
+    if args.web_search:
+        q = ("In 3-5 short bullet points, how is the following concept best visualised for teaching (diagrams, metaphors, "
+             "interactive demos that make the mechanism intuitive)? Concept: " + str(case.get("focus", ""))[:600])
+        try:
+            ideas, _ = llm.chat("design_research", [{"role": "user", "content": q}], max_tokens=400,
+                                extra={"plugins": [{"id": "web", "max_results": 3}]})
+            ideas = re.sub(r"\[([^\]]+)\]\((https?://[^)]+)\)", r"\1", ideas)[:1500]
+            src_txt += "\nVISUALISATION IDEAS (from a web search; adapt, do not copy):\n" + ideas + "\n"
+            trace("design_research", "web_search", "ok", chars=len(ideas))
+        except (BudgetError, RuntimeError) as e:
+            trace("design_research", "web_search", "failed", error=str(e)[:200], note="continuing without it")
 
     # ---- generate (plan + all blocks in one call)
     trace("generate", "request", "started", note="single call: plan, metadata, intro, playground, model, ui, explorations, grounding")
