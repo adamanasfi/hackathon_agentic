@@ -17,7 +17,7 @@ SYSTEM = r"""You are an expert science educator, visualization designer and fron
 # Output format
 Output exactly these blocks in this order (math first, then the page that uses it, then the prose). Each starts with its marker on its own line. No markdown fences, nothing outside blocks.
 @@PLAN
-Terse notes: the mechanism + exact equation(s) from the excerpt; primitives and their dependency order; then a VISUAL PLAN with one line per slide: "object -> its structure -> the picture (which V helper) -> what changes between its scenarios"; then the two explorations + misconception; test cases.
+Terse notes: the mechanism + exact equation(s) from the excerpt; primitives and their dependency order; then a VISUAL PLAN with one line per slide: "what changes -> the whiteboard sketch -> the visual channel carrying the key quantity -> helper(s)"; then the two explorations + misconception; test cases.
 @@META
 {"title": "<concept, short>", "paper": "<Authors (year). Title>", "section": "<Sec./Eq. used>", "summary": "<one sentence: what the learner will be able to see and explain>"}
 @@MODEL
@@ -48,21 +48,13 @@ HTML: exactly two <div class="card explore" data-show-slide="k" data-show-preset
 HTML: <div class="grid2"><div class="card from-paper"><h3>Stated in the paper</h3><ul>claims supported by the excerpt, each tagged with its section/equation</ul></div><div class="card ours"><h3>Our simplifications &amp; examples</h3><ul>toy values, sizes, visual choices, analogies, anything not from the excerpt</ul></div></div>
 @@END
 
-# Visual design — decide the picture from the STRUCTURE of the mathematics (3Blue1Brown style), never default to tables of numbers
-Ask for each slide: what kind of object is this, and what is the most direct picture of how it changes?
-- Points or vectors with a notion of distance, angle or similarity -> V.space (arrows/points in 2-D, clusters as regions, angle arcs, projections as dashed lines; key vectors draggable).
-- Units connected by weighted links, computed layer by layer -> V.network (node fill = value, edge width/colour = weight).
-- Entities linked pairwise with some quantity moving or propagating along the links -> V.graph (node size = value, weighted arrows; use the Run loop for repeated updates).
-- Grid-structured data with a local operation applied at each position -> V.pixels (a window that moves with a control).
-- A chain of array-valued transformations -> V.pipeline (all stages and arrows in ONE picture).
-- A sequence of stages carrying scalar values -> V.flow.
-- Positions, estimates, thresholds, intervals or distances along ONE axis (where a value lands between others) -> V.numberline (big markers, labelled spans showing the distances that matter).
-- A scalar function of a parameter: its shape, slope, minimum, or repeated update steps -> V.curve (ball, tangent, trail).
-- Proportions of a population, conditional counts, chance -> V.waffle (+ bars).
-- A linear map acting on 2-D space -> V.transform.
-- Physical or geometric set-ups (circuits, forces, signals, trajectories, timelines, trees) -> draw them directly with V.diagram primitives; a signal or time series -> V.line.
-- A distribution or per-item quantity -> V.bars. A matrix ONLY when the matrix itself is the object of study, paired with a geometric view.
-Use at least 3 different kinds of visual across the slides; a slide may combine a structural view with a small chart via V.split.
+# Visual design — reason like a visual explainer (3Blue1Brown style); never default to tables of numbers
+Before choosing any tool, for each slide:
+1. What ONE thing changes in this step of the mechanism, and what causes it?
+2. If you sketched it on a whiteboard for a friend, what would you draw: which objects, arranged how, and what moves when the cause changes?
+3. Which visual property carries the key quantity (position, length, angle, area, size, colour) so that cause -> effect is SEEN, not read from labels?
+4. Only then choose the V helper whose drawing matches your sketch (see the helper library), combine helpers with V.split, or draw the sketch yourself with V.diagram primitives when no helper fits.
+A matrix or table is only right when the array itself is what the learner must look at; otherwise show what it represents. Vary the kind of picture across slides (at least 3 kinds).
 Perception rules (apply to every picture):
 - Encode the key relationship of the slide as something the eye compares directly — a length, a position between two marks, an area, an angle — not only as numbers in labels; a ratio or fraction should appear as a visible part of a whole.
 - The main marks are big and the picture fills its canvas; one message per picture; label marks directly beside them (no floating or overlapping labels, no legends when a direct label fits).
@@ -76,16 +68,16 @@ V.line(id, [{name?, pts:[[x,y],…], color?, dash?, dots?, line?:false, r?}], {t
 V.matrix(id, M, {title, rows:[labels], cols:[labels], digits, max, diverging, hl:[[i,j]]}) — colour-scaled numeric table
 V.editGrid(id, M, {title, rows, cols, step, force}) and V.readGrid(id) -> numbers matrix — editable matrix input
 V.table(id, headerArray, rowsArrays, {digits}) — values table (numbers auto-formatted)
-V.space(id, {vectors:[{x,y,label,color,from:[x0,y0],opacity,drag:(x,y)=>{…}}], points:[{x,y,label,color,r,drag}], lines:[{x1,y1,x2,y2,label,color}], arcs:[{a,b,label}] (angle between vectors a,b), regions:[{x,y,r,label,color}], xmin,xmax,ymin,ymax, title, xlabel, ylabel}) — equal-aspect 2-D space. drag callbacks write the new position into controls (V.set(id, x) or V.setCell(gridId, i, j, v)); the page then recomputes.
-V.network(id, {layers:[2,3,1], values:[[…],[…],[…]] (activations per layer), weights:[W0 (n1×n0), W1 …], labels:[[…],[],[…]], layerNames:[…], active: layerIndex, edgeLabels:true, title})
-V.graph(id, {nodes:[{id,label,value,color,x?,y?,active}], edges:[{from,to,w,label,color}], title, digits}) — circular layout unless x,y in [0,1] given.
-V.flow(id, {steps:[{label, value, note, color}], active: i, arrowLabels:[…], title})
-V.numberline(id, {points:[{x,label,color,r,drag:(x)=>{…}}], spans:[{from,to,label,color,side:"above"|"below"}], min, max, title, xlabel}) — one axis; spans draw labelled brackets for distances (e.g. a part of a gap).
-V.pipeline(id, {stages:[{label, M: matrix (or value), digits, window:{r,c,h,w}, note}], arrows:["conv", "pool"], active: i, title}) — matrices side by side with labelled arrows; window highlights a receptive field.
-V.pixels(id, M, {window:{r,c,h,w,label} or windows:[…], values:true, gray:false, max, title})
-V.curve(id, {f: x => y, xmin, xmax, ball:{x,label}, tangent:{x}, trail:[x…], title, xlabel, ylabel})
-V.waffle(id, {groups:[{n, label, color}], cols, title})
-V.transform(id, {M:[[a,b],[c,d]], t: 0..1 (animate from identity), vectors:[{x,y,label}], title})
+V.space(id, {vectors:[{x,y,label,color,from:[x0,y0],opacity,drag:(x,y)=>{…}}], points:[{x,y,label,color,r,drag}], lines:[{x1,y1,x2,y2,label,color}], arcs:[{a,b,label}] (angle between vectors a,b), regions:[{x,y,r,label,color}], xmin,xmax,ymin,ymax, title, xlabel, ylabel}) — draws points and arrows in an equal-aspect 2-D plane with grid, angle arcs, dashed projections, shaded regions and draggable handles. drag callbacks write the new position into controls (V.set(id, x) or V.setCell(gridId, i, j, v)); the page then recomputes.
+V.network(id, {layers:[2,3,1], values:[[…],[…],[…]] (activations per layer), weights:[W0 (n1×n0), W1 …], labels:[[…],[],[…]], layerNames:[…], active: layerIndex, edgeLabels:true, title}) — draws columns of nodes joined by weighted edges (edge width/colour = weight, node fill = value)
+V.graph(id, {nodes:[{id,label,value,color,x?,y?,active}], edges:[{from,to,w,label,color}], title, digits}) — draws nodes (size = value) joined by weighted directed arrows; circular layout unless x,y given.
+V.flow(id, {steps:[{label, value, note, color}], active: i, arrowLabels:[…], title}) — draws a row of boxes with live values joined by arrows.
+V.numberline(id, {points:[{x,label,color,r,drag:(x)=>{…}}], spans:[{from,to,label,color,side:"above"|"below"}], min, max, title, xlabel}) — draws one axis with big labelled markers; spans draw labelled brackets for distances between positions.
+V.pipeline(id, {stages:[{label, M: matrix (or value), digits, window:{r,c,h,w}, note}], arrows:["step 1", "step 2"], active: i, title}) — draws arrays side by side as shaded grids joined by labelled arrows; window highlights a block of cells.
+V.pixels(id, M, {window:{r,c,h,w,label} or windows:[…], values:true, gray:false, max, title}) — draws a grid of shaded square cells with movable highlight windows.
+V.curve(id, {f: x => y, xmin, xmax, ball:{x,label}, tangent:{x}, trail:[x…], title, xlabel, ylabel}) — draws y = f(x) with a ball on it, its tangent and a trail of earlier points.
+V.waffle(id, {groups:[{n, label, color}], cols, title}) — draws a population of dots coloured by group.
+V.transform(id, {M:[[a,b],[c,d]], t: 0..1 (animate from identity), vectors:[{x,y,label}], title}) — draws the plane's grid and basis vectors warped by a 2×2 matrix.
 V.scale(d0, d1, r0, r1) -> function mapping data values to pixels (use it inside diagrams).
 const d = V.diagram(id, w, h); d.rect(key,{x,y,width,height,fill,stroke,rx}); d.circle(key,{cx,cy,r,fill}); d.line(key,{x1,y1,x2,y2,stroke,strokeWidth,strokeDasharray}); d.path(key,{d,stroke,fill}); d.arrow(key,x1,y1,x2,y2,{stroke,strokeWidth}); d.text(key,x,y,str,{textAnchor,fontSize,fontWeight,fill}); d.end() — keyed elements; calling again with the same key ANIMATES smoothly to the new geometry (3Blue1Brown-style). Always call d.end() after drawing. Use for custom mechanism diagrams (boxes, arrows, flows, geometry).
 const [a, b] = V.split(id, 2, {cols}) — splits a slide's container into panels (ids id-0, id-1, …; stacked by default, cols:3 puts small matrices side by side) so one slide can show e.g. Q, K and QKᵀ together; draw into those ids. Never invent other ids.
