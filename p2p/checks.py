@@ -104,13 +104,12 @@ def sanitize(blocks):
             blocks["PLAYGROUND"] = pg + "\n<div class=\"auto-viz\">" + "".join(f'<div class="viz" id="{i}"></div>' for i in miss) + "</div>"
             fixes.append(f"created missing display containers {miss}")
     ui0 = blocks.get("UI", "")
-    def _strip_s(m):
-        body = re.sub(r"\s*,?\s*[A-Za-z_$][\w$]*\s*:\s*s\.[\w$.\[\]]+\s*(?=[,}]|$)", "", m.group(1))
-        return "state: {" + re.sub(r"^\s*,", "", body) + "}"
-    ui1 = re.sub(r"state:\s*\{([^{}]*)\}", _strip_s, ui0)
+    # scenario literals that use the live state s or result r become functions evaluated at click time
+    ui1 = re.sub(r"state:\s*\{([^{}]*)\}", lambda m: ("state: (s, r) => ({" + m.group(1) + "})")
+                 if re.search(r"(?<![\w$.])[sr](\.|\[)", m.group(1)) else m.group(0), ui0)
     if ui1 != ui0:
         blocks["UI"] = ui1
-        fixes.append("removed references to the live state s inside scenario literals (chips patch the current state)")
+        fixes.append("scenario states that use s or r were turned into functions evaluated when the chip is clicked")
     decl = re.compile(r"^(?:const|let|var|function)\s+([A-Za-z_$][\w$]*)", re.M)
     model_names = set(decl.findall(blocks.get("MODEL", "")))
     lines, dropped = blocks.get("UI", "").split("\n"), []
@@ -309,10 +308,12 @@ HARNESS = r"""
   var R = {tests: [], info: {}};
   function has(n){ try { return typeof eval(n) !== 'undefined'; } catch (e) { return false; } }
   function msg(e){ return (e && e.message ? e.message : String(e)) + (e && e.stack ? ' @ ' + String(e.stack).split('\n').slice(0, 2).join(' ').trim() : ''); }
-  function nonfinite(o, path, out){ out = out || [];
+  function nonfinite(o, path, out, seen, depth){ out = out || []; seen = seen || []; depth = depth || 0;
+    if (depth > 12 || out.length > 20) return out;
+    if (o && typeof o === 'object') { if (seen.indexOf(o) >= 0) return out; seen.push(o); }
     if (typeof o === 'number') { if (!isFinite(o)) out.push(path + '=' + o); }
-    else if (Array.isArray(o)) o.forEach(function(v, i){ nonfinite(v, path + '[' + i + ']', out); });
-    else if (o && typeof o === 'object') for (var k in o) nonfinite(o[k], path + '.' + k, out);
+    else if (Array.isArray(o)) o.forEach(function(v, i){ nonfinite(v, path + '[' + i + ']', out, seen, depth + 1); });
+    else if (o && typeof o === 'object') for (var k in o) nonfinite(o[k], path + '.' + k, out, seen, depth + 1);
     return out; }
   ['DEFAULT_STATE', 'compute', 'TESTS', 'PRESETS', 'invariants'].forEach(function(n){ if (!has(n)) __err('MODEL: ' + n + ' is not defined'); });
   ['readState', 'setState', 'render'].forEach(function(n){ if (!has(n)) __err('UI: function ' + n + ' is not defined'); });
@@ -388,7 +389,9 @@ HARNESS = r"""
       var outs = {};
       (sl.choices || []).forEach(function(c, k){
         if (!c || (!c.state && !(c.preset in P))) { __err('SLIDES[' + i + '].choices[' + k + '] needs a preset (PRESETS key) or a state object'); return; }
-        var st = full(c.state || P[c.preset]), r;
+        var raw = c.state || P[c.preset];
+        if (typeof raw === 'function') { try { var s0 = full(S0); raw = raw(s0, compute(s0)); } catch (e) { __err('SLIDES[' + i + '].choices[' + k + '] state function threw: ' + msg(e)); return; } }
+        var st = full(raw), r;
         try { r = compute(st); sl.draw('slide-viz-' + i, st, r); } catch (e) { __err('SLIDES[' + i + '].choices[' + k + '] ("' + c.label + '") breaks compute/draw: ' + msg(e)); return; }
         var key = JSON.stringify(r); if (outs[key] !== undefined) __warn('SLIDES[' + i + '] choices "' + outs[key] + '" and "' + c.label + '" give the same result; make each scenario show something different'); outs[key] = c.label; });
       __clearLive('slide-viz-' + i);

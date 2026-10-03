@@ -762,8 +762,9 @@ const V = (function () {
     play.querySelector(".in > h2").after(bar.firstChild || document.createTextNode(""));
   }
   document.querySelectorAll(".chip[data-chip]").forEach((b) => b.addEventListener("click", () => {
-    const st = CH[+b.getAttribute("data-chip")];
-    let cur = {}; try { cur = readState(); } catch (e) {}
+    let st = CH[+b.getAttribute("data-chip")];
+    let cur = {}; try { cur = full(readState()); } catch (e) {}
+    if (typeof st === "function") { try { st = st(cur, compute(cur)) || {}; } catch (e) { showErr("scenario: " + e.message); st = {}; } }
     V.apply(Object.assign({}, cur, st));
     b.parentNode.querySelectorAll(".chip").forEach((x) => x.classList.toggle("on", x === b));
   }));
