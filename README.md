@@ -159,8 +159,10 @@ passing calculation.
 ## Measured results
 
 **Final batch:** each case was run once through `agent.py` with exactly
-`python agent.py --input <case>.json --output <dir> --model google/gemini-2.5-flash`, on the submitted code, with
-nothing post-processed. Every run exited 0, wrote exactly `index.html` and `trace.jsonl`, and stayed inside 10
+`python agent.py --input <case>.json --output <dir> --model google/gemini-2.5-flash`, with nothing post-processed.
+The batch ran on commit `eea2080`. The commits after it only add robustness: a fail-safe page write, a repair
+retry when a reply applies nothing, and a cycle-safe check. With them, Huffman, which failed in this batch,
+completed with 0 errors in a clean-room run on the final commit (2 calls, 36.5k tokens, 71 s). Every run exited 0, wrote exactly `index.html` and `trace.jsonl`, and stayed inside 10
 requests, 30k completion tokens and 10 minutes.
 
 | Case | Calls | Total tokens | Time | Final status |
