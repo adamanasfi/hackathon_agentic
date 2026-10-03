@@ -194,7 +194,10 @@ var V = (function(){
   function geo(f, a){ for (var k in a) { if (/^(x|y|x1|y1|x2|y2|cx|cy|r|rx|ry|width|height)$/.test(k) && !__fin(a[k])) __err(f + ': attribute ' + k + ' is ' + a[k]); if (k === 'd' && /NaN|undefined|Infinity/.test(String(a[k]))) __err(f + ': path d contains NaN/undefined'); } }
   function diagram(id, w, h){ __need(id, 'V.diagram'); w = w || 640; h = h || 360;
     function tag(t, k){ return "V.diagram('" + id + "') d." + t + "('" + k + "')"; }
-    function inb(k, xs, ys){ var m = 4; xs.forEach(function(x){ if (__fin(x) && (x < -m || x > w + m)) __warn("V.diagram('" + id + "') draws '" + k + "' at x=" + Math.round(x) + ', outside its viewBox width ' + w + ' (it will be clipped): enlarge w or rescale'); });
+    var ext = {x0: 0, y0: 0, x1: w, y1: h, kx: '', ky: ''};
+    function grow(k, xs, ys){ xs.forEach(function(x){ if (__fin(x)) { if (x < ext.x0) { ext.x0 = x; ext.kx = k; } if (x > ext.x1) { ext.x1 = x; ext.kx = k; } } });
+      ys.forEach(function(y){ if (__fin(y)) { if (y < ext.y0) { ext.y0 = y; ext.ky = k; } if (y > ext.y1) { ext.y1 = y; ext.ky = k; } } }); }
+    function inb(k, xs, ys){ grow(k, xs, ys); var m = 4; xs.forEach(function(x){ if (__fin(x) && (x < -m || x > w + m)) __warn("V.diagram('" + id + "') draws '" + k + "' at x=" + Math.round(x) + ', outside its viewBox width ' + w + ' (it will be clipped): enlarge w or rescale'); });
       ys.forEach(function(y){ if (__fin(y) && (y < -m || y > h + m)) __warn("V.diagram('" + id + "') draws '" + k + "' at y=" + Math.round(y) + ', outside its viewBox height ' + h + ' (it will be clipped): enlarge h or rescale'); }); }
     function pos(names, args){ if (typeof args[0] !== 'number') return args[0] || {}; var o = Object.assign({}, args[names.length] || {}); names.forEach(function(n, i){ o[n] = args[i]; }); return o; }
     var d = {w: w, h: h, width: w, height: h,
@@ -205,8 +208,13 @@ var V = (function(){
     text: function(k, x, y, s, a){ geo(tag('text', k), {x: x, y: y}); inb(k, [x], [y]); if (/NaN|undefined/.test(String(s))) __err('d.text shows "' + s + '"');
       a = a || {}; var fs = +(a.fontSize || a['font-size'] || 13) || 13, anc = a.textAnchor || a['text-anchor'] || 'start';
       var tw = String(s).replace(/<[^>]*>/g, '').length * fs * 0.56, x0 = anc === 'middle' ? x - tw / 2 : anc === 'end' ? x - tw : x;
+      var longest = String(s).replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').split('\n').reduce(function(m, l){ return Math.max(m, Math.min(l.length, 48)); }, 0);
+      tw = longest * fs * 0.56; x0 = anc === 'middle' ? x - tw / 2 : anc === 'end' ? x - tw : x; grow(k, [x0, x0 + tw], []);
       if (__fin(x) && !a.transform && (x0 < -6 || x0 + tw > w + 6)) __warn("V.diagram('" + id + "') label '" + String(s).slice(0, 30) + "' (~" + Math.round(tw) + 'px wide at x=' + Math.round(x) + ', anchor ' + anc + ') overflows the ' + w + 'px viewBox: shorten it, move it, or enlarge w'); },
-    arrow: function(k, x1, y1, x2, y2){ geo(tag('arrow', k), {x1: x1, y1: y1, x2: x2, y2: y2}); inb(k, [x1, x2], [y1, y2]); }, end: function(){}, svg: __absorb('svg') };
+    arrow: function(k, x1, y1, x2, y2){ geo(tag('arrow', k), {x1: x1, y1: y1, x2: x2, y2: y2}); inb(k, [x1, x2], [y1, y2]); },
+    end: function(){ var sw = (ext.x1 - ext.x0) / w, sh = (ext.y1 - ext.y0) / h;
+      if (sw > 1.35 || sh > 1.35) __err("V.diagram('" + id + "'): content spans " + Math.round(ext.x1 - ext.x0) + 'x' + Math.round(ext.y1 - ext.y0) + ' but the viewBox is ' + w + 'x' + h + ' (worst: ' + (sw > sh ? ext.kx : ext.ky) + '), so the whole visual is shrunk or clipped. Keep every element and label inside 0..w, 0..h, use short labels (long text belongs in the slide text, not the SVG), or enlarge w/h.'); },
+    svg: __absorb('svg') };
     return new Proxy(d, {get: function(t, k){ if (k in t || typeof k === 'symbol') return t[k];
       __err("V.diagram(...) has no member '" + String(k) + "' (it has only w, h, rect, circle, line, path, text, arrow, end). For coordinate maps use V.scale(d0, d1, r0, r1) which returns a function; V.line returns X/Y maps for plots.");
       return function(){ return 0; }; }}); }

@@ -291,15 +291,27 @@ const V = (function () {
         grow(x0, n(a.y) - fs, x0 + tw, n(a.y) + fs * 0.3);
       }
     }
+    /* SVG text cannot render HTML: turn <br> into line breaks, drop other tags, wrap long labels */
+    function lines(t, a) {
+      t = String(t).replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+      const max = (a && a.wrap) || 48, out = [];
+      t.split("\n").forEach((ln) => { let cur = ""; ln.split(/\s+/).forEach((w) => { if (cur && (cur + " " + w).length > max) { out.push(cur); cur = w; } else cur = cur ? cur + " " + w : w; }); out.push(cur); });
+      return out.filter((x, i) => x !== "" || i === 0);
+    }
     function el(tag, key, attrs, text) {
-      try { extent(tag, attrs || {}, text); } catch (e) {}
+      let ls = null;
+      if (tag === "text" && text !== undefined) { ls = lines(text, attrs); text = ls.join(" "); }
+      try { extent(tag, attrs || {}, ls && ls.length > 1 ? ls.reduce((a, b) => (b.length > a.length ? b : a), "") : text); if (ls && ls.length > 1) { const a = attrs || {}; extent("text", Object.assign({}, a, { y: +a.y + 15 * (ls.length - 1) }), ls[ls.length - 1]); } } catch (e) {}
       let e = svg._keys.get(key), fresh = false;
       if (e && e.tagName !== tag) { e.remove(); e = null; }
       if (!e) { e = document.createElementNS(NS, tag); svg._keys.set(key, e); fresh = true; }
       svg.appendChild(e);
       seen.add(key);
       setAttrs(e, attrs || {}, fresh);
-      if (text !== undefined) e.textContent = text;
+      if (ls && ls.length > 1) {
+        e.textContent = "";
+        ls.forEach((ln, i) => { const t = document.createElementNS(NS, "tspan"); t.setAttribute("x", attrs.x); if (i) t.setAttribute("dy", "1.2em"); t.textContent = ln; e.appendChild(t); });
+      } else if (text !== undefined) e.textContent = text;
       return e;
     }
     /* tolerate positional forms: rect(k,x,y,w,h,attrs), circle(k,cx,cy,r,attrs), line(k,x1,y1,x2,y2,attrs) */
@@ -321,6 +333,7 @@ const V = (function () {
       },
       end() {
         for (const [k, e] of svg._keys) if (!seen.has(k)) { e.remove(); svg._keys.delete(k); anims.delete(e); }
+        ext.x0 = Math.max(ext.x0, -0.2 * w); ext.x1 = Math.min(ext.x1, 1.2 * w); ext.y0 = Math.max(ext.y0, -0.2 * h); ext.y1 = Math.min(ext.y1, 1.2 * h);
         if (ext.x0 < 0 || ext.y0 < 0 || ext.x1 > w || ext.y1 > h) svg.setAttribute("viewBox", (ext.x0 - 6) + " " + (ext.y0 - 6) + " " + (ext.x1 - ext.x0 + 12) + " " + (ext.y1 - ext.y0 + 12));
       },
     };
@@ -672,7 +685,7 @@ const V = (function () {
     (CS[j].controls || []).forEach((id) => {
       const el = $(id); if (!el) return;
       const box = (el.closest && el.closest(".ctrl")) || el;
-      if (!play.contains(box)) return;
+      if (!play.contains(box) || box.querySelector(".grid-in") || (el.classList && el.classList.contains("grid-in"))) return;
       homes.push({ box, p: box.parentNode, n: box.nextSibling });
       $("slide-ctrls-" + j).appendChild(box);
     });
