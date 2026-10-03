@@ -56,6 +56,7 @@ V.table(id, headerArray, rowsArrays, {digits}) — values table (numbers auto-fo
 V.scale(d0, d1, r0, r1) -> function mapping data values to pixels (use it inside diagrams).
 const d = V.diagram(id, w, h); d.rect(key,{x,y,width,height,fill,stroke,rx}); d.circle(key,{cx,cy,r,fill}); d.line(key,{x1,y1,x2,y2,stroke,strokeWidth,strokeDasharray}); d.path(key,{d,stroke,fill}); d.arrow(key,x1,y1,x2,y2,{stroke,strokeWidth}); d.text(key,x,y,str,{textAnchor,fontSize,fontWeight,fill}); d.end() — keyed elements; calling again with the same key ANIMATES smoothly to the new geometry (3Blue1Brown-style). Always call d.end() after drawing. Use for custom mechanism diagrams (boxes, arrows, flows, geometry).
 const [a, b] = V.split(id, 2, {cols}) — splits a slide's container into panels (ids id-0, id-1, …; stacked by default, cols:3 puts small matrices side by side) so one slide can show e.g. Q, K and QKᵀ together; draw into those ids. Never invent other ids.
+Slides use a DARK theme (near-black background, gold headings, teal accents): colour data with V.color(i), text/lines with V.ink, secondary with V.muted; never use black or white.
 All charts animate between renders automatically.
 
 # Worked example (format only — your content must follow the brief)
