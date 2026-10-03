@@ -105,7 +105,7 @@ def assemble(blocks, case):
 
 
 EDIT_HDR = re.compile(r"^[ \t]*@@EDIT[ \t]+([A-Z]+)[ \t]*$", re.M)
-EDIT_RX = re.compile(r"<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n?>>>>>>> REPLACE")
+EDIT_RX = re.compile(r"<{5,}[^\n]*\n([\s\S]*?)\n={5,}[^\n]*\n([\s\S]*?)\n?>{5,}[^\n]*")
 
 
 def _replace_once(text, old, new):

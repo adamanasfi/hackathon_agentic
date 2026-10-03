@@ -163,7 +163,7 @@ const V = (function () {
   const $ = (id) => {
     id = String(id);
     let e = document.getElementById(id);
-    if (e || !/^(slide-viz|xviz)-/.test(id)) return e;
+    if (e || id.indexOf("-") < 0) return e;
     for (let cut = id.lastIndexOf("-"); cut > 0; cut = id.lastIndexOf("-", cut - 1)) {
       const parent = document.getElementById(id.slice(0, cut));
       if (parent) { e = document.createElement("div"); e.id = id; parent.appendChild(e); return e; }

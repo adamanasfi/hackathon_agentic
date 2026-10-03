@@ -98,7 +98,8 @@ def sanitize(blocks):
         known = set(parse_html("".join(blocks.get(k, "") for k in ("INTRO", "PLAYGROUND", "EXPLORE", "GROUNDING"))).els) | set(TEMPLATE_IDS)
         draw = set(re.findall(r"V\.(?:bars|line|matrix|table|diagram|editGrid)\(\s*['\"]([\w-]+)['\"]", ui))
         draw |= set(re.findall(r"V\.\$\(\s*['\"]([\w-]+)['\"]\s*\)\.(?:innerHTML|textContent)\s*=", ui))
-        miss = sorted(i for i in draw - known if not re.search(r"id\s*=\s*\\?['\"]" + re.escape(i), ui))
+        has_parent = lambda i: any(i[:k] in known for k in range(len(i)) if i[k] == "-")
+        miss = sorted(i for i in draw - known if not has_parent(i) and not re.search(r"id\s*=\s*\\?['\"]" + re.escape(i), ui))
         if miss:
             blocks["PLAYGROUND"] = pg + "\n<div class=\"auto-viz\">" + "".join(f'<div class="viz" id="{i}"></div>' for i in miss) + "</div>"
             fixes.append(f"created missing display containers {miss}")
@@ -179,7 +180,7 @@ function __close(a, b, tol){ if (Array.isArray(a) || Array.isArray(b)) return Ar
   if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) <= tol; return a === b; }
 function __fin(x){ return typeof x === 'number' && isFinite(x); }
 var __drawn = {};
-function __resolve(id){ id = String(id); if (id in __ids || !/^(slide-viz|xviz)-/.test(id)) return id;
+function __resolve(id){ id = String(id); if (id in __ids || id.indexOf('-') < 0) return id;
   for (var cut = id.lastIndexOf('-'); cut > 0; cut = id.lastIndexOf('-', cut - 1)) if (id.slice(0, cut) in __ids) { __mk(id, {tag: 'div', attrs: {}, value: ''}); return id; }
   return id; }
 function __need(id, f){ id = __resolve(id); __drawn[id] = 1; if (!(id in __ids)) __err(f + "('" + id + "'): no element with that id" + (String(id).length <= 2 ? " (a 1-character id usually means a string was destructured: V.split returns an ARRAY of ids, use const [a, b] = V.split(id, 2))" : "")); }
@@ -282,7 +283,10 @@ HARNESS = r"""
     var cur = full(Object.assign({}, st, rd)), r;
     try { r = compute(cur); } catch (e) { __err('compute(readState() after ' + label + ') threw: ' + msg(e)); return; }
     try { render(cur, r); } catch (e) { __err('render(' + label + ') threw: ' + msg(e)); } }
+  var __d0 = Object.keys(__drawn).length, __t0 = __texts.length; __drawn = {};
   apply('DEFAULT_STATE', S0);
+  if (!Object.keys(__drawn).some(function(k){ return !/^(slide-viz|xviz)-/.test(k); }) && __texts.length === __t0)
+    __err('render(s, r) draws nothing in the playground: it must fill the PLAYGROUND visual/readout containers (V.bars/V.line/V.matrix/V.diagram or innerHTML)');
   try { setState(full(S0)); render(full(readState()), compute(full(readState()))); } catch (e) {}
   Object.keys(P).forEach(function(k){ apply('PRESETS.' + k, P[k]); });
   R.info.state_keys = Object.keys(S0);
@@ -488,7 +492,7 @@ def static_checks(blocks):
     js = blocks.get("UI", "") + "\n" + blocks.get("MODEL", "")
     known = set(all_p.els) | set(TEMPLATE_IDS)
     for i in sorted(set(re.findall(r"(?:V\.\$|getElementById|V\.(?:num|val|set|bars|line|matrix|editGrid|readGrid|table|diagram))\(\s*['\"]([\w-]+)['\"]", js))):
-        if i not in known and not re.search(r"id\s*=\s*\\?['\"]" + re.escape(i) + r"\\?['\"]|\.id\s*=\s*['\"]" + re.escape(i), js):
+        if i not in known and not any(i[:k] in known for k in range(len(i)) if i[k] == "-") and not re.search(r"id\s*=\s*\\?['\"]" + re.escape(i) + r"\\?['\"]|\.id\s*=\s*['\"]" + re.escape(i), js):
             errors.append(f"UI references #{i} but no element has id=\"{i}\"")
     calcs = []
     for tag, a in all_p.tags:
