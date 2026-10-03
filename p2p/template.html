@@ -159,7 +159,17 @@ body.flow .top{top:0}body.flow .nav{bottom:0}
 /* ---------- Generic helper library (template, paper-agnostic) ---------- */
 const V = (function () {
   const NS = "http://www.w3.org/2000/svg";
-  const $ = (id) => document.getElementById(id);
+  /* resolve an id; if it extends an existing panel id (e.g. "slide-viz-2-0-Q"), create that sub-panel on demand */
+  const $ = (id) => {
+    id = String(id);
+    let e = document.getElementById(id);
+    if (e || !/^(slide-viz|xviz)-/.test(id)) return e;
+    for (let cut = id.lastIndexOf("-"); cut > 0; cut = id.lastIndexOf("-", cut - 1)) {
+      const parent = document.getElementById(id.slice(0, cut));
+      if (parent) { e = document.createElement("div"); e.id = id; parent.appendChild(e); return e; }
+    }
+    return null;
+  };
   const PAL = ["#4f46e5", "#f97316", "#14b8a6", "#eab308", "#a855f7", "#ec4899", "#22c55e", "#64748b"];
   const color = (i) => PAL[((i % PAL.length) + PAL.length) % PAL.length];
   function fmt(x, d) {
@@ -491,7 +501,7 @@ const V = (function () {
       for (let i = 0; i < n; i++) { const c = document.createElement("div"); c.id = id + "-" + i; host.appendChild(c); }
       host._split = n;
     }
-    return Array.from({ length: n }, (_, i) => id + "-" + i);
+    return Array.from({ length: n }, (_, i) => { const cid = id + "-" + i; return { id: cid, toString: () => cid, valueOf: () => cid }; });
   }
   const api = { $, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, stage: Infinity, syncOut };
   const warned = new Set();
@@ -505,6 +515,10 @@ const V = (function () {
 <script>
 /* ---------- MODEL (generated) ---------- */
 %%MODEL%%
+</script>
+<script>
+/* ---------- TESTS (generated, isolated so a faulty test cannot break the model) ---------- */
+%%TESTS%%
 </script>
 <script>
 /* ---------- UI (generated) ---------- */

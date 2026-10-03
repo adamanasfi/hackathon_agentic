@@ -168,7 +168,7 @@ function __El(rec){
 }
 function __mk(id, rec){ rec.id = id; var e = __El(rec); __ids[id] = e; return e; }
 var document = {
-  getElementById: function(id){ if (id in __ids) return __ids[id]; __warn('getElementById: no element #' + id + ' (static HTML)'); return null; },
+  getElementById: function(id){ id = __resolve(id); if (id in __ids) return __ids[id]; __warn('getElementById: no element #' + id + ' (static HTML)'); return null; },
   querySelector: function(s){ var m = /^#([\w-]+)$/.exec(s); if (m) return document.getElementById(m[1]); return __absorb('qs'); }, querySelectorAll: function(){ return []; },
   createElement: function(t){ return __El({tag: t, attrs: {}, value: ''}); }, createElementNS: function(n, t){ return __El({tag: t, attrs: {}, value: ''}); },
   createTextNode: function(){ return __absorb('text'); }, addEventListener: function(){}, body: __absorb('body'), documentElement: __absorb('html'), activeElement: null };
@@ -179,14 +179,17 @@ function __close(a, b, tol){ if (Array.isArray(a) || Array.isArray(b)) return Ar
   if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) <= tol; return a === b; }
 function __fin(x){ return typeof x === 'number' && isFinite(x); }
 var __drawn = {};
-function __need(id, f){ __drawn[id] = 1; if (!(id in __ids)) __err(f + "('" + id + "'): no element with that id" + (String(id).length <= 2 ? " (a 1-character id usually means a string was destructured: V.split returns an ARRAY of ids, use const [a, b] = V.split(id, 2))" : "")); }
+function __resolve(id){ id = String(id); if (id in __ids || !/^(slide-viz|xviz)-/.test(id)) return id;
+  for (var cut = id.lastIndexOf('-'); cut > 0; cut = id.lastIndexOf('-', cut - 1)) if (id.slice(0, cut) in __ids) { __mk(id, {tag: 'div', attrs: {}, value: ''}); return id; }
+  return id; }
+function __need(id, f){ id = __resolve(id); __drawn[id] = 1; if (!(id in __ids)) __err(f + "('" + id + "'): no element with that id" + (String(id).length <= 2 ? " (a 1-character id usually means a string was destructured: V.split returns an ARRAY of ids, use const [a, b] = V.split(id, 2))" : "")); }
 var V = (function(){
   var $ = function(id){ return document.getElementById(id); };
   function fmt(x, d){ d = d === undefined ? 3 : d; if (typeof x !== 'number') return String(x); if (isNaN(x)) return 'NaN'; if (!isFinite(x)) return x > 0 ? '∞' : '−∞'; return x.toFixed(d); }
   function num(id){ var e = $(id); if (!e) return NaN; return e.type === 'checkbox' ? (e.checked ? 1 : 0) : parseFloat(e.value); }
   function val(id){ var e = $(id); return !e ? undefined : e.type === 'checkbox' ? e.checked : e.value; }
   function set(id, v){ var e = $(id); if (!e) { __err("V.set('" + id + "'): no element with that id"); return; } if (v === undefined) return; if (e.type === 'checkbox') e.checked = !!v; else e.value = v; }
-  function split(id, n){ __need(id, 'V.split'); var out = []; for (var i = 0; i < n; i++) { __mk(id + '-' + i, {tag: 'div', attrs: {}, value: ''}); out.push(id + '-' + i); } return out; }
+  function split(id, n){ id = String(id); __need(id, 'V.split'); var out = []; for (var i = 0; i < n; i++) { (function(cid){ __mk(cid, {tag: 'div', attrs: {}, value: ''}); out.push({id: cid, toString: function(){ return cid; }, valueOf: function(){ return cid; }}); })(id + '-' + i); } return out; }
   function geo(f, a){ for (var k in a) { if (/^(x|y|x1|y1|x2|y2|cx|cy|r|rx|ry|width|height)$/.test(k) && !__fin(a[k])) __err(f + ': attribute ' + k + ' is ' + a[k]); if (k === 'd' && /NaN|undefined|Infinity/.test(String(a[k]))) __err(f + ': path d contains NaN/undefined'); } }
   function diagram(id, w, h){ __need(id, 'V.diagram'); w = w || 640; h = h || 360;
     function tag(t, k){ return "V.diagram('" + id + "') d." + t + "('" + k + "')"; }
@@ -339,6 +342,17 @@ def _u8(t):
         return t
 
 
+def _quote(code, err):
+    """Append the offending source line(s) to a JS error so the repair can locate it."""
+    m = re.search(r"<input>:(\d+)", err)
+    if not m:
+        return ""
+    n, lines = int(m.group(1)), code.split("\n")
+    if not 0 < n <= len(lines):
+        return ""
+    return " | line " + str(n) + ": " + lines[n - 1].strip()[:160]
+
+
 def run_js(blocks, els, preset_keys, calcs=None, xshow=None, time_limit=4):
     """Execute MODEL+UI in QuickJS against a stub DOM. Returns (errors, warnings, report)."""
     if quickjs is None:
@@ -353,11 +367,17 @@ def run_js(blocks, els, preset_keys, calcs=None, xshow=None, time_limit=4):
     init.update({i: {"tag": e["tag"], "attrs": e["attrs"], "value": e["value"],
                      "checked": "checked" in e["attrs"]} for i, e in els.items()})
     ctx.eval("(function(){var m=" + json.dumps(init) + ";for(var k in m) __mk(k,m[k]);})();")
-    for name in ("MODEL", "UI"):
+    from .assemble import split_tests
+    model, tests_js = split_tests(blocks.get("MODEL", ""))
+    for name, code in (("MODEL", model), ("TESTS", tests_js), ("UI", blocks.get("UI", ""))):
         try:
-            ctx.eval(blocks.get(name, ""))
+            ctx.eval(code)
         except Exception as e:
-            errors.append(f"{name} block failed to load: {_u8(str(e)).strip()[:300]}")
+            errors.append(f"{name if name != 'TESTS' else 'MODEL (TESTS)'} block failed to load: {_u8(str(e)).strip()[:300]}" + _quote(code, str(e)))
+    if tests_js:
+        te = ctx.eval("__TESTS_ERROR")
+        if te:
+            errors.append(f"MODEL: evaluating the TESTS array threw: {_u8(str(te))} — TESTS entries must be plain literals or functions (no references to s or r outside get())")
     try:
         ctrls = [{"id": i, "tag": e["tag"], "type": e["attrs"].get("type", ""), "min": e["attrs"].get("min"),
                   "max": e["attrs"].get("max"), "options": e["options"][:8]}
@@ -370,7 +390,20 @@ def run_js(blocks, els, preset_keys, calcs=None, xshow=None, time_limit=4):
     except Exception as e:
         errors.append(f"execution harness aborted (infinite loop or crash?): {str(e).strip()[:300]}")
         return errors, [], {}
-    return errors + out["E"], out["W"], out["R"]
+    codes = {"MODEL": model, "UI": blocks.get("UI", "")}
+
+    def locate(e):
+        m = re.search(r"at ([\w$.]+) \(<input>:(\d+)\)", e)
+        if not m or "| line" in e:
+            return e
+        fn, n = m.group(1).split(".")[-1], int(m.group(2))
+        for code in codes.values():
+            if re.search(r"(function\s+" + re.escape(fn) + r"\b|\b" + re.escape(fn) + r"\s*[:=]\s*(\(|function|async))", code):
+                lines = code.split("\n")
+                if 0 < n <= len(lines):
+                    return e + " | line " + str(n) + ": " + lines[n - 1].strip()[:160]
+        return e
+    return errors + [locate(e) for e in out["E"]], out["W"], out["R"]
 
 
 def static_checks(blocks):

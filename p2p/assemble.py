@@ -32,6 +32,38 @@ def parse_blocks(text, truncated=False):
     return out
 
 
+def split_tests(model):
+    """Move `const TESTS = [...]` out of MODEL into a guarded snippet so a bad test can never break compute()."""
+    m = re.search(r"^(const|let|var)\s+TESTS\s*=\s*\[", model or "", re.M)
+    if not m:
+        return model, ""
+    i, depth, q = m.end() - 1, 0, None
+    while i < len(model):
+        c = model[i]
+        if q:
+            if c == "\\":
+                i += 1
+            elif c == q:
+                q = None
+        elif c in "'\"`":
+            q = c
+        elif c == "[":
+            depth += 1
+        elif c == "]":
+            depth -= 1
+            if depth == 0:
+                break
+        i += 1
+    if depth != 0:
+        return model, ""
+    end = i + 1
+    if end < len(model) and model[end] == ";":
+        end += 1
+    body = model[m.end() - 1:i + 1]
+    guarded = ("var TESTS = [], __TESTS_ERROR = null;\ntry { TESTS = " + body + "; } catch (e) { __TESTS_ERROR = String(e && e.message || e); }")
+    return model[:m.start()] + model[end:], guarded
+
+
 def _js(s):
     return (s or "").replace("</script", "<\\/script")
 
@@ -54,6 +86,7 @@ def assemble(blocks, case):
     if aud:
         cite.append("Audience: " + H.escape(str(aud)))
     page = open(TEMPLATE, encoding="utf-8").read()
+    model, tests_js = split_tests(blocks.get("MODEL", ""))
     rep = {
         "%%TITLE%%": title,
         "%%CITE%%": " · ".join(cite),
@@ -62,7 +95,8 @@ def assemble(blocks, case):
         "%%PLAYGROUND%%": blocks.get("PLAYGROUND", ""),
         "%%EXPLORE%%": blocks.get("EXPLORE", ""),
         "%%GROUNDING%%": blocks.get("GROUNDING", ""),
-        "%%MODEL%%": _js(blocks.get("MODEL", "")),
+        "%%MODEL%%": _js(model),
+        "%%TESTS%%": _js(tests_js),
         "%%UI%%": _js(blocks.get("UI", "")),
         "%%MATHLIB%%": open(MATHLIB, encoding="utf-8").read(),
     }
