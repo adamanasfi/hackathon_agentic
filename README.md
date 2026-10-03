@@ -122,17 +122,21 @@ calculation.
 
 ## Measured results (development runs, `google/gemini-2.5-flash`, final code)
 
-| Practice case | LLM calls | Total tokens | Wall time | Main visual primitives |
-|---|---|---|---|---|
-| Bayes' rule, base-rate fallacy | 1 | 11.7k | 31 s | `waffle` (1000-person population) |
-| Shannon entropy (Sec. 6) | 2 | 23.4k | 41 s | bars, diagram |
-| Batch Normalization (Alg. 1) | 2 | 29.5k | 56 s | bars |
-| word2vec analogies (Sec. 1, 5) | 2 | 32.8k | 65 s | `space` (draggable word vectors), similarity matrix |
-| Scaled dot-product attention (Sec. 3.2.1) | 2 | 34.7k | 68 s | diagram, matrix |
-| MLP forward pass (Rumelhart et al., Eq. 1–2) | 2 | 36.0k | 74 s | `network`, `curve` (sigmoid) |
-| Convolution + sub-sampling (LeCun et al., Sec. II.A) | 2 | 38.2k | 81 s | `pixels` with a sliding window |
-| PageRank (Sec. 2.4, 2.6; iterative ▶ Run) | 2 | 36.4k | 86 s | `graph` |
-| Adam bias correction (Alg. 1; iterative ▶ Run) | 2 | 45.1k | 104 s | line, bars |
+| Practice case | LLM calls | Total tokens | Wall time | Visual primitives the agent chose | Remaining issues |
+|---|---|---|---|---|---|
+| Bayes' rule, base-rate fallacy | 1 | 12.7k | 31 s | `waffle` (1000-person population) | none |
+| Scaled dot-product attention (Sec. 3.2.1) | 1 | 16.0k | 44 s | diagram, matrices | 1 minor |
+| MLP forward pass (Rumelhart et al., Eq. 1–2) | 2 | 29.8k | 58 s | `network`, `curve` (sigmoid) | none |
+| Adam bias correction (Alg. 1, iterative) | 2 | 29.4k | 65 s | bars, diagram | 2 minor |
+| Batch Normalization (Alg. 1) | 2 | 31.6k | 62 s | bars, `pipeline` | model-proposed invariants pruned |
+| word2vec analogies (Sec. 1, 5) | 2 | 34.4k | 64 s | `space` (draggable word vectors) | several minor |
+| Shannon entropy (Sec. 6) | 3 | 39.3k | 58 s | bars, diagram | none |
+| PageRank (Sec. 2.4, 2.6, iterative ▶ Run) | 2 | 41.3k | 92 s | `graph` | 3 minor |
+| Convolution + sub-sampling (LeCun et al., Sec. II.A) | 3 | 57.8k | 105 s | `pixels`, diagram, matrices | 2 minor |
+
+In this final batch, all nine pages load and run in Chromium. Across earlier development batches,
+the occasional failure was always a model-written code error that the repair round could not fix. Such errors are
+logged in the trace, and every recurring pattern was turned into a deterministic library fix.
 
 Every run stays well inside 10 requests, 30k completion tokens and 10 minutes. We also tested
 `openai/gpt-4.1-mini` (entropy: 1 call, 10.8k tokens, clean) and a run where every network request except
