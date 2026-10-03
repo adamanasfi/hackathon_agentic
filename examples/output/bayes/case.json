@@ -1,0 +1,8 @@
+{
+  "source_url": "https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053",
+  "title": "An Essay towards solving a Problem in the Doctrine of Chances (Bayes, 1763) — modern statement",
+  "section": "Proposition 3 and 5 (conditional probability), stated in modern notation",
+  "excerpt": "Proposition 3: The probability that two subsequent events will both happen is a ratio compounded of the probability of the 1st, and the probability of the 2nd on supposition the 1st happens. Proposition 5: If there be two subsequent events, the probability of the 2nd b/N and the probability of both together P/N, and it being first discovered that the 2nd event has happened, from hence I guess that the 1st event has also happened, the probability I am in the right is P/b. In modern notation: P(A and B) = P(A) P(B|A), and therefore P(A|B) = P(B|A) P(A) / P(B), where P(B) = P(B|A) P(A) + P(B|not A) P(not A).",
+  "focus": "Explain Bayes' rule with a diagnostic test example: prior prevalence P(D), test sensitivity P(+|D) and false-positive rate P(+|not D). Let the learner change all three. Show a population of 1000 people split into the four groups (true/false positives/negatives), the evidence P(+), and the posterior P(D|+). Check that the four groups sum to 1000 and that a prior of 0 or 1 gives a posterior of 0 or 1. Explain the base-rate fallacy: a 99% accurate test can still give a low posterior for a rare condition.",
+  "audience": "Engineering undergraduate with basic probability."
+}

@@ -122,20 +122,25 @@ calculation.
 
 ## Measured results (development runs, `google/gemini-2.5-flash`, final code)
 
-| Practice case | LLM calls | Total tokens | Wall time | Remaining issues |
+| Practice case | LLM calls | Total tokens | Wall time | Main visual primitives |
 |---|---|---|---|---|
-| Shannon entropy (Sec. 6) | 1 | 11.7k | 26 s | none: every check passes |
-| Attention (Sec. 3.2.1) | 1 | 16.0k | 45 s | one model-proposed test pruned |
-| PageRank (Sec. 2.4/2.6, iterative ▶ Run) | 2 | 27.1k | 55 s | none |
-| Batch Normalization (Alg. 1) | 2 | 36.7k | 76 s | one model-proposed invariant pruned |
-| Adam bias correction (Alg. 1, iterative) | 2 | 35.3k | 77 s | one helper misuse (since added to `V`) |
+| Bayes' rule, base-rate fallacy | 1 | 11.7k | 31 s | `waffle` (1000-person population) |
+| Shannon entropy (Sec. 6) | 2 | 23.4k | 41 s | bars, diagram |
+| Batch Normalization (Alg. 1) | 2 | 29.5k | 56 s | bars |
+| word2vec analogies (Sec. 1, 5) | 2 | 32.8k | 65 s | `space` (draggable word vectors), similarity matrix |
+| Scaled dot-product attention (Sec. 3.2.1) | 2 | 34.7k | 68 s | diagram, matrix |
+| MLP forward pass (Rumelhart et al., Eq. 1–2) | 2 | 36.0k | 74 s | `network`, `curve` (sigmoid) |
+| Convolution + sub-sampling (LeCun et al., Sec. II.A) | 2 | 38.2k | 81 s | `pixels` with a sliding window |
+| PageRank (Sec. 2.4, 2.6; iterative ▶ Run) | 2 | 36.4k | 86 s | `graph` |
+| Adam bias correction (Alg. 1; iterative ▶ Run) | 2 | 45.1k | 104 s | line, bars |
 
-We also tested `openai/gpt-4.1-mini` (entropy: 1 call, 10.8k tokens, clean) and a run where every network request
-except OpenRouter was blocked: the source fetch failed in 0.05 s, the failure was logged, and generation
-completed from the case text.
+Every run stays well inside 10 requests, 30k completion tokens and 10 minutes. We also tested
+`openai/gpt-4.1-mini` (entropy: 1 call, 10.8k tokens, clean) and a run where every network request except
+OpenRouter was blocked: the source fetch failed in 0.05 s, the failure was logged, and generation completed from
+the case text.
 
-**Example input/output pair:** [examples/output/entropy/](examples/output/entropy/) holds `case.json`,
-`index.html` and `trace.jsonl`, exactly as the agent wrote them.
+**Example input/output pair:** [examples/output/bayes/](examples/output/bayes/) holds `case.json`, `index.html`
+and `trace.jsonl`, exactly as the agent wrote them.
 
 ## Files
 
@@ -149,8 +154,8 @@ completed from the case text.
 | `p2p/assemble.py` | Block parser, search/replace edit applier, template assembly |
 | `p2p/source.py` | Excerpt handling and best-effort source fetch |
 | `p2p/template.html`, `p2p/vizlib.js`, `p2p/mathlib.js` | Generic slide-deck template, semantic visual primitives, numeric helpers |
-| `examples/*.json` | Practice inputs (our own; the two public examples plus three others) |
-| `examples/output/entropy/` | One example input/output pair with its trace |
+| `examples/*.json` | Practice inputs written by us (the two public examples plus seven others) |
+| `examples/output/bayes/` | One example input/output pair with its trace |
 | `tools/` | Development-only scripts (browser smoke test, re-assembly); not used by the agent |
 
 ## Credits and reuse

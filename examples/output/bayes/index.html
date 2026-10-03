@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bayes&#x27; Rule: Diagnostic Test</title>
+<style>
+:root{--bg:#0d1117;--panel:#131922;--panel2:#171e29;--ink:#e6edf3;--ink2:#c3ccd6;--muted:#8b949e;--line:#262e3a;--gold:#e2b86b;--teal:#4fb3bf;--coral:#e07a5f;--ok:#7fb77e;--bad:#e5534b;--warn:#e2b86b;--hl:#e2b86b;--r:12px;--mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;--sans:"DM Sans","Inter","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:17px/1.6 var(--sans)}
+body{display:flex;flex-direction:column;overflow:hidden}
+a{color:var(--teal)}
+b,strong{color:var(--teal);font-weight:650}
+/* ---------- top bar ---------- */
+.top{flex:0 0 auto;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 28px 0;position:relative;z-index:5}
+.top .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:10px;height:22px;border-radius:3px;background:linear-gradient(180deg,var(--gold),var(--teal));flex:0 0 auto}
+.top h1{font-size:1rem;margin:0;color:var(--gold);font-weight:700;letter-spacing:.01em}
+.top .cite{font-size:.78rem;color:var(--muted);flex:1 1 300px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .tools button{font-size:.78rem;padding:3px 12px}
+.prog{height:3px;background:var(--line);margin:10px -28px 0}
+.prog>div{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .45s ease}
+/* ---------- deck ---------- */
+#deck{flex:1 1 auto;overflow:hidden;position:relative}
+#track{display:flex;height:100%;transition:transform .55s cubic-bezier(.65,0,.35,1)}
+.slide{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;padding:34px 56px 36px;scroll-behavior:smooth}
+.slide>.in{max-width:1240px;margin:0 auto}
+.kicker{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin-bottom:6px}
+.slide h2{font-size:2.3rem;line-height:1.15;margin:0 0 16px;letter-spacing:-.01em;color:var(--gold);font-weight:700}
+.slide h3{font-size:1.1rem;margin:0 0 8px;color:var(--gold);font-weight:650}
+p{margin:0 0 12px}
+li{margin:0 0 6px}
+ul{padding-left:1.2em}
+li::marker{color:var(--ink)}
+/* title slide */
+.hero{padding:22px 0 26px}
+.hero h2{font-size:3.2rem;margin-bottom:10px}
+.hero .sum{font-size:1.25rem;color:var(--ink);max-width:880px}
+.hero .hint{margin-top:12px;color:var(--muted);font-size:.9rem}
+#intro-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 34px}
+/* concept slides */
+.cslide{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:40px;align-items:start;max-width:1300px;margin:0 auto}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-height:380px;display:flex;flex-direction:column;justify-content:center}
+.stage .viz{border:0;background:transparent;margin:0;padding:0}
+.stage,.stage .viz,.stage .viz>div{min-width:0;max-width:100%}
+.stage{overflow:auto}
+.stage table.mx{font-size:.85rem}
+.side{padding-top:4px}
+.side .stext{font-size:1.08rem;color:var(--ink)}
+.slide-ctrls:not(:empty){border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0 4px;margin:16px 0}
+.stage-empty{color:var(--muted);text-align:center;font-size:.95rem}
+@media (max-width:900px){.cslide,#intro-cards,.grid2,.grid3,.play{grid-template-columns:1fr!important}.slide{padding:20px 16px}.hero h2{font-size:2.1rem}.slide h2{font-size:1.7rem}}
+/* ---------- generic content ---------- */
+.card{background:transparent;border:0;border-top:1px solid var(--line);padding:14px 2px 6px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.play{display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:28px;align-items:start}
+.play>.card:first-child{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.eq{font-family:"Cambria Math","Latin Modern Math","STIX Two Math",Georgia,serif;font-size:1.45rem;text-align:center;padding:16px;margin:12px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow-x:auto;color:var(--ink)}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.9em;margin:0 2px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 3px}
+.frac>span:last-child{padding:0 3px}
+.ovl{text-decoration:overline}
+table{border-collapse:collapse}
+table.sym,table.vals{width:100%;font-size:.95rem}
+table.sym th,table.vals th{color:var(--gold);font-weight:650;text-align:left;padding:6px 12px;border-bottom:1px solid var(--gold)}
+table.sym td,table.vals td{border-bottom:1px solid var(--line);padding:7px 12px;text-align:left;vertical-align:top}
+table.vals td.num,table.vals th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+table.vals td.num{color:var(--teal)}
+table.sym td:first-child{white-space:nowrap;font-family:Georgia,serif;font-size:1.08rem;color:var(--teal)}
+.ctrl{margin:0 0 14px}
+.ctrl label{display:block;font-weight:650;font-size:.9rem;margin-bottom:4px;color:var(--gold)}
+.ctrl .hint{font-size:.8rem;color:var(--muted)}
+input[type=range]{width:calc(100% - 64px);vertical-align:middle;accent-color:var(--teal)}
+output.val{display:inline-block;width:58px;text-align:right;font-family:var(--mono);font-weight:600;color:var(--teal)}
+input[type=number],input[type=text],select,textarea{font:inherit;font-family:var(--mono);padding:5px 8px;border:1px solid #30363d;border-radius:6px;background:var(--bg);color:var(--ink);max-width:100%}
+input[type=number]{width:90px}
+input[type=checkbox]{accent-color:var(--teal);width:16px;height:16px}
+input:focus,select:focus{outline:2px solid rgba(79,179,191,.45);border-color:var(--teal)}
+button{font:inherit;font-size:.92rem;font-weight:650;cursor:pointer;border:1px solid var(--teal);background:var(--teal);color:#071014;border-radius:8px;padding:6px 16px;margin:2px 4px 2px 0;transition:transform .12s,background .12s}
+button:hover{transform:translateY(-1px)}
+button.ghost{background:transparent;color:var(--teal)}
+button.ghost:hover{background:rgba(79,179,191,.1)}
+button:disabled{opacity:.35;cursor:default;transform:none}
+.viz{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin:0 0 16px;min-height:40px}
+.viz .viz{border:0;padding:4px;margin:0 0 6px;background:transparent}
+.viz svg.v{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:4px 18px;justify-content:center;font-size:.85rem;padding:2px 6px 4px;color:var(--ink2)}
+.legend i{display:inline-block;width:22px;vertical-align:middle;margin-right:6px}
+svg.v text{font:13px var(--sans);fill:var(--ink)}
+svg.v .ax{stroke:#4b5563;stroke-width:1}
+svg.v .grid{stroke:#1f2631;stroke-width:1}
+svg.v *{transition:fill .35s,stroke .35s}
+.big{font-size:1.5rem;font-weight:700;font-family:var(--mono);color:var(--teal)}
+.readout{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 14px}
+.readout>div{border-left:2px solid var(--gold);padding:4px 14px;min-width:120px}
+.readout small{display:block;color:var(--muted);font-size:.78rem}
+table.mx{margin:4px auto 10px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+table.mx caption{font-family:var(--sans);font-weight:650;font-size:.9rem;padding-bottom:6px;color:var(--gold)}
+table.mx td,table.mx th{padding:5px 10px;text-align:center;border:2px solid var(--panel);min-width:52px;font-size:.92rem;border-radius:5px}
+table.mx th{color:var(--muted);font-weight:500;background:transparent;font-family:var(--sans)}
+table.mx td{transition:background .35s;color:var(--ink)}
+table.mx td.hlc{outline:2px solid var(--gold);outline-offset:-2px}
+.grid-in input{width:64px;padding:4px;text-align:right}
+.grid-in table td{padding:2px}
+.grid-in th{color:var(--muted);font-weight:500;font-size:.85rem}
+.grid-in input.bad{border-color:var(--bad);background:#2a1414}
+.explore{border-top:2px solid var(--teal)}
+.caution{border-top:2px solid var(--coral)}
+.caution h3{color:var(--coral)}
+.from-paper{border-top:2px solid var(--gold)}
+.ours{border-top:2px solid var(--teal)}
+.note{font-size:.86rem;color:var(--muted)}
+.calc{font-family:var(--mono);font-weight:600;color:var(--teal);background:rgba(79,179,191,.12);border-radius:4px;padding:0 4px}
+.hl{outline:2px solid var(--gold)!important;outline-offset:3px;border-radius:10px;animation:pulse 1.4s ease-in-out 2}
+@keyframes pulse{50%{outline-color:rgba(226,184,107,.2)}}
+#learnbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 14px;margin:0 0 16px;font-family:var(--mono);font-size:.9rem}
+ul.checks{list-style:none;padding:0;margin:0}
+ul.checks li{padding:3px 0;font-size:.93rem}
+.pass{color:var(--ok);font-weight:700}.fail{color:var(--bad);font-weight:700}
+#errors{display:none;background:#2a1414;border:1px solid var(--bad);color:#ffb4ae;border-radius:8px;padding:8px 12px;margin:8px 28px;font-size:.85rem;white-space:pre-wrap;max-height:80px;overflow:auto}
+.disclaimer{font-size:.88rem;color:var(--muted);border-left:2px solid var(--line);padding:6px 14px;margin:18px 0}
+code{font-family:var(--mono);background:var(--panel2);border-radius:4px;padding:0 5px;color:var(--gold)}
+/* ---------- bottom nav ---------- */
+.nav{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 16px;background:var(--bg);border-top:1px solid var(--line)}
+.dots{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:60vw}
+.dots button{width:9px;height:9px;padding:0;margin:0;border-radius:99px;background:#30363d;border:0}
+.dots button.on{background:var(--gold);width:26px}
+.dots button:hover{transform:scale(1.25);background:var(--teal)}
+#counter{font-size:.82rem;color:var(--muted);min-width:160px;text-align:center;font-family:var(--mono)}
+/* ---------- "view as page" mode ---------- */
+body.flow{overflow:auto;display:block}
+body.flow #deck{overflow:visible}
+body.flow #track{display:block;transform:none!important}
+body.flow .slide{height:auto;overflow:visible;border-bottom:1px solid var(--line);padding-bottom:44px}
+body.flow .nav .dots,body.flow #prev,body.flow #next{display:none}
+body.flow .top,body.flow .nav{position:sticky;z-index:5}
+body.flow .top{top:0}body.flow .nav{bottom:0}
+</style>
+</head>
+<body>
+<header class="top"><div class="row"><div class="logo"></div><h1>Bayes&#x27; Rule: Diagnostic Test</h1><div class="cite">Source: Bayes (1763). An Essay towards solving a Problem in the Doctrine of Chances · Proposition 3 and 5 (modern statement) · <a href="https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053" target="_blank" rel="noopener">https://royalsocietypublishing.org/doi/10.1098/rstl.1763.0053</a> · Audience: Engineering undergraduate with basic probability.</div>
+<div class="tools"><button class="ghost" id="flowbtn" title="Show all slides as one scrolling page">View as page</button></div></div>
+<div class="prog"><div id="bar"></div></div></header>
+<div id="errors"></div>
+<main id="deck"><div id="track">
+<section class="slide" data-title="The idea"><div class="in">
+<div class="hero"><span class="kicker">Interactive lesson</span><h2>Bayes&#x27; Rule: Diagnostic Test</h2><p class="sum">Learners will see how prior disease prevalence, test sensitivity, and false positive rate combine to determine the probability of having a disease given a positive test result.</p><p class="hint">Use the → / ← keys or the buttons below. Every number on these slides is computed live in your browser.</p></div>
+<div id="intro-cards">
+<div class="card">
+  <h3>The idea</h3>
+  Imagine you get a positive result from a medical test. How likely are you to actually have the disease? Bayes' Rule helps us update our belief about a hypothesis (having the disease) after observing new evidence (a positive test result). It combines the initial prevalence of the disease with the test's accuracy.
+</div>
+<div class="card">
+  <h3>Why it matters</h3>
+  Bayes' Rule is fundamental in statistics, machine learning, and artificial intelligence. In medicine, it helps patients and doctors interpret diagnostic test results accurately, avoiding misjudgments based solely on test sensitivity. It's crucial for understanding the true meaning of "positive" in screening programs.
+</div>
+<div class="card">
+  <h3>The key equation</h3>
+  <div class="eq">P(D|+) = <span class="frac"><span>P(+|D)P(D)</span><span>P(+|D)P(D) + P(+|not D)P(not D)</span></span></div>
+  This equation calculates the probability of having the Disease (D) given a positive test result (+).
+</div>
+<div class="card">
+  <h3>Symbols</h3>
+  <table class="sym">
+    <tr><td>P(D)</td><td>Prior probability of Disease</td><td>[0, 1]</td></tr>
+    <tr><td>P(+|D)</td><td>Probability of positive test given Disease (Sensitivity)</td><td>[0, 1]</td></tr>
+    <tr><td>P(+|not D)</td><td>Probability of positive test given NO Disease (False Positive Rate)</td><td>[0, 1]</td></tr>
+    <tr><td>P(+)</td><td>Overall probability of a positive test</td><td>[0, 1]</td></tr>
+    <tr><td>P(D|+)</td><td>Posterior probability of Disease given positive test</td><td>[0, 1]</td></tr>
+  </table>
+</div>
+</div></div></section>
+<section class="slide" id="play" data-title="Playground"><div class="in">
+<span class="kicker">Sandbox</span><h2>Playground: the full mechanism</h2>
+<div id="learnbar" hidden></div>
+<div class="play">
+  <div class="card">
+    <div class="ctrl">
+      <label for="p_d">P(D): Prior probability of Disease</label>
+      <input type="range" id="p_d" min="0" max="1" step="0.01" value="0.01">
+      <div class="hint">How common is the disease in the population?</div>
+    </div>
+    <div class="ctrl">
+      <label for="p_pos_given_d">P(+|D): Test Sensitivity (True Positive Rate)</label>
+      <input type="range" id="p_pos_given_d" min="0" max="1" step="0.01" value="0.99">
+      <div class="hint">Probability of testing positive given the disease.</div>
+    </div>
+    <div class="ctrl">
+      <label for="p_pos_given_not_d">P(+|not D): False Positive Rate</label>
+      <input type="range" id="p_pos_given_not_d" min="0" max="1" step="0.01" value="0.01">
+      <div class="hint">Probability of testing positive given no disease.</div>
+    </div>
+  </div>
+  <div class="viz" id="waffle_chart"></div>
+  <div class="readout" id="readouts"></div>
+</div>
+<div class="card" id="livebox" hidden><h3>Live checks (recomputed on every change)</h3><ul class="checks" id="live"></ul></div>
+</div></section>
+<section class="slide" id="source" data-title="Sources &amp; checks"><div class="in">
+<span class="kicker">Grounding</span><h2>What comes from the paper, and what is ours</h2>
+<div class="grid2">
+  <div class="card from-paper">
+    <h3>Stated in the paper</h3>
+    <ul>
+      <li data-sec="Proposition 3">The probability that two subsequent events will both happen is a ratio compounded of the probability of the 1st, and the probability of the 2nd on supposition the 1st happens. (P(A and B) = P(A) P(B|A))</li>
+      <li data-sec="Proposition 5">If there be two subsequent events, the probability of the 2nd b/N and the probability of both together P/N, and it being first discovered that the 2nd event has happened, from hence I guess that the 1st event has also happened, the probability I am in the right is P/b. (P(A|B) = P(A and B) / P(B))</li>
+      <li data-sec="Modern notation">P(A|B) = P(B|A) P(A) / P(B), where P(B) = P(B|A) P(A) + P(B|not A) P(not A).</li>
+    </ul>
+  </div>
+  <div class="card ours">
+    <h3>Our simplifications &amp; examples</h3>
+    <ul>
+      <li>We use a medical diagnostic test scenario (Disease D, Positive test +) to illustrate the concepts, which is a common application of Bayes' Rule.</li>
+      <li>We use a fixed population size of 1000 for the waffle chart visualization to make the counts concrete and intuitive.</li>
+      <li>The waffle chart is a visual analogy to represent proportions of a population, making the abstract probabilities tangible.</li>
+      <li>We round the number of people in each category to integers for simplicity in the visualization, which may introduce minor discrepancies from exact floating-point calculations.</li>
+    </ul>
+  </div>
+</div>
+<p class="disclaimer">This page is an automatically generated, simplified teaching demonstration. All numbers are computed live in your browser from the formulas shown, using small illustrative inputs; they do not reproduce the paper's experiments or reported results.</p>
+<div class="card" id="selftest"><h3>Built-in calculation checks</h3><p class="note">Known cases evaluated with the same <code>compute()</code> function that drives every slide.</p>
+<table class="vals" id="tests"><tr><th>Case</th><th class="num">Computed</th><th class="num">Expected</th><th>Result</th></tr></table></div>
+</div></section>
+</div></main>
+<div id="explore-src" hidden>
+<div class="card explore" data-show-slide="4" data-show-preset="rareDiseaseHighAccuracy">
+  <h3>Exploration 1: The Base-Rate Fallacy</h3>
+  <p><b>Try:</b> Set P(D) to <span class="calc" data-at="rareDiseaseHighAccuracy" data-get="s.p_d"></span> (a rare disease), P(+|D) to <span class="calc" data-at="rareDiseaseHighAccuracy" data-get="s.p_pos_given_d"></span> (high sensitivity), and P(+|not D) to <span class="calc" data-at="rareDiseaseHighAccuracy" data-get="s.p_pos_given_not_d"></span> (low false positive rate).</p>
+  <p><b>Watch:</b> Observe the "P(D|+)" value. Even with a highly accurate test, the probability of actually having the disease given a positive result is only <span class="calc" data-at="rareDiseaseHighAccuracy" data-get="r.p_d_given_pos" data-d="2"></span>. Notice how many false positives (orange dots) there are compared to true positives (teal dots).</p>
+  <p><b>Why:</b> When a disease is very rare, even a small false positive rate can lead to many more false positives than true positives. The prior probability P(D) has a strong influence on the posterior P(D|+).</p>
+  <button data-preset="rareDiseaseHighAccuracy">Try it in the playground</button>
+</div>
+
+<div class="card explore" data-show-slide="4" data-show-preset="commonDiseaseHighAccuracy">
+  <h3>Exploration 2: Impact of Disease Prevalence</h3>
+  <p><b>Try:</b> Keep the test parameters the same as before (P(+|D) = <span class="calc" data-at="commonDiseaseHighAccuracy" data-get="s.p_pos_given_d"></span>, P(+|not D) = <span class="calc" data-at="commonDiseaseHighAccuracy" data-get="s.p_pos_given_not_d"></span>), but increase P(D) to <span class="calc" data-at="commonDiseaseHighAccuracy" data-get="s.p_d"></span> (a common disease).</p>
+  <p><b>Watch:</b> See how P(D|+) jumps to <span class="calc" data-at="commonDiseaseHighAccuracy" data-get="r.p_d_given_pos" data-d="2"></span>. The number of true positives (teal) now significantly outweighs the false positives (orange).</p>
+  <p><b>Why:</b> With a more common disease, the same test becomes much more informative. The higher prior probability means there are more people with the disease to be correctly identified, making the true positives a larger fraction of all positive tests.</p>
+  <button data-preset="commonDiseaseHighAccuracy">Try it in the playground</button>
+</div>
+
+<div class="card caution" data-show-slide="4" data-show-preset="rareDiseaseHighAccuracy">
+  <h3>Limitation / common misunderstanding</h3>
+  <p>The <b>base-rate fallacy</b> is the tendency to ignore the prior probability (base rate) of an event and focus only on specific information. In diagnostic testing, this means overestimating the probability of having a disease after a positive test, simply because the test is "highly accurate" (high sensitivity), without considering how rare the disease is. As shown in Exploration 1, a 99% accurate test for a 1% prevalent disease still leaves you with only a 50% chance of actually having the disease if you test positive.</p>
+  <button data-preset="rareDiseaseHighAccuracy">See the example</button>
+</div>
+</div>
+<nav class="nav"><button class="ghost" id="prev">← Back</button><div class="dots" id="dots"></div><span id="counter"></span><button id="next">Next →</button></nav>
+<script>
+"use strict";
+/* ---------- Generic helper library (template, paper-agnostic) ---------- */
+const V = (function () {
+  const NS = "http://www.w3.org/2000/svg";
+  /* resolve an id; if it extends an existing panel id (e.g. "slide-viz-2-0-Q"), create that sub-panel on demand */
+  const $ = (id) => {
+    id = String(id);
+    let e = document.getElementById(id);
+    if (e || id.indexOf("-") < 0) return e;
+    for (let cut = id.lastIndexOf("-"); cut > 0; cut = id.lastIndexOf("-", cut - 1)) {
+      const parent = document.getElementById(id.slice(0, cut));
+      if (parent) { e = document.createElement("div"); e.id = id; parent.appendChild(e); return e; }
+    }
+    return null;
+  };
+  const PAL = ["#4fb3bf", "#e2b86b", "#e07a5f", "#9d8cd8", "#7fb77e", "#d47fa6", "#6c9bd2", "#8b949e"];
+  const INK = "#e6edf3", MUTED = "#8b949e", BG = "#131922";
+  /* models often hard-code light-theme colours: remap them for the dark slides */
+  const REMAP = { black: INK, "#000": INK, "#000000": INK, "#111": INK, "#222": INK, "#333": INK, "#1d2433": INK, "#0f172a": INK, white: BG, "#fff": BG, "#ffffff": BG, "#fafafa": BG, "#f5f5f5": BG, "#eee": "#2a3240", "#ddd": "#3a4352", "#ccc": "#4b5563", gray: MUTED, grey: MUTED, lightgray: "#4b5563", lightgrey: "#4b5563" };
+  const color = (i) => PAL[((i % PAL.length) + PAL.length) % PAL.length];
+  function fmt(x, d) {
+    d = d === undefined ? 3 : d;
+    if (typeof x !== "number") return String(x);
+    if (Number.isNaN(x)) return "NaN";
+    if (!isFinite(x)) return x > 0 ? "∞" : "−∞";
+    if (x === 0) return (0).toFixed(d);
+    const a = Math.abs(x);
+    let s = a >= 1e6 || a < Math.pow(10, -d) ? x.toExponential(Math.max(1, d - 1)) : x.toFixed(d);
+    if (/^-0\.?0*$/.test(s)) s = s.slice(1);
+    return s.replace("-", "−");
+  }
+  function num(id) { const e = $(id); if (!e) return NaN; return e.type === "checkbox" ? (e.checked ? 1 : 0) : parseFloat(e.value); }
+  function val(id) { const e = $(id); return !e ? undefined : e.type === "checkbox" ? e.checked : e.value; }
+  function syncOut(e) { const o = e && e.nextElementSibling; if (o && o.classList && o.classList.contains("val")) o.textContent = e.value; }
+  function set(id, v) {
+    const e = $(id); if (!e || v === undefined) return;
+    if (e.type === "checkbox") e.checked = !!v; else e.value = v;
+    syncOut(e);
+  }
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+  /* --- animation engine: tweens numeric parts of geometric attributes --- */
+  const GEO = new Set(["x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "d", "points", "transform", "opacity", "fill-opacity", "stroke-width"]);
+  const STYLE = new Set(["fill", "stroke", "color"]);
+  const NUM = /-?\d*\.?\d+(?:e[-+]?\d+)?/gi;
+  const anims = new Map();
+  let rafOn = false;
+  const DUR = 380;
+  function skel(s) { return String(s).replace(NUM, "#"); }
+  function nums(s) { return (String(s).match(NUM) || []).map(Number); }
+  function tick(now) {
+    for (const [e, list] of anims) {
+      let alive = false;
+      for (const a of list) {
+        const t = clamp((now - a.t0) / DUR, 0, 1), k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        let i = 0;
+        const out = a.sk.replace(/#/g, () => { const v = a.f[i] + (a.t[i] - a.f[i]) * k; i++; return +v.toFixed(3); });
+        e.setAttribute(a.name, out);
+        if (t < 1) alive = true;
+      }
+      if (!alive) anims.delete(e);
+    }
+    if (anims.size) requestAnimationFrame(tick); else rafOn = false;
+  }
+  function setAttrs(e, attrs, fresh) {
+    const list = [];
+    for (let k in attrs) {
+      let v = attrs[k];
+      if (v === undefined || v === null) continue;
+      const name = k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+      if (STYLE.has(name)) { const lv = String(v).toLowerCase().trim(); e.style[name] = REMAP[lv] || v; continue; }
+      if (name === "class") { e.setAttribute("class", v); continue; }
+      const cur = e.getAttribute(name);
+      if (!fresh && GEO.has(name) && cur !== null && skel(cur) === skel(v) && String(cur) !== String(v)) {
+        list.push({ name, sk: skel(v), f: nums(cur), t: nums(v), t0: performance.now() });
+      } else e.setAttribute(name, v);
+    }
+    const prev = anims.get(e) || [];
+    if (list.length) {
+      const names = new Set(list.map((a) => a.name));
+      anims.set(e, prev.filter((a) => !names.has(a.name)).concat(list));
+      if (!rafOn) { rafOn = true; requestAnimationFrame(tick); }
+    } else if (prev.length) {
+      const names = new Set(Object.keys(attrs).map((k) => k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())));
+      const keep = prev.filter((a) => !names.has(a.name));
+      if (keep.length) anims.set(e, keep); else anims.delete(e);
+    }
+  }
+
+  /* --- keyed, animated SVG drawing context --- */
+  function diagram(id, w, h) {
+    w = w || 640; h = h || 360;
+    const host = $(id);
+    if (!host) throw new Error("V.diagram: no element with id '" + id + "'");
+    let svg = host.querySelector("svg.v");
+    if (!svg) { svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "v"); host.appendChild(svg); svg._keys = new Map(); }
+    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    const seen = new Set();
+    /* track the extent of everything drawn so the viewBox can grow instead of clipping */
+    const ext = { x0: 0, y0: 0, x1: w, y1: h };
+    function grow(x0, y0, x1, y1) { if (isFinite(x0) && isFinite(x1)) { ext.x0 = Math.min(ext.x0, x0); ext.x1 = Math.max(ext.x1, x1); } if (isFinite(y0) && isFinite(y1)) { ext.y0 = Math.min(ext.y0, y0); ext.y1 = Math.max(ext.y1, y1); } }
+    function extent(tag, a, text) {
+      const n = (v) => (v === undefined || v === null ? NaN : +v);
+      if (tag === "rect") grow(n(a.x), n(a.y), n(a.x) + n(a.width), n(a.y) + n(a.height));
+      else if (tag === "circle") { const r = n(a.r) || 0; grow(n(a.cx) - r, n(a.cy) - r, n(a.cx) + r, n(a.cy) + r); }
+      else if (tag === "line") grow(Math.min(n(a.x1), n(a.x2)), Math.min(n(a.y1), n(a.y2)), Math.max(n(a.x1), n(a.x2)), Math.max(n(a.y1), n(a.y2)));
+      else if (tag === "path" && a.d) { const v = (String(a.d).match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi) || []).map(Number); for (let i = 0; i + 1 < v.length; i += 2) grow(v[i], v[i + 1], v[i], v[i + 1]); }
+      else if (tag === "text" && !a.transform) {
+        let fs = parseFloat(a.fontSize || a["font-size"]) || 13; if (/em$/.test(String(a.fontSize || a["font-size"] || ""))) fs *= 13;
+        const tw = String(text || "").length * fs * 0.56, anc = a.textAnchor || a["text-anchor"] || "start";
+        const x0 = anc === "middle" ? n(a.x) - tw / 2 : anc === "end" ? n(a.x) - tw : n(a.x);
+        grow(x0, n(a.y) - fs, x0 + tw, n(a.y) + fs * 0.3);
+      }
+    }
+    function el(tag, key, attrs, text) {
+      try { extent(tag, attrs || {}, text); } catch (e) {}
+      let e = svg._keys.get(key), fresh = false;
+      if (e && e.tagName !== tag) { e.remove(); e = null; }
+      if (!e) { e = document.createElementNS(NS, tag); svg._keys.set(key, e); fresh = true; }
+      svg.appendChild(e);
+      seen.add(key);
+      setAttrs(e, attrs || {}, fresh);
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+    /* tolerate positional forms: rect(k,x,y,w,h,attrs), circle(k,cx,cy,r,attrs), line(k,x1,y1,x2,y2,attrs) */
+    const pos = (names, args) => { if (typeof args[0] !== "number") return args[0] || {}; const o = Object.assign({}, args[names.length] || {}); names.forEach((n, i) => { o[n] = args[i]; }); return o; };
+    const d = {
+      w, h, width: w, height: h, svg,
+      rect: (k, ...a) => el("rect", k, pos(["x", "y", "width", "height"], a)),
+      circle: (k, ...a) => el("circle", k, pos(["cx", "cy", "r"], a)),
+      line: (k, ...a) => { a = pos(["x1", "y1", "x2", "y2"], a); return el("line", k, Object.assign(a.class ? {} : { stroke: INK }, a)); },
+      path: (k, a) => el("path", k, Object.assign(a && a.class ? { fill: "none" } : { fill: "none", stroke: INK }, a)),
+      text: (k, x, y, s, a) => el("text", k, Object.assign({ x, y }, a || {}), String(s)),
+      arrow(k, x1, y1, x2, y2, a) {
+        a = a || {};
+        const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L, s = a.head || 9;
+        const hx = x2 - ux * s, hy = y2 - uy * s;
+        const p = "M" + x1 + " " + y1 + " L" + x2 + " " + y2 + " M" + (hx - uy * s * 0.55) + " " + (hy + ux * s * 0.55) + " L" + x2 + " " + y2 + " L" + (hx + uy * s * 0.55) + " " + (hy - ux * s * 0.55);
+        const b = Object.assign({}, a); delete b.head;
+        return el("path", k, Object.assign({ d: p, fill: "none", stroke: INK, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, b));
+      },
+      end() {
+        for (const [k, e] of svg._keys) if (!seen.has(k)) { e.remove(); svg._keys.delete(k); anims.delete(e); }
+        if (ext.x0 < 0 || ext.y0 < 0 || ext.x1 > w || ext.y1 > h) svg.setAttribute("viewBox", (ext.x0 - 6) + " " + (ext.y0 - 6) + " " + (ext.x1 - ext.x0 + 12) + " " + (ext.y1 - ext.y0 + 12));
+      },
+    };
+    return d;
+  }
+
+  function ticks(a, b, n) {
+    n = n || 5;
+    if (!(b > a)) { b = a + 1; }
+    const span = b - a, step0 = Math.pow(10, Math.floor(Math.log10(span / n))), err = (span / n) / step0;
+    const step = step0 * (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1);
+    const out = [];
+    for (let v = Math.ceil(a / step - 1e-9) * step; v <= b + step * 1e-9; v += step) out.push(+v.toFixed(10));
+    return out;
+  }
+  function tickFmt(v) { const a = Math.abs(v); return a !== 0 && (a < 1e-3 || a >= 1e5) ? v.toExponential(1) : String(+v.toPrecision(6)); }
+
+  /* --- HTML legend under a chart (never overlaps the plot) --- */
+  function legend(host, items) {
+    let lg = host.querySelector(":scope > .legend");
+    if (!items.length) { if (lg) lg.remove(); return; }
+    if (!lg) { lg = document.createElement("div"); lg.className = "legend"; host.appendChild(lg); }
+    lg.innerHTML = items.map((it) => "<span><i style='border-top:3px " + (it.dash ? "dashed " : "solid ") + it.color + "'></i>" + it.name + "</span>").join("");
+  }
+
+  /* --- bar chart --- */
+  function bars(id, items, o) {
+    o = o || {};
+    const W = o.w || 640, H = o.h || 300, m = { l: 52, r: 16, t: o.title ? 30 : 14, b: 46 };
+    const d = diagram(id, W, H);
+    const vals = items.map((it) => (isFinite(it.value) ? it.value : 0));
+    const refs = o.ref || [];
+    let lo = o.min !== undefined ? o.min : Math.min(0, ...vals, ...refs.map((r) => r.value));
+    let hi = o.max !== undefined ? o.max : Math.max(0, ...vals, ...refs.map((r) => r.value));
+    if (!(hi > lo)) hi = lo + 1;
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const Y = (v) => m.t + ph * (1 - (clamp(v, lo, hi) - lo) / (hi - lo));
+    if (o.title) d.text("title", W / 2, 18, o.title, { "text-anchor": "middle", "font-weight": 600 });
+    ticks(lo, hi, 5).forEach((t, i) => { d.line("g" + i, { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), class: "grid" }); d.text("gt" + i, m.l - 6, Y(t) + 4, tickFmt(t), { "text-anchor": "end", "font-size": 11 }); });
+    if (o.ylabel) d.text("yl", 12, m.t + ph / 2, o.ylabel, { transform: "rotate(-90 12 " + (m.t + ph / 2) + ")", "text-anchor": "middle", "font-size": 12 });
+    const n = Math.max(1, items.length), slot = pw / n, bw = Math.min(70, slot * 0.7);
+    items.forEach((it, i) => {
+      const v = vals[i], x = m.l + slot * i + (slot - bw) / 2, y0 = Y(0), y1 = Y(v);
+      d.rect("b" + i, { x, y: Math.min(y0, y1), width: bw, height: Math.max(0.5, Math.abs(y1 - y0)), fill: it.color || color(o.colorBy === "index" ? i : 0), rx: 3 });
+      d.text("v" + i, x + bw / 2, (v >= 0 ? Math.min(y0, y1) - 5 : Math.max(y0, y1) + 14), isFinite(it.value) ? fmt(it.value, o.digits === undefined ? 3 : o.digits) + (o.unit || "") : String(it.value), { "text-anchor": "middle", "font-size": 12, "font-weight": 600 });
+      d.text("l" + i, x + bw / 2, H - m.b + 18, it.label, { "text-anchor": "middle", "font-size": 12 });
+    });
+    d.line("ax0", { x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0), class: "ax" });
+    refs.forEach((r, i) => {
+      d.line("r" + i, { x1: m.l, x2: W - m.r, y1: Y(r.value), y2: Y(r.value), stroke: r.color || "#e2b86b", "stroke-dasharray": "6 4", "stroke-width": 1.5 });
+      d.text("rt" + i, W - m.r - 4, Y(r.value) - 5, r.label || fmt(r.value), { "text-anchor": "end", "font-size": 11, fill: r.color || "#e2b86b" });
+    });
+    if (o.xlabel) d.text("xl", m.l + pw / 2, H - 8, o.xlabel, { "text-anchor": "middle", "font-size": 12 });
+    d.end();
+    return d;
+  }
+
+  /* --- line / scatter plot --- */
+  function line(id, series, o) {
+    o = o || {};
+    const W = o.w || 640, H = o.h || 340, m = { l: 56, r: 18, t: o.title ? 30 : 14, b: 46 };
+    const d = diagram(id, W, H);
+    const xs = [], ys = [];
+    series.forEach((s) => (s.pts || []).forEach((p) => { if (isFinite(p[0]) && isFinite(p[1])) { xs.push(p[0]); ys.push(p[1]); } }));
+    (o.points || []).forEach((p) => { if (isFinite(p.x) && isFinite(p.y)) { xs.push(p.x); ys.push(p.y); } });
+    let x0 = o.xmin !== undefined ? o.xmin : Math.min(...xs), x1 = o.xmax !== undefined ? o.xmax : Math.max(...xs);
+    let y0 = o.ymin !== undefined ? o.ymin : Math.min(...ys), y1 = o.ymax !== undefined ? o.ymax : Math.max(...ys);
+    if (!isFinite(x0) || !isFinite(x1)) { x0 = 0; x1 = 1; }
+    if (!isFinite(y0) || !isFinite(y1)) { y0 = 0; y1 = 1; }
+    if (x1 <= x0) x1 = x0 + 1;
+    if (y1 <= y0) { y0 -= 0.5; y1 += 0.5; }
+    if (o.ymin === undefined && o.ymax === undefined) { const pad = (y1 - y0) * 0.06; y0 -= pad; y1 += pad; }
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const X = (v) => m.l + pw * (v - x0) / (x1 - x0), Y = (v) => m.t + ph * (1 - (v - y0) / (y1 - y0));
+    const cx = (v) => clamp(X(v), m.l - 4, W - m.r + 4), cy = (v) => clamp(Y(v), m.t - 4, H - m.b + 4);
+    if (o.title) d.text("title", W / 2, 18, o.title, { "text-anchor": "middle", "font-weight": 600 });
+    ticks(x0, x1, 6).forEach((t, i) => { d.line("gx" + i, { x1: X(t), x2: X(t), y1: m.t, y2: H - m.b, class: "grid" }); d.text("tx" + i, X(t), H - m.b + 16, tickFmt(t), { "text-anchor": "middle", "font-size": 11 }); });
+    ticks(y0, y1, 5).forEach((t, i) => { d.line("gy" + i, { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), class: "grid" }); d.text("ty" + i, m.l - 6, Y(t) + 4, tickFmt(t), { "text-anchor": "end", "font-size": 11 }); });
+    d.line("axx", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, class: "ax" });
+    d.line("axy", { x1: m.l, x2: m.l, y1: m.t, y2: H - m.b, class: "ax" });
+    if (o.xlabel) d.text("xl", m.l + pw / 2, H - 8, o.xlabel, { "text-anchor": "middle", "font-size": 12 });
+    if (o.ylabel) d.text("yl", 14, m.t + ph / 2, o.ylabel, { transform: "rotate(-90 14 " + (m.t + ph / 2) + ")", "text-anchor": "middle", "font-size": 12 });
+    (o.hlines || []).forEach((l, i) => { d.line("hl" + i, { x1: m.l, x2: W - m.r, y1: cy(l.y), y2: cy(l.y), stroke: l.color || MUTED, "stroke-dasharray": "6 4" }); if (l.label) d.text("hlt" + i, W - m.r - 4, cy(l.y) - 5, l.label, { "text-anchor": "end", "font-size": 11 }); });
+    (o.vlines || []).forEach((l, i) => { d.line("vl" + i, { x1: cx(l.x), x2: cx(l.x), y1: m.t, y2: H - m.b, stroke: l.color || MUTED, "stroke-dasharray": "6 4" }); if (l.label) { const R = cx(l.x) > W * 0.7; d.text("vlt" + i, cx(l.x) + (R ? -4 : 4), m.t + 12 + 14 * (i % 2), l.label, { "font-size": 11, "text-anchor": R ? "end" : "start" }); } });
+    series.forEach((s, si) => {
+      const c = s.color || color(si), pts = (s.pts || []).filter((p) => isFinite(p[0]) && isFinite(p[1]));
+      if (s.line !== false && pts.length > 1) d.path("s" + si, { d: "M" + pts.map((p) => cx(p[0]).toFixed(2) + " " + cy(p[1]).toFixed(2)).join(" L"), stroke: c, "stroke-width": s.width || 2.5, "stroke-dasharray": s.dash ? "7 5" : "none" });
+      if (s.dots) pts.forEach((p, j) => d.circle("s" + si + "p" + j, { cx: cx(p[0]), cy: cy(p[1]), r: s.r || 4.5, fill: c, stroke: BG, "stroke-width": 1 }));
+    });
+    (o.points || []).forEach((p, i) => {
+      d.circle("pt" + i, { cx: cx(p.x), cy: cy(p.y), r: p.r || 6, fill: p.color || "#e2b86b", stroke: BG, "stroke-width": 1.5 });
+      if (p.label) { const R = cx(p.x) > W * 0.7; d.text("ptl" + i, cx(p.x) + (R ? -9 : 9), cy(p.y) - 8, p.label, { "font-size": 12, "font-weight": 600, "text-anchor": R ? "end" : "start" }); }
+    });
+    d.end();
+    legend($(id), series.filter((s) => s.name).map((s) => ({ name: s.name, color: s.color || color(series.indexOf(s)), dash: s.dash })));
+    d.X = X; d.Y = Y;
+    return d;
+  }
+
+  /* labels may arrive as array, count or comma string: normalise */
+  function labs(x) { return Array.isArray(x) ? x : typeof x === "string" && x ? x.split(",") : undefined; }
+
+  /* --- heatmap matrix (read-only) --- */
+  function cellColor(v, mx, div) {
+    if (!isFinite(v)) return "#5c2323";
+    const t = clamp(Math.abs(v) / (mx || 1), 0, 1);
+    if (div && v < 0) return "rgba(224,122,95," + (0.1 + 0.8 * t).toFixed(3) + ")";
+    return "rgba(79,179,191," + (0.08 + 0.82 * t).toFixed(3) + ")";
+  }
+  function matrix(id, M, o) {
+    o = Object.assign({}, o || {}); o.rows = labs(o.rows); o.cols = labs(o.cols);
+    if (!Array.isArray(M)) M = [];
+    M = M.map((r) => (Array.isArray(r) ? r : [r]));
+    const host = $(id);
+    if (!host) throw new Error("V.matrix: no element with id '" + id + "'");
+    const R = M.length, C = R ? M[0].length : 0, dg = o.digits === undefined ? 2 : o.digits;
+    let mx = o.max;
+    if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (isFinite(v)) mx = Math.max(mx, Math.abs(v)); })); }
+    let t = host.querySelector("table.mx");
+    const shape = R + "x" + C + "|" + (o.rows || []).join(",") + "|" + (o.cols || []).join(",") + "|" + (o.title || "");
+    if (!t || t._shape !== shape) {
+      let h = "<table class='mx'>" + (o.title ? "<caption>" + o.title + "</caption>" : "");
+      if (o.cols) h += "<tr><th></th>" + o.cols.map((c) => "<th>" + c + "</th>").join("") + "</tr>";
+      for (let i = 0; i < R; i++) { h += "<tr>" + (o.rows ? "<th>" + (o.rows[i] === undefined ? "" : o.rows[i]) + "</th>" : (o.cols ? "<th></th>" : "")) + "<td></td>".repeat(C) + "</tr>"; }
+      host.innerHTML = h + "</table>";
+      t = host.querySelector("table.mx"); t._shape = shape;
+    }
+    const hl = new Set((o.hl || []).map((p) => p[0] + "," + p[1]));
+    const rows = t.querySelectorAll("tr");
+    const off = o.cols ? 1 : 0;
+    for (let i = 0; i < R; i++) {
+      const tds = rows[i + off].querySelectorAll("td");
+      for (let j = 0; j < C; j++) {
+        const v = M[i][j], td = tds[j];
+        td.textContent = typeof v === "number" ? fmt(v, dg) : String(v);
+        td.style.background = typeof v === "number" ? cellColor(v, mx, o.diverging) : "#1f2631";
+        td.style.color = typeof v === "number" && isFinite(v) && Math.abs(v) / (mx || 1) > 0.62 ? "#071014" : "";
+        td.className = hl.has(i + "," + j) ? "hlc" : "";
+      }
+    }
+  }
+
+  /* --- editable numeric grid --- */
+  function editGrid(id, M, o) {
+    o = Object.assign({}, o || {}); o.rows = labs(o.rows); o.cols = labs(o.cols);
+    if (!Array.isArray(M)) M = [];
+    const host = $(id);
+    if (!host) throw new Error("V.editGrid: no element with id '" + id + "'");
+    host._flat = M.length > 0 && !M.some(Array.isArray);
+    if (host._flat) M = [M];
+    M = M.map((r) => (Array.isArray(r) ? r : [r]));
+    const R = M.length, C = R ? M[0].length : 0;
+    let t = host.querySelector("table");
+    if (!t || t._shape !== R + "x" + C) {
+      let h = "<table>" + (o.title ? "<caption>" + o.title + "</caption>" : "");
+      if (o.cols) h += "<tr><th></th>" + o.cols.map((c) => "<th>" + c + "</th>").join("") + "</tr>";
+      for (let i = 0; i < R; i++) {
+        h += "<tr>" + (o.rows ? "<th>" + (o.rows[i] === undefined ? "" : o.rows[i]) + "</th>" : (o.cols ? "<th></th>" : ""));
+        for (let j = 0; j < C; j++) h += "<td><input type='number' step='" + (o.step || 0.1) + "' data-i='" + i + "' data-j='" + j + "'></td>";
+        h += "</tr>";
+      }
+      host.innerHTML = h + "</table>";
+      host.classList.add("grid-in");
+      t = host.querySelector("table"); t._shape = R + "x" + C;
+    }
+    t.querySelectorAll("input").forEach((inp) => { const v = M[+inp.dataset.i][+inp.dataset.j]; if (document.activeElement !== inp || o.force) inp.value = v; });
+  }
+  function readGrid(id) {
+    const host = $(id); if (!host) return [];
+    const out = [];
+    host.querySelectorAll("input").forEach((inp) => {
+      const i = +inp.dataset.i, j = +inp.dataset.j, v = parseFloat(inp.value);
+      inp.classList.toggle("bad", !isFinite(v));
+      (out[i] = out[i] || [])[j] = isFinite(v) ? v : 0;
+    });
+    return host._flat ? out[0] || [] : out;
+  }
+
+  function table(id, head, rows, o) {
+    o = o || {};
+    const host = $(id); if (!host) throw new Error("V.table: no element with id '" + id + "'");
+    const dg = o.digits === undefined ? 3 : o.digits;
+    const cell = (v, th) => { const n = typeof v === "number"; const tag = th ? "th" : "td"; return "<" + tag + (n ? " class='num'" : "") + ">" + (n ? fmt(v, dg) : v) + "</" + tag + ">"; };
+    host.innerHTML = "<table class='vals'>" + (head ? "<tr>" + head.map((h) => cell(h, true)).join("") + "</tr>" : "") + rows.map((r) => "<tr>" + r.map((v) => cell(v)).join("") + "</tr>").join("") + "</table>";
+  }
+
+  function resize(M, rows, cols, fill) {
+    fill = fill === undefined ? 0 : fill;
+    const A = Array.isArray(M) ? M : [];
+    if (cols === undefined) return Array.from({ length: rows }, (_, i) => (A[i] === undefined || A[i] === null ? fill : A[i]));
+    return Array.from({ length: rows }, (_, i) => Array.from({ length: cols }, (_, j) => (Array.isArray(A[i]) && A[i][j] !== undefined && A[i][j] !== null ? A[i][j] : fill)));
+  }
+  /* several panels on one slide: returns child ids "<id>-0" … */
+  function split(id, n, o) {
+    o = o || {};
+    const host = $(id);
+    if (!host) throw new Error("V.split: no element with id '" + id + "'");
+    if (host._split !== n) {
+      host.innerHTML = "";
+      host.style.display = "grid";
+      host.style.gridTemplateColumns = (o.cols || 1) > 1 ? "repeat(auto-fit, minmax(360px, 1fr))" : "minmax(0, 1fr)";
+      host.style.gap = "10px"; host.style.alignItems = "center";
+      for (let i = 0; i < n; i++) { const c = document.createElement("div"); c.id = id + "-" + i; host.appendChild(c); }
+      host._split = n;
+    }
+    return Array.from({ length: n }, (_, i) => { const cid = id + "-" + i; return { id: cid, toString: () => cid, valueOf: () => cid }; });
+  }
+  /* linear map from data domain [d0,d1] to pixel range [r0,r1] */
+  const scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / ((d1 - d0) || 1)) * (r1 - r0);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  const api = { ink: INK, muted: MUTED, bg: BG, $, $$, fmt, num, val, set, clamp, color, diagram, bars, line, matrix, editGrid, readGrid, table, ticks, resize, split, scale, stage: Infinity, syncOut };
+  const warned = new Set();
+  /* unknown helpers degrade to no-ops instead of breaking the page */
+  return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; if (!warned.has(k)) { warned.add(k); console.warn("V." + String(k) + " is not a helper"); } return () => ""; } });
+})();
+</script>
+<script>
+/* ---------- Semantic visual primitives (template, paper-agnostic) ----------
+   3Blue1Brown-style building blocks on top of V.diagram: every element is keyed, so re-rendering animates. */
+(function () {
+  const { diagram, color, fmt, ticks, clamp, line } = V;
+  const INK = V.ink, MUTED = V.muted, BG = V.bg, GOLD = "#e2b86b", TEAL = "#4fb3bf", CORAL = "#e07a5f";
+  const fin = (v) => typeof v === "number" && isFinite(v);
+  const num = (v, d) => (fin(v) ? fmt(v, d === undefined ? 2 : d) : String(v === undefined ? "" : v));
+  const host = (id) => V.$(id);
+
+  /* ---- drag support: element calls fn(x, y) in data coordinates, then the page recomputes ---- */
+  function draggable(e, svg, fn) {
+    e._drag = fn;
+    if (e._wired) return;
+    e._wired = true;
+    e.style.cursor = "grab";
+    e.addEventListener("pointerdown", (ev) => { e.setPointerCapture(ev.pointerId); e._on = true; e.style.cursor = "grabbing"; ev.preventDefault(); });
+    e.addEventListener("pointerup", () => { e._on = false; e.style.cursor = "grab"; });
+    e.addEventListener("pointermove", (ev) => {
+      if (!e._on || !e._drag || !svg._map) return;
+      const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+      const p = pt.matrixTransform(svg.getScreenCTM().inverse()), m = svg._map;
+      const snap = m.snap || 0.05, r = (v) => Math.round(v / snap) * snap;
+      try { e._drag(+r(m.ix(p.x)).toFixed(4), +r(m.iy(p.y)).toFixed(4)); V.update(); } catch (err) { console.warn(err); }
+    });
+  }
+
+  /* ---- V.space: 2-D vector space (embeddings, similarity, attention geometry, linear algebra) ---- */
+  function space(id, o) {
+    o = o || {};
+    const W = o.w || 640, H = o.h || 440, top = o.title ? 26 : 8, m = 26;
+    const d = diagram(id, W, H), svg = d.svg;
+    const vs = o.vectors || [], ps = o.points || [], ls = o.lines || [];
+    const xs = [0], ys = [0];
+    vs.forEach((v) => { const f = v.from || [0, 0]; xs.push(v.x, f[0]); ys.push(v.y, f[1]); });
+    ps.forEach((p) => { xs.push(p.x); ys.push(p.y); });
+    ls.forEach((l) => { xs.push(l.x1, l.x2); ys.push(l.y1, l.y2); });
+    const fx = xs.filter(fin), fy = ys.filter(fin);
+    let rng = { x0: Math.min(...fx), x1: Math.max(...fx), y0: Math.min(...fy), y1: Math.max(...fy) };
+    const pad = (a, b) => { const s = Math.max(b - a, 1e-9) * 0.18 + 0.4; return [a - s, b + s]; };
+    [rng.x0, rng.x1] = pad(rng.x0, rng.x1); [rng.y0, rng.y1] = pad(rng.y0, rng.y1);
+    const dragging = vs.concat(ps).some((q) => q.drag);
+    if (o.xmin !== undefined) { rng = { x0: o.xmin, x1: o.xmax, y0: o.ymin, y1: o.ymax }; }
+    else if (dragging) { if (!svg._frozen) svg._frozen = rng; else { const f = svg._frozen; rng = { x0: Math.min(f.x0, rng.x0), x1: Math.max(f.x1, rng.x1), y0: Math.min(f.y0, rng.y0), y1: Math.max(f.y1, rng.y1) }; svg._frozen = rng; } }
+    const s = Math.min((W - 2 * m) / (rng.x1 - rng.x0), (H - top - 2 * m) / (rng.y1 - rng.y0));
+    const cx = W / 2 - s * (rng.x0 + rng.x1) / 2, cy = top + (H - top) / 2 + s * (rng.y0 + rng.y1) / 2;
+    const X = (x) => cx + s * x, Y = (y) => cy - s * y;
+    svg._map = { ix: (px) => (px - cx) / s, iy: (py) => (cy - py) / s, snap: o.snap };
+    if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    if (o.grid !== false) {
+      const vx0 = (m - cx) / s, vx1 = (W - m - cx) / s, vy0 = (cy - (H - m)) / s, vy1 = (cy - top - m) / s;
+      ticks(vx0, vx1, 8).forEach((t, i) => d.line("gx" + i, { x1: X(t), x2: X(t), y1: top + m, y2: H - m, class: "grid" }));
+      ticks(vy0, vy1, 6).forEach((t, i) => d.line("gy" + i, { x1: m, x2: W - m, y1: Y(t), y2: Y(t), class: "grid" }));
+      if (vy0 <= 0 && vy1 >= 0) d.line("axx", { x1: m, x2: W - m, y1: Y(0), y2: Y(0), class: "ax" });
+      if (vx0 <= 0 && vx1 >= 0) d.line("axy", { x1: X(0), x2: X(0), y1: top + m, y2: H - m, class: "ax" });
+      if (o.xlabel) d.text("xl", W - m, Y(0) - 6, o.xlabel, { textAnchor: "end", fill: MUTED, fontSize: 12 });
+      if (o.ylabel) d.text("yl", X(0) + 6, top + m + 4, o.ylabel, { fill: MUTED, fontSize: 12 });
+    }
+    (o.regions || []).forEach((g, i) => d.circle("rg" + i, { cx: X(g.x), cy: Y(g.y), r: Math.max(4, (g.r || 0.5) * s), fill: g.color || color(i), fillOpacity: 0.1, stroke: g.color || color(i), strokeDasharray: "4 4" }));
+    (o.regions || []).forEach((g, i) => { if (g.label) d.text("rgl" + i, X(g.x), Y(g.y) - (g.r || 0.5) * s - 6, g.label, { textAnchor: "middle", fill: g.color || color(i), fontSize: 12 }); });
+    ls.forEach((l, i) => {
+      d.line("l" + i, { x1: X(l.x1), y1: Y(l.y1), x2: X(l.x2), y2: Y(l.y2), stroke: l.color || MUTED, strokeWidth: l.width || 1.5, strokeDasharray: l.dash === false ? "none" : "5 4" });
+      if (l.label) d.text("ll" + i, X((l.x1 + l.x2) / 2) + 6, Y((l.y1 + l.y2) / 2) - 6, l.label, { fill: l.color || MUTED, fontSize: 12 });
+    });
+    (o.arcs || []).forEach((a, i) => {
+      const va = vs[a.a], vb = vs[a.b]; if (!va || !vb) return;
+      const t1 = Math.atan2(va.y, va.x), t2 = Math.atan2(vb.y, vb.x), R = a.r || 34;
+      let dt = t2 - t1; while (dt > Math.PI) dt -= 2 * Math.PI; while (dt < -Math.PI) dt += 2 * Math.PI;
+      const p1 = [X(0) + R * Math.cos(t1), Y(0) - R * Math.sin(t1)], p2 = [X(0) + R * Math.cos(t1 + dt), Y(0) - R * Math.sin(t1 + dt)];
+      d.path("arc" + i, { d: "M" + p1[0] + " " + p1[1] + " A" + R + " " + R + " 0 0 " + (dt > 0 ? 0 : 1) + " " + p2[0] + " " + p2[1], stroke: a.color || GOLD, strokeWidth: 2 });
+      if (a.label) { const tm = t1 + dt / 2; d.text("arcl" + i, X(0) + (R + 16) * Math.cos(tm), Y(0) - (R + 16) * Math.sin(tm) + 4, a.label, { textAnchor: "middle", fill: a.color || GOLD, fontSize: 12 }); }
+    });
+    const placed = [];
+    function spot(x, y, w, anchor) {
+      const x0 = anchor === "end" ? x - w : anchor === "middle" ? x - w / 2 : x;
+      for (const dy of [0, -14, 14, -28, 28, -42, 42]) {
+        const b = [x0, y + dy - 11, x0 + w, y + dy + 3];
+        if (!placed.some((q) => b[0] < q[2] && b[2] > q[0] && b[1] < q[3] && b[3] > q[1])) { placed.push(b); return y + dy; }
+      }
+      placed.push([x0, y - 11, x0 + w, y + 3]); return y;
+    }
+    const tw = (t) => String(t).length * 7.2;
+    vs.forEach((v, i) => {
+      const f = v.from || [0, 0], c = v.color || color(i);
+      d.arrow("v" + i, X(f[0]), Y(f[1]), X(v.x), Y(v.y), { stroke: c, strokeWidth: v.width || 3, head: 11, opacity: v.opacity === undefined ? 1 : v.opacity });
+      if (v.label) {
+        const dx = X(v.x) - X(f[0]), dy = Y(v.y) - Y(f[1]), L = Math.hypot(dx, dy) || 1;
+        const anc = dx < -2 ? "end" : dx > 2 ? "start" : "middle", lx = X(v.x) + (dx / L) * 14;
+        d.text("vl" + i, lx, spot(lx, Y(v.y) + (dy / L) * 14 + 4, tw(v.label), anc), v.label, { textAnchor: anc, fill: c, fontWeight: 650 });
+      }
+      if (v.drag) draggable(d.circle("vh" + i, { cx: X(v.x), cy: Y(v.y), r: 10, fill: c, fillOpacity: 0.28, stroke: c }), svg, v.drag);
+    });
+    ps.forEach((p, i) => {
+      const c = p.color || color(i), r = p.r || 7;
+      const e = d.circle("p" + i, { cx: X(p.x), cy: Y(p.y), r, fill: c, stroke: BG, strokeWidth: 2, opacity: p.opacity === undefined ? 1 : p.opacity });
+      if (p.label) d.text("pl" + i, X(p.x) + r + 5, spot(X(p.x) + r + 5, Y(p.y) + 4, tw(p.label), "start"), p.label, { fill: INK, fontSize: 13 });
+      if (p.drag) draggable(e, svg, p.drag);
+    });
+    d.end();
+    return { X, Y, scale: s };
+  }
+
+  /* ---- V.network: layered neural network graph ---- */
+  function network(id, o) {
+    o = o || {};
+    const layers = (o.layers || []).map((n) => Math.max(1, n | 0)), Lc = layers.length;
+    const maxN = Math.max(1, ...layers), W = o.w || 640, top = o.title ? 28 : 10;
+    const gap = clamp(300 / maxN, 34, 70), H = o.h || Math.max(260, top + 50 + gap * maxN);
+    const d = diagram(id, W, H), m = 60;
+    const nx = (l) => (Lc === 1 ? W / 2 : m + ((W - 2 * m) * l) / (Lc - 1));
+    const ny = (l, i) => top + (H - top - 30) / 2 + (i - (layers[l] - 1) / 2) * gap;
+    const rN = clamp(gap * 0.32, 10, 20);
+    if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    const Wt = o.weights || [];
+    let wmax = 0;
+    Wt.forEach((M) => (M || []).forEach((r) => (r || []).forEach((v) => { if (fin(v)) wmax = Math.max(wmax, Math.abs(v)); })));
+    const wAt = (l, i, j) => { const M = Wt[l]; if (!M) return undefined; if (M.length === layers[l + 1] && M[0] && M[0].length === layers[l]) return M[j][i]; if (M.length === layers[l] && M[0] && M[0].length === layers[l + 1]) return M[i][j]; return undefined; };
+    let ne = 0;
+    for (let l = 0; l + 1 < Lc; l++) for (let i = 0; i < layers[l]; i++) for (let j = 0; j < layers[l + 1]; j++) {
+      const w = wAt(l, i, j), t = fin(w) && wmax ? Math.abs(w) / wmax : 0.35;
+      d.line("e" + l + "_" + i + "_" + j, { x1: nx(l) + rN, y1: ny(l, i), x2: nx(l + 1) - rN, y2: ny(l + 1, j), stroke: !fin(w) ? MUTED : w >= 0 ? TEAL : CORAL, strokeWidth: 0.6 + 4 * t, opacity: 0.25 + 0.7 * t });
+      if (o.edgeLabels && fin(w)) { ne++; d.text("el" + l + "_" + i + "_" + j, nx(l) + (nx(l + 1) - nx(l)) * 0.3, ny(l, i) + (ny(l + 1, j) - ny(l, i)) * 0.3 - 4, num(w, 1), { textAnchor: "middle", fontSize: 11, fill: w >= 0 ? TEAL : CORAL }); }
+    }
+    const A = o.values || [];
+    let amax = 0;
+    A.forEach((r) => (r || []).forEach((v) => { if (fin(v)) amax = Math.max(amax, Math.abs(v)); }));
+    for (let l = 0; l < Lc; l++) {
+      for (let i = 0; i < layers[l]; i++) {
+        const v = A[l] ? A[l][i] : undefined, t = fin(v) && amax ? Math.abs(v) / amax : 0;
+        const act = o.active === l || (o.active && o.active.layer === l && o.active.node === i);
+        d.circle("n" + l + "_" + i, { cx: nx(l), cy: ny(l, i), r: rN, fill: fin(v) ? (v >= 0 ? "rgba(79,179,191," : "rgba(224,122,95,") + (0.15 + 0.8 * t).toFixed(3) + ")" : "#1b2330", stroke: act ? GOLD : "#3a4352", strokeWidth: act ? 3 : 1.5 });
+        if (fin(v) && o.showValues !== false) d.text("nv" + l + "_" + i, nx(l), ny(l, i) + 4, num(v, 2), { textAnchor: "middle", fontSize: 11, fill: t > 0.6 ? "#071014" : INK });
+        const lab = o.labels && o.labels[l] && o.labels[l][i];
+        if (lab) d.text("nl" + l + "_" + i, l === 0 ? nx(l) - rN - 6 : nx(l) + rN + 6, ny(l, i) + 4, lab, { textAnchor: l === 0 ? "end" : "start", fontSize: 12, fill: INK });
+      }
+      const ln = o.layerNames && o.layerNames[l];
+      if (ln) d.text("ln" + l, nx(l), H - 8, ln, { textAnchor: "middle", fontSize: 12, fill: o.active === l ? GOLD : MUTED });
+    }
+    d.end();
+    return d;
+  }
+
+  /* ---- V.graph: weighted directed graph (PageRank, Markov chains, message passing) ---- */
+  function graph(id, o) {
+    o = o || {};
+    const N = o.nodes || [], E = o.edges || [], W = o.w || 640, H = o.h || 420, top = o.title ? 28 : 6;
+    const d = diagram(id, W, H);
+    if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    const idx = new Map(N.map((n, i) => [n.id === undefined ? i : n.id, i]));
+    const vmax = Math.max(1e-9, ...N.map((n) => (fin(n.value) ? Math.abs(n.value) : 0)));
+    const R0 = Math.min(W, H - top) * 0.36, ccx = W / 2, ccy = top + (H - top) / 2;
+    const pos = N.map((n, i) => fin(n.x) && fin(n.y) ? [40 + n.x * (W - 80), top + 30 + n.y * (H - top - 60)] : [ccx + R0 * Math.cos(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length)), ccy + R0 * Math.sin(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length))]);
+    const rad = N.map((n) => (fin(n.value) ? 14 + 22 * Math.sqrt(Math.abs(n.value) / vmax) : 22));
+    const wmax = Math.max(1e-9, ...E.map((e) => (fin(e.w) ? Math.abs(e.w) : 1)));
+    const has = new Set(E.map((e) => idx.get(e.from) + ">" + idx.get(e.to)));
+    E.forEach((e, k) => {
+      const a = idx.get(e.from), b = idx.get(e.to); if (a === undefined || b === undefined) return;
+      const c = e.color || MUTED, t = fin(e.w) ? Math.abs(e.w) / wmax : 0.5, sw = 1 + 4 * t;
+      if (a === b) { const [x, y] = pos[a], r = rad[a]; d.path("e" + k, { d: "M" + (x - 8) + " " + (y - r) + " C" + (x - 30) + " " + (y - r - 46) + " " + (x + 30) + " " + (y - r - 46) + " " + (x + 8) + " " + (y - r), stroke: c, strokeWidth: sw, opacity: 0.4 + 0.6 * t }); return; }
+      const [x1, y1] = pos[a], [x2, y2] = pos[b], L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+      const off = has.has(b + ">" + a) ? 7 : 0, px = -uy * off, py = ux * off;
+      d.arrow("e" + k, x1 + ux * rad[a] + px, y1 + uy * rad[a] + py, x2 - ux * (rad[b] + 3) + px, y2 - uy * (rad[b] + 3) + py, { stroke: c, strokeWidth: sw, opacity: 0.4 + 0.6 * t, head: 8 + 2 * t });
+      if (e.label !== undefined) d.text("elb" + k, (x1 + x2) / 2 + px * 2.2, (y1 + y2) / 2 + py * 2.2 - 4, typeof e.label === "number" ? num(e.label, 2) : e.label, { textAnchor: "middle", fontSize: 11, fill: c === MUTED ? INK : c });
+    });
+    N.forEach((n, i) => {
+      const c = n.color || color(i);
+      d.circle("n" + i, { cx: pos[i][0], cy: pos[i][1], r: rad[i], fill: c, fillOpacity: 0.85, stroke: n.active ? GOLD : BG, strokeWidth: n.active ? 3 : 2 });
+      d.text("nl" + i, pos[i][0], pos[i][1] + 4, n.label === undefined ? String(n.id === undefined ? i : n.id) : n.label, { textAnchor: "middle", fontWeight: 700, fill: "#071014" });
+      if (fin(n.value)) d.text("nv" + i, pos[i][0], pos[i][1] + rad[i] + 15, num(n.value, o.digits === undefined ? 3 : o.digits), { textAnchor: "middle", fontSize: 12, fill: INK });
+    });
+    d.end();
+    return { pos };
+  }
+
+  /* ---- V.flow: stages of an algorithm / pipeline with live values ---- */
+  function flow(id, o) {
+    o = o || {};
+    const S = o.steps || [], n = Math.max(1, S.length), gap = 34, m = 16;
+    const bw = clamp(o.boxWidth || 130, 80, 200), W = o.w || Math.max(640, 2 * m + n * bw + (n - 1) * gap), top = o.title ? 30 : 8;
+    const bh = 70, H = o.h || top + bh + 46, y0 = top + 8;
+    const d = diagram(id, W, H);
+    const x0 = (W - (n * bw + (n - 1) * gap)) / 2;
+    if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    S.forEach((st, i) => {
+      const x = x0 + i * (bw + gap), c = st.color || color(i), act = o.active === i;
+      d.rect("b" + i, { x, y: y0, width: bw, height: bh, rx: 10, fill: act ? "rgba(226,184,107,.12)" : "#171e29", stroke: act ? GOLD : c, strokeWidth: act ? 3 : 1.5 });
+      d.text("bl" + i, x + bw / 2, y0 + 24, st.label || "", { textAnchor: "middle", fontWeight: 650, fill: act ? GOLD : c, fontSize: 13 });
+      if (st.value !== undefined) d.text("bv" + i, x + bw / 2, y0 + 50, typeof st.value === "number" ? num(st.value, 3) : String(st.value), { textAnchor: "middle", fill: INK, fontSize: 13, fontFamily: "monospace" });
+      if (st.note) d.text("bn" + i, x + bw / 2, y0 + bh + 18, st.note, { textAnchor: "middle", fill: MUTED, fontSize: 11 });
+      if (i + 1 < n) {
+        d.arrow("a" + i, x + bw + 4, y0 + bh / 2, x + bw + gap - 4, y0 + bh / 2, { stroke: o.active === i + 1 ? GOLD : MUTED, strokeWidth: 2, head: 8 });
+        const al = o.arrowLabels && o.arrowLabels[i];
+        if (al) d.text("al" + i, x + bw + gap / 2, y0 + bh / 2 - 8, al, { textAnchor: "middle", fill: MUTED, fontSize: 11 });
+      }
+    });
+    d.end();
+    return d;
+  }
+
+  /* ---- V.pixels: image / feature-map grid with an (animated) sliding window ---- */
+  function pixels(id, M, o) {
+    o = o || {};
+    M = (Array.isArray(M) ? M : []).map((r) => (Array.isArray(r) ? r : [r]));
+    const R = M.length, C = R ? Math.max(...M.map((r) => r.length)) : 0, top = o.title ? 28 : 6, m = 20;
+    const cs = o.cell || clamp(Math.floor(Math.min(340 / Math.max(R, 1), 560 / Math.max(C, 1))), 10, 52);
+    const W = o.w || Math.max(240, C * cs + 2 * m), H = top + R * cs + 2 * m;
+    const d = diagram(id, W, H), x0 = (W - C * cs) / 2, y0 = top + m;
+    let mx = o.max; if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); }
+    if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    const showV = o.values !== false && cs >= 24;
+    M.forEach((r, i) => r.forEach((v, j) => {
+      const t = fin(v) ? clamp(Math.abs(v) / (mx || 1), 0, 1) : 0;
+      const fill = !fin(v) ? "#5c2323" : o.gray ? "rgba(230,237,243," + (0.04 + 0.9 * t).toFixed(3) + ")" : (v < 0 ? "rgba(224,122,95," : "rgba(79,179,191,") + (0.06 + 0.88 * t).toFixed(3) + ")";
+      d.rect("c" + i + "_" + j, { x: x0 + j * cs, y: y0 + i * cs, width: cs - 1, height: cs - 1, fill, rx: 2 });
+      if (showV) d.text("t" + i + "_" + j, x0 + j * cs + cs / 2, y0 + i * cs + cs / 2 + 4, num(v, o.digits === undefined ? (Number.isInteger(v) ? 0 : 1) : o.digits), { textAnchor: "middle", fontSize: Math.min(12, cs * 0.36), fill: t > 0.6 ? "#071014" : INK });
+    }));
+    (o.windows || (o.window ? [o.window] : [])).forEach((w, k) => {
+      d.rect("w" + k, { x: x0 + w.c * cs - 2, y: y0 + w.r * cs - 2, width: (w.w || 1) * cs + 3, height: (w.h || 1) * cs + 3, fill: "none", stroke: w.color || GOLD, strokeWidth: 3, rx: 4 });
+      if (w.label) d.text("wl" + k, x0 + w.c * cs, y0 + w.r * cs - 7, w.label, { fill: w.color || GOLD, fontSize: 12, fontWeight: 650 });
+    });
+    d.end();
+    return { cell: cs, x0, y0 };
+  }
+
+  /* ---- V.curve: function curve with a ball, tangent and trail (optimisation, calculus, losses) ---- */
+  function curve(id, o) {
+    o = o || {};
+    const f = typeof o.f === "function" ? o.f : null, x0 = o.xmin === undefined ? -5 : o.xmin, x1 = o.xmax === undefined ? 5 : o.xmax;
+    const pts = o.pts || (f ? Array.from({ length: 160 }, (_, i) => { const x = x0 + ((x1 - x0) * i) / 159; return [x, f(x)]; }) : []);
+    const series = [{ name: o.name, pts, color: o.color || TEAL, width: 3 }];
+    const points = [];
+    const fy = (x) => (f ? f(x) : NaN);
+    (o.trail || []).forEach((x, i, a) => { const y = fy(x); if (fin(y)) points.push({ x, y, r: 4, color: "rgba(226,184,107," + (0.25 + (0.6 * i) / Math.max(1, a.length)).toFixed(2) + ")" }); });
+    if (o.tangent && f) {
+      const x = o.tangent.x, h = 1e-4 * Math.max(1, Math.abs(x)), sl = fin(o.tangent.slope) ? o.tangent.slope : (f(x + h) - f(x - h)) / (2 * h), L = (x1 - x0) * 0.16;
+      series.push({ name: o.tangent.label || "slope " + num(sl, 2), pts: [[x - L, f(x) - sl * L], [x + L, f(x) + sl * L]], color: GOLD, dash: true, width: 2 });
+    }
+    if (o.ball) { const y = fin(o.ball.y) ? o.ball.y : fy(o.ball.x); if (fin(y)) points.push({ x: o.ball.x, y, r: 9, color: o.ball.color || GOLD, label: o.ball.label }); }
+    let ymin = o.ymin, ymax = o.ymax;
+    if (ymin === undefined || ymax === undefined) { const ys = pts.map((p) => p[1]).filter(fin); if (ymin === undefined) ymin = Math.min(...ys); if (ymax === undefined) ymax = Math.max(...ys); }
+    return line(id, series, Object.assign({}, o, { points, xmin: x0, xmax: x1, ymin, ymax }));
+  }
+
+  /* ---- V.waffle: population of dots split into groups (probability, base rates, Bayes) ---- */
+  function waffle(id, o) {
+    o = o || {};
+    const G = o.groups || [], tot = Math.min(2000, G.reduce((a, g) => a + Math.max(0, Math.round(g.n || 0)), 0));
+    const cols = o.cols || (tot > 400 ? 40 : tot > 100 ? 20 : 10), rows = Math.ceil(tot / cols) || 1;
+    const top = o.title ? 28 : 6, cs = clamp(Math.floor(600 / cols), 6, 30), W = o.w || Math.max(320, cols * cs + 40), H = top + rows * cs + 24 + 22 * Math.ceil(G.length / 2);
+    const d = diagram(id, W, H), x0 = (W - cols * cs) / 2;
+    if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
+    let k = 0;
+    G.forEach((g, gi) => { for (let q = 0; q < Math.round(g.n || 0) && k < tot; q++, k++) d.circle("d" + k, { cx: x0 + (k % cols) * cs + cs / 2, cy: top + 8 + Math.floor(k / cols) * cs + cs / 2, r: cs * 0.38, fill: g.color || color(gi) }); });
+    G.forEach((g, gi) => {
+      const lx = gi % 2 === 0 ? W * 0.08 : W * 0.54, ly = top + rows * cs + 30 + 22 * Math.floor(gi / 2);
+      d.circle("lg" + gi, { cx: lx, cy: ly - 4, r: 6, fill: g.color || color(gi) });
+      d.text("lgt" + gi, lx + 12, ly, (g.label || "group " + (gi + 1)) + ": " + Math.round(g.n || 0), { fontSize: 13, fill: INK });
+    });
+    d.end();
+    return d;
+  }
+
+  /* ---- V.transform: the plane warped by a 2x2 matrix (3b1b linear-algebra view) ---- */
+  function transform(id, o) {
+    o = o || {};
+    const M = o.M || [[1, 0], [0, 1]], t = o.t === undefined ? 1 : clamp(o.t, 0, 1);
+    const a = 1 + (M[0][0] - 1) * t, b = M[0][1] * t, c = M[1][0] * t, e = 1 + (M[1][1] - 1) * t;
+    const ap = (x, y) => [a * x + b * y, c * x + e * y];
+    const n = o.n || 3, lines = [];
+    for (let k = -n; k <= n; k++) { const p = ap(k, -n), q = ap(k, n), r = ap(-n, k), s = ap(n, k); lines.push({ x1: p[0], y1: p[1], x2: q[0], y2: q[1], color: "rgba(79,179,191,.35)", dash: false, width: 1 }, { x1: r[0], y1: r[1], x2: s[0], y2: s[1], color: "rgba(79,179,191,.35)", dash: false, width: 1 }); }
+    const i1 = ap(1, 0), j1 = ap(0, 1);
+    const vecs = [{ x: i1[0], y: i1[1], label: "î", color: GOLD }, { x: j1[0], y: j1[1], label: "ĵ", color: CORAL }].concat((o.vectors || []).map((v, k) => { const p = ap(v.x, v.y); return Object.assign({}, v, { x: p[0], y: p[1], color: v.color || color(k + 2) }); }));
+    return space(id, Object.assign({ xmin: -n - 0.5, xmax: n + 0.5, ymin: -n - 0.5, ymax: n + 0.5 }, o, { vectors: vecs, lines: lines.concat(o.lines || []), grid: o.grid === undefined ? false : o.grid }));
+  }
+
+  /* write into an editable grid cell (for drag callbacks) */
+  function setCell(gridId, i, j, v) {
+    const h = host(gridId); if (!h) return;
+    const inp = h.querySelector("input[data-i='" + i + "'][data-j='" + j + "']");
+    if (inp) inp.value = +(+v).toFixed(3);
+  }
+
+  Object.assign(V, { space, network, graph, flow, pixels, curve, waffle, transform, setCell });
+})();
+
+</script>
+<script>
+/* ---------- L: small, tested numeric helpers (template, paper-agnostic) ---------- */
+const L = (function () {
+  const isM = (A) => Array.isArray(A) && Array.isArray(A[0]);
+  const range = (n, a, b) => (b === undefined ? Array.from({ length: n }, (_, i) => i) : Array.from({ length: n }, (_, i) => a + (n === 1 ? 0 : ((b - a) * i) / (n - 1))));
+  const zeros = (r, c) => (c === undefined ? Array(r).fill(0) : Array.from({ length: r }, () => Array(c).fill(0)));
+  const sum = (v) => v.reduce((a, b) => a + b, 0);
+  const mean = (v) => (v.length ? sum(v) / v.length : 0);
+  const dot = (a, b) => a.reduce((s, x, i) => s + x * (b[i] || 0), 0);
+  const transpose = (A) => (A.length ? A[0].map((_, j) => A.map((r) => r[j])) : []);
+  function matmul(A, B) {
+    if (!isM(B)) return A.map((r) => dot(r, B));
+    if (!A.length || !B.length) return [];
+    if (A[0].length !== B.length) throw new Error("L.matmul: shapes " + A.length + "x" + A[0].length + " and " + B.length + "x" + B[0].length + " do not match");
+    return A.map((r) => B[0].map((_, j) => r.reduce((s, x, k) => s + x * B[k][j], 0)));
+  }
+  const map = (A, f) => (isM(A) ? A.map((r, i) => r.map((x, j) => f(x, i, j))) : A.map((x, i) => f(x, i)));
+  const scale = (A, k) => map(A, (x) => x * k);
+  const add = (A, B) => map(A, (x, i, j) => x + (j === undefined ? B[i] : B[i][j]));
+  const sub = (A, B) => map(A, (x, i, j) => x - (j === undefined ? B[i] : B[i][j]));
+  function softmax(v, T) {
+    T = T === undefined ? 1 : T;
+    if (isM(v)) return v.map((r) => softmax(r, T));
+    if (!v.length) return [];
+    const m = Math.max(...v), e = v.map((x) => Math.exp((x - m) / T)), s = sum(e);
+    return e.map((x) => x / s);
+  }
+  const logsumexp = (v) => { const m = Math.max(...v); return m + Math.log(sum(v.map((x) => Math.exp(x - m)))); };
+  const log2 = (x) => Math.log(x) / Math.LN2;
+  const xlogx = (p, base) => (p > 0 ? (p * Math.log(p)) / Math.log(base || 2) : 0);
+  const normalize = (v) => { const s = sum(v); return s > 0 ? v.map((x) => x / s) : v.map(() => 1 / v.length); };
+  const argmax = (v) => v.reduce((bi, x, i) => (x > v[bi] ? i : bi), 0);
+  const norm = (v) => Math.sqrt(dot(v, v));
+  const rowSums = (A) => A.map(sum);
+  const shape = (A) => (isM(A) ? [A.length, A[0].length] : [A.length]);
+  const sigmoid = (x) => 1 / (1 + Math.exp(-x));
+  const round = (x, d) => { const k = Math.pow(10, d === undefined ? 3 : d); return Math.round(x * k) / k; };
+  function rng(seed) { let s = seed >>> 0 || 1; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+  function randn(r) { const u = Math.max(1e-12, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  const max = (v) => Math.max(...(isM(v) ? v.flat() : v));
+  const min = (v) => Math.min(...(isM(v) ? v.flat() : v));
+  const ones = (r, c) => map(zeros(r, c), () => 1);
+  const abs = (A) => map(A, Math.abs);
+  const cumsum = (v) => { let s = 0; return v.map((x) => (s += x)); };
+  const clip = (A, a, b) => map(A, (x) => Math.min(b, Math.max(a, x)));
+  const fmt = (x, d) => (typeof x === "number" && isFinite(x) ? x.toFixed(d === undefined ? 3 : d) : String(x));
+  const fill = (n, v) => Array(n).fill(v === undefined ? 0 : v);
+  const api = { fill, log: Math.log, exp: Math.exp, sqrt: Math.sqrt, pow: Math.pow, fmt, range, zeros, ones, sum, mean, max, min, abs, cumsum, clip, dot, transpose, matmul, map, scale, add, sub, softmax, logsumexp, log2, xlogx, normalize, argmax, norm, rowSums, shape, sigmoid, round, rng, randn };
+  if (typeof __err === "function") return new Proxy(api, { get(t, k) { if (k in t || typeof k === "symbol") return t[k]; __err("L." + String(k) + " does not exist (available: " + Object.keys(t).join(", ") + ")"); return () => 0; } });
+  return api;
+})();
+
+</script>
+<script>
+/* ---------- MODEL (generated) ---------- */
+const DEFAULT_STATE = {
+  p_d: 0.01, // P(D): prior probability of disease
+  p_pos_given_d: 0.99, // P(+|D): sensitivity (true positive rate)
+  p_pos_given_not_d: 0.01, // P(+|not D): false positive rate
+  population_size: 1000,
+};
+
+function compute(s) {
+  const N = s.population_size;
+  const p_not_d = 1 - s.p_d;
+
+  // Number of people with disease (D) and without disease (not D)
+  const n_d = L.round(s.p_d * N);
+  const n_not_d = N - n_d; // Ensure sum is N
+
+  // Number of true positives (TP), false negatives (FN)
+  const n_tp = L.round(s.p_pos_given_d * n_d);
+  const n_fn = n_d - n_tp;
+
+  // Number of false positives (FP), true negatives (TN)
+  const n_fp = L.round(s.p_pos_given_not_d * n_not_d);
+  const n_tn = n_not_d - n_fp;
+
+  // Total positives and negatives
+  const n_pos = n_tp + n_fp;
+  const n_neg = n_fn + n_tn;
+
+  // P(+): Probability of a positive test
+  const p_pos = (s.p_pos_given_d * s.p_d) + (s.p_pos_given_not_d * p_not_d);
+
+  // P(D|+): Posterior probability of disease given a positive test
+  let p_d_given_pos = 0;
+  if (p_pos > 1e-9) { // Avoid division by zero
+    p_d_given_pos = (s.p_pos_given_d * s.p_d) / p_pos;
+  } else if (s.p_d === 0) { // If P(D)=0, then P(D|+)=0
+    p_d_given_pos = 0;
+  } else if (s.p_d === 1 && s.p_pos_given_d > 0) { // If P(D)=1 and test is sensitive, P(D|+)=1
+    p_d_given_pos = 1;
+  }
+
+  return {
+    p_not_d,
+    n_d, n_not_d,
+    n_tp, n_fn, n_fp, n_tn,
+    n_pos, n_neg,
+    p_pos,
+    p_d_given_pos,
+  };
+}
+
+function invariants(s, r) {
+  return [
+    {
+      label: "Population sum",
+      ok: Math.abs(r.n_tp + r.n_fn + r.n_fp + r.n_tn - s.population_size) < 1e-9,
+      detail: `Total people: ${r.n_tp + r.n_fn + r.n_fp + r.n_tn} vs ${s.population_size}`
+    },
+    {
+      label: "P(D)=0 implies P(D|+)=0",
+      ok: s.p_d > 1e-9 || r.p_d_given_pos < 1e-9,
+      detail: `P(D)=${s.p_d}, P(D|+)=${r.p_d_given_pos}`
+    },
+    {
+      label: "P(D)=1 implies P(D|+)=1",
+      ok: s.p_d < 1 - 1e-9 || r.p_d_given_pos > 1 - 1e-9,
+      detail: `P(D)=${s.p_d}, P(D|+)=${r.p_d_given_pos}`
+    },
+    {
+      label: "P(+|D)=0 implies P(D|+)=0 (unless P(D)=0)",
+      ok: s.p_pos_given_d > 1e-9 || s.p_d < 1e-9 || r.p_d_given_pos < 1e-9,
+      detail: `P(+|D)=${s.p_pos_given_d}, P(D)=${s.p_d}, P(D|+)=${r.p_d_given_pos}`
+    }
+  ];
+}
+
+
+
+const PRESETS = {
+  rareDiseaseHighAccuracy: { p_d: 0.01, p_pos_given_d: 0.99, p_pos_given_not_d: 0.01 },
+  commonDiseaseHighAccuracy: { p_d: 0.5, p_pos_given_d: 0.99, p_pos_given_not_d: 0.01 },
+  perfectTest: { p_d: 0.1, p_pos_given_d: 1.0, p_pos_given_not_d: 0.0 },
+  uselessTest: { p_d: 0.1, p_pos_given_d: 0.5, p_pos_given_not_d: 0.5 },
+};
+</script>
+<script>
+/* ---------- TESTS (generated, isolated so a faulty test cannot break the model) ---------- */
+var TESTS = [], __TESTS_ERROR = null;
+try { TESTS = [
+  {
+    name: "P(D)=0",
+    state: { p_d: 0 },
+    get: (r) => r.p_d_given_pos,
+    expect: 0,
+    tol: 1e-9
+  },
+  {
+    name: "P(D)=1",
+    state: { p_d: 1 },
+    get: (r) => r.p_d_given_pos,
+    expect: 1,
+    tol: 1e-9
+  },
+  {
+    name: "P(+|D)=0",
+    state: { p_d: 0.5, p_pos_given_d: 0 },
+    get: (r) => r.p_d_given_pos,
+    expect: 0,
+    tol: 1e-9
+  },
+  {
+    name: "P(+|not D)=0",
+    state: { p_d: 0.5, p_pos_given_not_d: 0 },
+    get: (r) => r.p_d_given_pos,
+    expect: 1,
+    tol: 1e-9
+  },
+  {
+    name: "Symmetric case",
+    state: { p_d: 0.5, p_pos_given_d: 0.5, p_pos_given_not_d: 0.5 },
+    get: (r) => r.p_d_given_pos,
+    expect: 0.5,
+    tol: 1e-9
+  },
+  {
+    name: "Base-rate fallacy example",
+    state: { p_d: 0.01, p_pos_given_d: 0.99, p_pos_given_not_d: 0.01 },
+    get: (r) => r.p_d_given_pos,
+    expect: 0.5, // (0.99 * 0.01) / (0.99 * 0.01 + 0.01 * 0.99) = 0.0099 / (0.0099 + 0.0099) = 0.5
+    tol: 1e-9
+  }
+]; } catch (e) { __TESTS_ERROR = String(e && e.message || e); }
+</script>
+<script>
+/* ---------- UI (generated) ---------- */
+function readState() {
+  return {
+    p_d: V.num("p_d"),
+    p_pos_given_d: V.num("p_pos_given_d"),
+    p_pos_given_not_d: V.num("p_pos_given_not_d"),
+    population_size: DEFAULT_STATE.population_size,
+  };
+}
+
+function setState(s) {
+  V.set("p_d", s.p_d);
+  V.set("p_pos_given_d", s.p_pos_given_d);
+  V.set("p_pos_given_not_d", s.p_pos_given_not_d);
+}
+
+function render(s, r) {
+  const N = s.population_size;
+
+  const groups = [
+    { n: r.n_tp, label: "True Positives (D and +)", color: V.color(0) },
+    { n: r.n_fn, label: "False Negatives (D and -)", color: V.color(1) },
+    { n: r.n_fp, label: "False Positives (not D and +)", color: V.color(2) },
+    { n: r.n_tn, label: "True Negatives (not D and -)", color: V.color(3) },
+  ];
+
+  V.waffle("waffle_chart", {
+    groups: groups,
+    cols: 50,
+    title: `Population of ${N} people`
+  });
+
+  V.$("readouts").innerHTML = `
+    <div>
+      <small>P(D): Prior Probability of Disease</small>
+      <span class="big">${V.fmt(s.p_d)}</span>
+    </div>
+    <div>
+      <small>P(+|D): Test Sensitivity</small>
+      <span class="big">${V.fmt(s.p_pos_given_d)}</span>
+    </div>
+    <div>
+      <small>P(+|not D): False Positive Rate</small>
+      <span class="big">${V.fmt(s.p_pos_given_not_d)}</span>
+    </div>
+    <div>
+      <small>P(+): Probability of Positive Test</small>
+      <span class="big">${V.fmt(r.p_pos)}</span>
+    </div>
+    <div>
+      <small>P(D|+): Posterior Probability of Disease given Positive Test</small>
+      <span class="big">${V.fmt(r.p_d_given_pos)}</span>
+    </div>
+  `;
+}
+
+const SLIDES = [
+  {
+    title: "The Prior: How common is the disease?",
+    text: `Before any test, we have a <b>prior probability</b> of disease, P(D). This is the prevalence of the disease in the general population. Here, we visualize a population of ${DEFAULT_STATE.population_size} people.`,
+    controls: ["p_d"],
+    draw: (id, s, r) => {
+      const groups = [
+        { n: r.n_d, label: "Has Disease (D)", color: V.color(0) },
+        { n: r.n_not_d, label: "Does Not Have Disease (not D)", color: V.color(3) },
+      ];
+      V.waffle(id, { groups: groups, cols: 50, title: `P(D) = ${V.fmt(s.p_d)}` });
+    }
+  },
+  {
+    title: "Test Sensitivity: P(+|D)",
+    text: `A good diagnostic test has high <b>sensitivity</b>, P(+|D), meaning it correctly identifies people who have the disease. These are the <b>True Positives</b>.`,
+    controls: ["p_d", "p_pos_given_d"],
+    draw: (id, s, r) => {
+      const groups = [
+        { n: r.n_tp, label: "True Positives (D and +)", color: V.color(0) },
+        { n: r.n_fn, label: "False Negatives (D and -)", color: V.color(1) },
+        { n: r.n_not_d, label: "Does Not Have Disease (not D)", color: V.color(3) },
+      ];
+      V.waffle(id, { groups: groups, cols: 50, title: `P(+|D) = ${V.fmt(s.p_pos_given_d)}` });
+    }
+  },
+  {
+    title: "False Positive Rate: P(+|not D)",
+    text: `Even good tests can have <b>false positives</b>, P(+|not D), where a healthy person tests positive. This is the probability of testing positive given they do NOT have the disease.`,
+    controls: ["p_d", "p_pos_given_d", "p_pos_given_not_d"],
+    draw: (id, s, r) => {
+      const groups = [
+        { n: r.n_tp, label: "True Positives (D and +)", color: V.color(0) },
+        { n: r.n_fn, label: "False Negatives (D and -)", color: V.color(1) },
+        { n: r.n_fp, label: "False Positives (not D and +)", color: V.color(2) },
+        { n: r.n_tn, label: "True Negatives (not D and -)", color: V.color(3) },
+      ];
+      V.waffle(id, { groups: groups, cols: 50, title: `P(+|not D) = ${V.fmt(s.p_pos_given_not_d)}` });
+    }
+  },
+  {
+    title: "Total Positive Tests: P(+)",
+    text: `The overall probability of a positive test, P(+), is the sum of true positives and false positives. It's the total number of people who test positive, regardless of whether they actually have the disease.
+    <div class="eq">P(+) = P(+|D)P(D) + P(+|not D)P(not D)</div>`,
+    controls: ["p_d", "p_pos_given_d", "p_pos_given_not_d"],
+    draw: (id, s, r) => {
+      const groups = [
+        { n: r.n_tp, label: "True Positives (D and +)", color: V.color(0) },
+        { n: r.n_fp, label: "False Positives (not D and +)", color: V.color(2) },
+        { n: r.n_fn + r.n_tn, label: "Negative Tests", color: V.color(3) },
+      ];
+      V.waffle(id, { groups: groups, cols: 50, title: `P(+) = ${V.fmt(r.p_pos)}` });
+    }
+  },
+  {
+    title: "Bayes' Rule: P(D|+)",
+    text: `Finally, Bayes' Rule tells us the <b>posterior probability</b> of having the disease given a positive test, P(D|+). It's the proportion of true positives among all positive tests.
+    <div class="eq">P(D|+) = <span class="frac"><span>P(+|D)P(D)</span><span>P(+)</span></span></div>
+    <div class="eq">P(D|+) = <span class="frac"><span>P(+|D)P(D)</span><span>P(+|D)P(D) + P(+|not D)P(not D)</span></span></div>`,
+    controls: ["p_d", "p_pos_given_d", "p_pos_given_not_d"],
+    draw: (id, s, r) => {
+      const groups = [
+        { n: r.n_tp, label: "True Positives (D and +)", color: V.color(0) },
+        { n: r.n_fp, label: "False Positives (not D and +)", color: V.color(2) },
+        { n: r.n_fn + r.n_tn, label: "Negative Tests", color: V.color(3) },
+      ];
+      V.waffle(id, { groups: groups, cols: 50, title: `P(D|+) = ${V.fmt(r.p_d_given_pos)}` });
+    }
+  }
+];
+</script>
+<script>
+"use strict";
+/* ---------- Boot (template): slides, navigation, wiring, run loop, checks ---------- */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const errBox = $("errors");
+  const seenErr = new Set();
+  function showErr(msg) { if (seenErr.has(msg) || seenErr.size >= 3) return; seenErr.add(msg); errBox.style.display = "block"; errBox.textContent += (errBox.textContent ? "\n" : "") + "⚠ " + msg; }
+  window.addEventListener("error", (e) => showErr(e.message));
+  const has = (n) => { try { return typeof eval(n) !== "undefined"; } catch (e) { return false; } };
+  const S0 = has("DEFAULT_STATE") ? DEFAULT_STATE : {};
+  const full = (s) => Object.assign({}, S0, s || {});
+  const P = has("PRESETS") ? PRESETS : {};
+  const track = $("track"), play = $("play"), source = $("source");
+  const esc = (t) => String(t === undefined ? "" : t);
+
+  /* ---- concept slides from SLIDES ---- */
+  const CS = has("SLIDES") && Array.isArray(SLIDES) ? SLIDES : [];
+  CS.forEach((sl, i) => {
+    const sec = document.createElement("section");
+    sec.className = "slide concept"; sec.dataset.title = esc(sl.title) || "Step " + (i + 1); sec.dataset.j = i;
+    sec.innerHTML = "<div class='cslide'><div class='stage'><div class='viz' id='slide-viz-" + i + "'></div></div><div class='side'><span class='kicker'>Step " + (i + 1) + " of " + CS.length + "</span><h2>" + esc(sl.title) +
+      "</h2><div class='stext'>" + esc(sl.text) + "</div><div class='slide-ctrls' id='slide-ctrls-" + i + "'></div>" + (sl.preset && P[sl.preset] ? "<button class='ghost' data-preset='" + sl.preset + "' data-stay='1'>↺ Reset this example</button>" : "") + "</div></div>";
+    track.insertBefore(sec, play);
+  });
+
+  /* ---- exploration / limitation slides from EXPLORE cards ---- */
+  const XV = [];
+  [...$("explore-src").children].filter((c) => c.classList && c.classList.contains("card")).forEach((c, i) => {
+    const sec = document.createElement("section");
+    const isCaution = c.classList.contains("caution");
+    const h = c.querySelector("h3");
+    sec.className = "slide"; sec.dataset.title = h ? h.textContent : isCaution ? "Limitation" : "Exploration";
+    const k = c.getAttribute("data-show-slide"), pk = c.getAttribute("data-show-preset");
+    const ok = k !== null && CS[+k] && typeof CS[+k].draw === "function";
+    sec.innerHTML = "<div class='cslide'><div class='stage'>" + (ok ? "<div class='viz' id='xviz-" + i + "'></div><p class='note' style='text-align:center;margin:6px 0 0'>Shown for the example “" + (pk || "default") + "”. Use the button to explore it live.</p>" : "<div class='stage-empty'>Use the button to load this setup into the playground.</div>") +
+      "</div><div class='side'><span class='kicker'>" + (isCaution ? "Watch out" : "Guided exploration") + "</span></div></div>";
+    sec.querySelector(".side").appendChild(c);
+    if (ok) XV.push({ id: "xviz-" + i, k: +k, preset: pk });
+    track.insertBefore(sec, source);
+  });
+
+  /* ---- drawing ---- */
+  const getters = new Map();
+  function calcFill(el, s, r) {
+    const ex = el.getAttribute("data-get");
+    let f = getters.get(ex);
+    if (!f) { try { f = new Function("r", "s", "return (" + ex + ");"); } catch (e) { f = () => "?"; } getters.set(ex, f); }
+    let v; try { v = f(r, s); } catch (e) { v = "?"; }
+    const d = el.hasAttribute("data-d") ? +el.getAttribute("data-d") : 3;
+    const f2 = (x) => (Array.isArray(x) ? "[" + x.map(f2).join(", ") + "]" : typeof x === "number" ? V.fmt(x, d) : String(x));
+    el.textContent = f2(v);
+  }
+  function drawSlide(j, id, s, r) {
+    const host = $(id);
+    try { CS[j].draw(id, s, r); if (host && host._failed) { host._failed = false; const n = host.querySelector(".vfail"); if (n) n.remove(); } }
+    catch (e) {
+      console.warn("slide " + (j + 1) + " visual:", e);
+      if (host && !host._failed) { host._failed = true; const n = document.createElement("p"); n.className = "note vfail"; n.style.textAlign = "center"; n.textContent = "This visual could not be drawn for the current values (" + e.message + "). The other slides and the playground still work."; host.appendChild(n); }
+    }
+  }
+  function draw(s) {
+    const r = compute(s);
+    try { render(s, r); } catch (e) { showErr("playground visual: " + e.message); console.warn(e); }
+    CS.forEach((sl, j) => { if (typeof sl.draw === "function") drawSlide(j, "slide-viz-" + j, s, r); });
+    if (has("invariants")) {
+      const dropInv = has("__DROP_INV") ? __DROP_INV : [];
+      const list = (invariants(s, r) || []).filter((c) => dropInv.indexOf(c.label) < 0);
+      $("livebox").hidden = !list.length;
+      $("live").innerHTML = list.map((c) => "<li><span class='" + (c.ok ? "pass'>✓" : "fail'>✗") + "</span> " + c.label + (c.detail ? " <span class='note'>(" + c.detail + ")</span>" : "") + "</li>").join("");
+    }
+    document.querySelectorAll(".calc[data-get]:not([data-at])").forEach((el) => calcFill(el, s, r));
+    return r;
+  }
+  V.update = function () { try { draw(full(readState())); } catch (e) { showErr("update: " + e.message); } };
+  V.apply = function (s) { try { const st = full(s); setState(st); draw(full(Object.assign({}, st, readState()))); } catch (e) { showErr("apply: " + e.message); } };
+
+  /* ---- input wiring (whole deck) ---- */
+  play.querySelectorAll("input[type=range]").forEach((e) => {
+    if (!(e.nextElementSibling && e.nextElementSibling.classList.contains("val"))) { const o = document.createElement("output"); o.className = "val"; e.after(o); }
+    V.syncOut(e);
+  });
+  let pending = false;
+  function onInput(ev) {
+    const t = ev.target;
+    if (!t || !t.matches || !t.matches("input,select,textarea")) return;
+    if (t.closest("#learnbar")) return;
+    V.syncOut(t);
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; V.update(); });
+  }
+  track.addEventListener("input", onInput);
+  track.addEventListener("change", onInput);
+
+  /* ---- navigation ---- */
+  const slides = [...track.children];
+  const dots = $("dots");
+  slides.forEach((sl, i) => { const b = document.createElement("button"); b.title = (i + 1) + ". " + sl.dataset.title; b.setAttribute("aria-label", b.title); b.onclick = () => go(i); dots.appendChild(b); });
+  const homes = [];
+  function restoreCtrls() { while (homes.length) { const h = homes.pop(); h.p.insertBefore(h.box, h.n); } }
+  function moveCtrls(j) {
+    (CS[j].controls || []).forEach((id) => {
+      const el = $(id); if (!el) return;
+      const box = (el.closest && el.closest(".ctrl")) || el;
+      if (!play.contains(box)) return;
+      homes.push({ box, p: box.parentNode, n: box.nextSibling });
+      $("slide-ctrls-" + j).appendChild(box);
+    });
+  }
+  let cur = 0;
+  function go(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    cur = i;
+    restoreCtrls();
+    const sl = slides[i];
+    if (sl.classList.contains("concept")) { const j = +sl.dataset.j; V.stage = j; moveCtrls(j); } else V.stage = Infinity;
+    if (!document.body.classList.contains("flow")) track.style.transform = "translateX(" + (-100 * i) + "%)";
+    [...dots.children].forEach((d, k) => d.classList.toggle("on", k === i));
+    $("bar").style.width = (100 * (i + 1) / slides.length) + "%";
+    $("counter").textContent = (i + 1) + " / " + slides.length + " · " + sl.dataset.title;
+    $("prev").disabled = i === 0; $("next").disabled = i === slides.length - 1;
+    sl.scrollTop = 0;
+    V.update();
+  }
+  $("prev").onclick = () => go(cur - 1);
+  $("next").onclick = () => go(cur + 1);
+  document.addEventListener("keydown", (e) => {
+    if (e.target && e.target.matches && e.target.matches("input,select,textarea")) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown") { go(cur + 1); e.preventDefault(); }
+    if (e.key === "ArrowLeft" || e.key === "PageUp") { go(cur - 1); e.preventDefault(); }
+  });
+  $("flowbtn").onclick = function () {
+    const on = document.body.classList.toggle("flow");
+    this.textContent = on ? "View as slides" : "View as page";
+    restoreCtrls();
+    if (on) track.style.transform = "none"; else go(cur);
+  };
+
+  /* ---- presets ---- */
+  document.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.getAttribute("data-preset");
+    if (!P[k]) { showErr("unknown preset " + k); return; }
+    V.apply(P[k]);
+    if (!b.hasAttribute("data-stay")) { go(slides.indexOf(play)); play.classList.add("hl"); setTimeout(() => play.classList.remove("hl"), 1600); }
+  }));
+
+  /* ---- iterative run loop ("Learn") ---- */
+  if (has("step") && typeof step === "function") {
+    const lb = $("learnbar");
+    lb.hidden = false;
+    const label = has("STEP_LABEL") ? STEP_LABEL : "Run";
+    lb.innerHTML = "<button id='lrun'>▶ " + label + "</button><button class='ghost' id='lstep'>Step once</button><button class='ghost' id='lreset'>↺ Reset</button><span>Iteration: <b id='liter'>0</b></span><span class='note' id='lmsg'></span>";
+    let curS = null, it = 0, timer = null, snap = null;
+    const MAXIT = has("MAX_ITERS") ? MAX_ITERS : 400;
+    function one() {
+      if (!curS) { curS = full(readState()); snap = Object.assign({}, curS); }
+      const nx = step(Object.assign({}, curS));
+      if (!nx || it >= MAXIT) { stop(nx ? "stopped at max iterations" : "converged / finished"); return false; }
+      curS = full(nx); it++;
+      setState(curS);
+      draw(curS);
+      $("liter").textContent = it;
+      return true;
+    }
+    function stop(msg) { if (timer) { clearInterval(timer); timer = null; } $("lrun").textContent = "▶ " + label; if (msg) $("lmsg").textContent = msg; }
+    $("lrun").onclick = function () {
+      if (timer) { stop(); return; }
+      $("lmsg").textContent = "";
+      this.textContent = "⏸ Pause";
+      timer = setInterval(() => { try { one(); } catch (e) { stop(); showErr("step: " + e.message); } }, has("STEP_MS") ? STEP_MS : 120);
+    };
+    $("lstep").onclick = () => { stop(); try { one(); } catch (e) { showErr("step: " + e.message); } };
+    $("lreset").onclick = () => { stop(""); it = 0; $("liter").textContent = 0; V.apply(snap || S0); curS = null; snap = null; };
+    track.addEventListener("input", (e) => { if (!e.target.closest("#learnbar")) { stop(); curS = null; it = 0; $("liter").textContent = 0; } });
+  }
+
+  /* ---- first render ---- */
+  try { if (has("init") && typeof init === "function") init(); } catch (e) { showErr("init: " + e.message); }
+  V.apply(S0);
+  /* exploration visuals, each at its own preset */
+  XV.forEach((x) => { const st = full(P[x.preset] || {}); try { drawSlide(x.k, x.id, st, compute(st)); } catch (e) { showErr("exploration visual: " + e.message); } });
+  /* numbers quoted in text are computed from presets, never typed by hand */
+  document.querySelectorAll(".calc[data-get][data-at]").forEach((el) => {
+    const st = full(P[el.getAttribute("data-at")] || {});
+    try { calcFill(el, st, compute(st)); } catch (e) { el.textContent = "?"; }
+  });
+  go(0);
+
+  /* ---- self-tests ---- */
+  const tt = $("tests");
+  const show = (v) => (Array.isArray(v) ? "[" + v.map(show).join(", ") + "]" : typeof v === "number" ? V.fmt(v, 4) : String(v));
+  const drop = has("__DROP_TESTS") ? __DROP_TESTS : [];
+  if (drop.length) { const n = document.createElement("p"); n.className = "note"; n.textContent = drop.length + " model-proposed check(s) were excluded because their hand-derived expectation did not match the executed computation: " + drop.join("; ") + "."; tt.after(n); }
+  if (has("TESTS")) TESTS.filter((t) => drop.indexOf(t.name) < 0).forEach((t) => {
+    let got, ok = false, msg = "";
+    try {
+      const st = full(t.state); got = t.get(compute(st), st);
+      const tol = t.tol === undefined ? 1e-6 : t.tol;
+      const close = (a, b) => Array.isArray(a) || Array.isArray(b) ? Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => close(x, b[i])) : typeof a === "number" && typeof b === "number" ? Math.abs(a - b) <= tol : a === b;
+      ok = close(got, t.expect);
+    } catch (e) { msg = e.message; }
+    const row = document.createElement("tr");
+    row.innerHTML = "<td>" + t.name + "</td><td class='num'>" + (msg ? "error: " + msg : show(got)) + "</td><td class='num'>" + show(t.expect) + "</td><td class='" + (ok ? "pass'>✓ pass" : "fail'>✗ fail") + "</td>";
+    tt.appendChild(row);
+  });
+})();
+</script>
+</body>
+</html>
