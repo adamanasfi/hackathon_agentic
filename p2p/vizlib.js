@@ -28,7 +28,7 @@
   function space(id, o) {
     o = o || {};
     const W = o.w || 640, H = o.h || 440, top = o.title ? 26 : 8, m = 26;
-    const d = diagram(id, W, H), svg = d.svg;
+    const d = diagram(id, W, H, "\u0001space\u0001"), svg = d.svg;
     const vs = o.vectors || [], ps = o.points || [], ls = o.lines || [];
     const xs = [0], ys = [0];
     vs.forEach((v) => { const f = v.from || [0, 0]; xs.push(v.x, f[0]); ys.push(v.y, f[1]); });
@@ -105,7 +105,7 @@
     const layers = (o.layers || []).map((n) => Math.max(1, n | 0)), Lc = layers.length;
     const maxN = Math.max(1, ...layers), W = o.w || 640, top = o.title ? 28 : 10;
     const gap = clamp(300 / maxN, 34, 70), H = o.h || Math.max(260, top + 50 + gap * maxN);
-    const d = diagram(id, W, H), m = 60;
+    const d = diagram(id, W, H, "\u0001network\u0001"), m = 60;
     const nx = (l) => (Lc === 1 ? W / 2 : m + ((W - 2 * m) * l) / (Lc - 1));
     const ny = (l, i) => top + (H - top - 30) / 2 + (i - (layers[l] - 1) / 2) * gap;
     const rN = clamp(gap * 0.32, 10, 20);
@@ -143,12 +143,13 @@
   function graph(id, o) {
     o = o || {};
     const N = o.nodes || [], E = o.edges || [], W = o.w || 640, H = o.h || 420, top = o.title ? 28 : 6;
-    const d = diagram(id, W, H);
+    const d = diagram(id, W, H, "\u0001graph\u0001");
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const idx = new Map(N.map((n, i) => [n.id === undefined ? i : n.id, i]));
     const vmax = Math.max(1e-9, ...N.map((n) => (fin(n.value) ? Math.abs(n.value) : 0)));
     const R0 = Math.min(W, H - top) * 0.36, ccx = W / 2, ccy = top + (H - top) / 2;
-    const pos = N.map((n, i) => fin(n.x) && fin(n.y) ? [40 + n.x * (W - 80), top + 30 + n.y * (H - top - 60)] : [ccx + R0 * Math.cos(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length)), ccy + R0 * Math.sin(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length))]);
+    const px = N.some((n) => (fin(n.x) && Math.abs(n.x) > 1.5) || (fin(n.y) && Math.abs(n.y) > 1.5)); // pixel coordinates given
+    const pos = N.map((n, i) => fin(n.x) && fin(n.y) ? (px ? [n.x, n.y] : [40 + n.x * (W - 80), top + 30 + n.y * (H - top - 60)]) : [ccx + R0 * Math.cos(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length)), ccy + R0 * Math.sin(-Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, N.length))]);
     const rad = N.map((n) => (fin(n.value) ? 14 + 22 * Math.sqrt(Math.abs(n.value) / vmax) : 22));
     const wmax = Math.max(1e-9, ...E.map((e) => (fin(e.w) ? Math.abs(e.w) : 1)));
     const has = new Set(E.map((e) => idx.get(e.from) + ">" + idx.get(e.to)));
@@ -177,7 +178,7 @@
     const S = o.steps || [], n = Math.max(1, S.length), gap = 34, m = 16;
     const bw = clamp(o.boxWidth || 130, 80, 200), W = o.w || Math.max(640, 2 * m + n * bw + (n - 1) * gap), top = o.title ? 30 : 8;
     const bh = 70, H = o.h || top + bh + 46, y0 = top + 8;
-    const d = diagram(id, W, H);
+    const d = diagram(id, W, H, "\u0001flow\u0001");
     const x0 = (W - (n * bw + (n - 1) * gap)) / 2;
     if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     S.forEach((st, i) => {
@@ -203,7 +204,7 @@
     const R = M.length, C = R ? Math.max(...M.map((r) => r.length)) : 0, top = o.title ? 28 : 6, m = 20;
     const cs = o.cell || clamp(Math.floor(Math.min(340 / Math.max(R, 1), 560 / Math.max(C, 1))), 10, 52);
     const W = o.w || Math.max(240, C * cs + 2 * m), H = top + R * cs + 2 * m;
-    const d = diagram(id, W, H), x0 = (W - C * cs) / 2, y0 = top + m;
+    const d = diagram(id, W, H, "\u0001pixels\u0001"), x0 = (W - C * cs) / 2, y0 = top + m;
     let mx = o.max; if (mx === undefined) { mx = 0; M.forEach((r) => r.forEach((v) => { if (fin(v)) mx = Math.max(mx, Math.abs(v)); })); }
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const showV = o.values !== false && cs >= 24;
@@ -246,7 +247,7 @@
     const G = o.groups || [], tot = Math.min(2000, G.reduce((a, g) => a + Math.max(0, Math.round(g.n || 0)), 0));
     const cols = o.cols || (tot > 400 ? 40 : tot > 100 ? 20 : 10), rows = Math.ceil(tot / cols) || 1;
     const top = o.title ? 28 : 6, cs = clamp(Math.floor(600 / cols), 6, 30), W = o.w || Math.max(320, cols * cs + 40), H = top + rows * cs + 24 + 22 * Math.ceil(G.length / 2);
-    const d = diagram(id, W, H), x0 = (W - cols * cs) / 2;
+    const d = diagram(id, W, H, "\u0001waffle\u0001"), x0 = (W - cols * cs) / 2;
     if (o.title) d.text("title", W / 2, 18, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     let k = 0;
     G.forEach((g, gi) => { for (let q = 0; q < Math.round(g.n || 0) && k < tot; q++, k++) d.circle("d" + k, { cx: x0 + (k % cols) * cs + cs / 2, cy: top + 8 + Math.floor(k / cols) * cs + cs / 2, r: cs * 0.38, fill: g.color || color(gi) }); });
@@ -282,7 +283,7 @@
     const cs = clamp(Math.floor(Math.min((860 - 40 - gap * (n - 1)) / Math.max(1, totCols), 300 / maxRows)), 14, 56);
     const W = o.w || Math.max(520, totCols * cs + gap * (n - 1) + 40 + (S.some((st) => !st.M) ? cs : 0));
     const H = o.h || top + labH + maxRows * cs + 40;
-    const d = diagram(id, W, H);
+    const d = diagram(id, W, H, "\u0001pipeline\u0001");
     if (o.title) d.text("title", W / 2, 20, o.title, { textAnchor: "middle", fontWeight: 650, fill: GOLD });
     const used = dims.reduce((a, dm) => a + dm[1] * cs, 0) + gap * (n - 1);
     let x = (W - used) / 2;

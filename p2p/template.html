@@ -268,7 +268,9 @@ const V = (function () {
   }
 
   /* --- keyed, animated SVG drawing context --- */
-  function diagram(id, w, h) {
+  /* ns: helpers draw in their own namespace so a user's d.end() never deletes another helper's elements */
+  function diagram(id, w, h, ns) {
+    ns = ns || "";
     w = w || 640; h = h || 360;
     const host = $(id);
     if (!host) throw new Error("V.diagram: no element with id '" + id + "'");
@@ -300,6 +302,7 @@ const V = (function () {
       return out.filter((x, i) => x !== "" || i === 0);
     }
     function el(tag, key, attrs, text) {
+      key = ns + key;
       let ls = null;
       if (tag === "text" && text !== undefined) { ls = lines(text, attrs); text = ls.join(" "); }
       try { extent(tag, attrs || {}, ls && ls.length > 1 ? ls.reduce((a, b) => (b.length > a.length ? b : a), "") : text); if (ls && ls.length > 1) { const a = attrs || {}; extent("text", Object.assign({}, a, { y: +a.y + 15 * (ls.length - 1) }), ls[ls.length - 1]); } } catch (e) {}
@@ -333,7 +336,7 @@ const V = (function () {
         return el("path", k, Object.assign({ d: p, fill: "none", stroke: INK, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, b));
       },
       end() {
-        for (const [k, e] of svg._keys) if (!seen.has(k)) { e.remove(); svg._keys.delete(k); anims.delete(e); }
+        for (const [k, e] of svg._keys) if (!seen.has(k) && (ns ? k.startsWith(ns) : k.charAt(0) !== "\u0001")) { e.remove(); svg._keys.delete(k); anims.delete(e); }
         ext.x0 = Math.max(ext.x0, -0.2 * w); ext.x1 = Math.min(ext.x1, 1.2 * w); ext.y0 = Math.max(ext.y0, -0.2 * h); ext.y1 = Math.min(ext.y1, 1.2 * h);
         if (ext.x0 < 0 || ext.y0 < 0 || ext.x1 > w || ext.y1 > h) svg.setAttribute("viewBox", (ext.x0 - 6) + " " + (ext.y0 - 6) + " " + (ext.x1 - ext.x0 + 12) + " " + (ext.y1 - ext.y0 + 12));
       },
@@ -364,7 +367,7 @@ const V = (function () {
   function bars(id, items, o) {
     o = o || {};
     const W = o.w || 640, H = o.h || 300, m = { l: 52, r: 16, t: o.title ? 30 : 14, b: 46 };
-    const d = diagram(id, W, H);
+    const d = diagram(id, W, H, "\u0001bars\u0001");
     const vals = items.map((it) => (isFinite(it.value) ? it.value : 0));
     const refs = o.ref || [];
     let lo = o.min !== undefined ? o.min : Math.min(0, ...vals, ...refs.map((r) => r.value));
@@ -396,7 +399,7 @@ const V = (function () {
   function line(id, series, o) {
     o = o || {};
     const W = o.w || 640, H = o.h || 340, m = { l: 56, r: 18, t: o.title ? 30 : 14, b: 46 };
-    const d = diagram(id, W, H);
+    const d = diagram(id, W, H, "\u0001line\u0001");
     const xs = [], ys = [];
     series.forEach((s) => (s.pts || []).forEach((p) => { if (isFinite(p[0]) && isFinite(p[1])) { xs.push(p[0]); ys.push(p[1]); } }));
     (o.points || []).forEach((p) => { if (isFinite(p.x) && isFinite(p.y)) { xs.push(p.x); ys.push(p.y); } });

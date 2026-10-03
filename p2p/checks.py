@@ -187,7 +187,10 @@ var performance = {now: function(){ return 0; }}, console = {log: function(){}, 
 function __close(a, b, tol){ if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every(function(x, i){ return __close(x, b[i], tol); });
   if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) <= tol; return a === b; }
 function __fin(x){ return typeof x === 'number' && isFinite(x); }
-var __drawn = {};
+var __drawn = {}, __live = {};
+function __mark(id, key, shape){ id = String(id); (__live[id] = __live[id] || {})[key] = shape ? 1 : 0; }
+function __visible(prefix){ var n = 0; for (var id in __live) if (id === prefix || id.indexOf(prefix + '-') === 0) for (var k in __live[id]) n += __live[id][k]; return n; }
+function __clearLive(prefix){ for (var id in __live) if (id === prefix || id.indexOf(prefix + '-') === 0) delete __live[id]; }
 function __resolve(id){ id = String(id); if (id in __ids || id.indexOf('-') < 0) return id;
   for (var cut = id.lastIndexOf('-'); cut > 0; cut = id.lastIndexOf('-', cut - 1)) if (id.slice(0, cut) in __ids) { __mk(id, {tag: 'div', attrs: {}, value: ''}); return id; }
   return id; }
@@ -200,7 +203,8 @@ var V = (function(){
   function set(id, v){ var e = $(id); if (!e) { __err("V.set('" + id + "'): no element with that id"); return; } if (v === undefined) return; if (e.type === 'checkbox') e.checked = !!v; else e.value = v; }
   function split(id, n){ id = String(id); __need(id, 'V.split'); var out = []; for (var i = 0; i < n; i++) { (function(cid){ __mk(cid, {tag: 'div', attrs: {}, value: ''}); out.push({id: cid, toString: function(){ return cid; }, valueOf: function(){ return cid; }}); })(id + '-' + i); } return out; }
   function geo(f, a){ for (var k in a) { if (/^(x|y|x1|y1|x2|y2|cx|cy|r|rx|ry|width|height)$/.test(k) && !__fin(a[k])) __err(f + ': attribute ' + k + ' is ' + a[k]); if (k === 'd' && /NaN|undefined|Infinity/.test(String(a[k]))) __err(f + ': path d contains NaN/undefined'); } }
-  function diagram(id, w, h){ __need(id, 'V.diagram'); w = w || 640; h = h || 360;
+  function diagram(id, w, h){ __need(id, 'V.diagram'); w = w || 640; h = h || 360; var __seen = {}, __id = String(__resolve(id));
+    function reg(k, shape){ __seen[k] = 1; __mark(__id, k, shape); }
     function tag(t, k){ return "V.diagram('" + id + "') d." + t + "('" + k + "')"; }
     var ext = {x0: 0, y0: 0, x1: w, y1: h, kx: '', ky: ''};
     function grow(k, xs, ys){ xs.forEach(function(x){ if (__fin(x)) { if (x < ext.x0) { ext.x0 = x; ext.kx = k; } if (x > ext.x1) { ext.x1 = x; ext.kx = k; } } });
@@ -209,78 +213,79 @@ var V = (function(){
       ys.forEach(function(y){ if (__fin(y) && (y < -m || y > h + m)) __warn("V.diagram('" + id + "') draws '" + k + "' at y=" + Math.round(y) + ', outside its viewBox height ' + h + ' (it will be clipped): enlarge h or rescale'); }); }
     function pos(names, args){ if (typeof args[0] !== 'number') return args[0] || {}; var o = Object.assign({}, args[names.length] || {}); names.forEach(function(n, i){ o[n] = args[i]; }); return o; }
     var d = {w: w, h: h, width: w, height: h,
-    rect: function(k){ var a = pos(['x', 'y', 'width', 'height'], [].slice.call(arguments, 1)); geo(tag('rect', k), a); inb(k, [a.x, (a.x || 0) + (a.width || 0)], [a.y, (a.y || 0) + (a.height || 0)]); },
-    circle: function(k){ var a = pos(['cx', 'cy', 'r'], [].slice.call(arguments, 1)); geo(tag('circle', k), a); inb(k, [a.cx], [a.cy]); },
-    line: function(k){ var a = pos(['x1', 'y1', 'x2', 'y2'], [].slice.call(arguments, 1)); geo(tag('line', k), a); inb(k, [a.x1, a.x2], [a.y1, a.y2]); },
-    path: function(k, a){ geo(tag('path', k), a || {}); },
-    text: function(k, x, y, s, a){ geo(tag('text', k), {x: x, y: y}); inb(k, [x], [y]); if (/NaN|undefined/.test(String(s))) __err('d.text shows "' + s + '"');
+    rect: function(k){ var a = pos(['x', 'y', 'width', 'height'], [].slice.call(arguments, 1)); geo(tag('rect', k), a); reg(k, 1); inb(k, [a.x, (a.x || 0) + (a.width || 0)], [a.y, (a.y || 0) + (a.height || 0)]); },
+    circle: function(k){ var a = pos(['cx', 'cy', 'r'], [].slice.call(arguments, 1)); geo(tag('circle', k), a); reg(k, 1); inb(k, [a.cx], [a.cy]); },
+    line: function(k){ var a = pos(['x1', 'y1', 'x2', 'y2'], [].slice.call(arguments, 1)); geo(tag('line', k), a); reg(k, 1); inb(k, [a.x1, a.x2], [a.y1, a.y2]); },
+    path: function(k, a){ geo(tag('path', k), a || {}); reg(k, 1); },
+    text: function(k, x, y, s, a){ geo(tag('text', k), {x: x, y: y}); reg(k, 0); inb(k, [x], [y]); if (/NaN|undefined/.test(String(s))) __err('d.text shows "' + s + '"');
       a = a || {}; var fs = +(a.fontSize || a['font-size'] || 13) || 13, anc = a.textAnchor || a['text-anchor'] || 'start';
       var tw = String(s).replace(/<[^>]*>/g, '').length * fs * 0.56, x0 = anc === 'middle' ? x - tw / 2 : anc === 'end' ? x - tw : x;
       var longest = String(s).replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').split('\n').reduce(function(m, l){ return Math.max(m, Math.min(l.length, 48)); }, 0);
       tw = longest * fs * 0.56; x0 = anc === 'middle' ? x - tw / 2 : anc === 'end' ? x - tw : x; grow(k, [x0, x0 + tw], []);
       if (__fin(x) && !a.transform && (x0 < -6 || x0 + tw > w + 6)) __warn("V.diagram('" + id + "') label '" + String(s).slice(0, 30) + "' (~" + Math.round(tw) + 'px wide at x=' + Math.round(x) + ', anchor ' + anc + ') overflows the ' + w + 'px viewBox: shorten it, move it, or enlarge w'); },
-    arrow: function(k, x1, y1, x2, y2){ geo(tag('arrow', k), {x1: x1, y1: y1, x2: x2, y2: y2}); inb(k, [x1, x2], [y1, y2]); },
-    end: function(){ var sw = (ext.x1 - ext.x0) / w, sh = (ext.y1 - ext.y0) / h;
+    arrow: function(k, x1, y1, x2, y2){ geo(tag('arrow', k), {x1: x1, y1: y1, x2: x2, y2: y2}); reg(k, 1); inb(k, [x1, x2], [y1, y2]); },
+    end: function(){ var L = __live[__id] || {}; for (var k in L) if (k.charAt(0) !== '\u0001' && !__seen[k]) delete L[k];
+      var sw = (ext.x1 - ext.x0) / w, sh = (ext.y1 - ext.y0) / h;
       if (sw > 1.35 || sh > 1.35) __err("V.diagram('" + id + "'): content spans " + Math.round(ext.x1 - ext.x0) + 'x' + Math.round(ext.y1 - ext.y0) + ' but the viewBox is ' + w + 'x' + h + ' (worst: ' + (sw > sh ? ext.kx : ext.ky) + '), so the whole visual is shrunk or clipped. Keep every element and label inside 0..w, 0..h, use short labels (long text belongs in the slide text, not the SVG), or enlarge w/h.'); },
     svg: __absorb('svg') };
     return new Proxy(d, {get: function(t, k){ if (k in t || typeof k === 'symbol') return t[k];
       __err("V.diagram(...) has no member '" + String(k) + "' (it has only w, h, rect, circle, line, path, text, arrow, end). For coordinate maps use V.scale(d0, d1, r0, r1) which returns a function; V.line returns X/Y maps for plots.");
       return function(){ return 0; }; }}); }
-  function bars(id, items, o){ __need(id, 'V.bars'); if (!Array.isArray(items)) { __err('V.bars: items must be an array'); return; }
+  function bars(id, items, o){ __need(id, 'V.bars'); __mark(__resolve(id), '\u0001bars', 1); if (!Array.isArray(items)) { __err('V.bars: items must be an array'); return; }
     items.forEach(function(it, i){ if (!it || !__fin(it.value)) __err("V.bars('" + id + "'): item " + i + ' has value=' + (it && it.value) + ' (keys: ' + (it ? Object.keys(it).join(',') : '') + '). Signature: V.bars(id, [{label, value: finite number, color?}, ...], opts) draws ONE bar per item; for two quantities use two charts or interleave items.'); }); }
-  function line(id, series, o){ __need(id, 'V.line'); if (!Array.isArray(series)) { __err('V.line: series must be an array'); return {X: function(){return 0;}, Y: function(){return 0;}}; }
+  function line(id, series, o){ __need(id, 'V.line'); __mark(__resolve(id), '\u0001line', 1); if (!Array.isArray(series)) { __err('V.line: series must be an array'); return {X: function(){return 0;}, Y: function(){return 0;}}; }
     series.forEach(function(s, i){ if (!s || !Array.isArray(s.pts)) { __err("V.line('" + id + "'): series " + i + ' has no pts array (keys: ' + (s ? Object.keys(s).join(',') : '') + '). Signature: V.line(id, [{name?, pts: [[x, y], ...], color?, dash?, dots?}], opts)'); return; }
       var bad = s.pts.filter(function(p){ return !Array.isArray(p) || !__fin(p[0]) || !__fin(p[1]); }).length;
       if (bad === s.pts.length && bad > 0) __err("V.line('" + id + "'): series " + i + ' has no finite points'); else if (bad) __warn("V.line('" + id + "'): series " + i + ' has ' + bad + ' non-finite points'); });
     return {X: function(){ return 0; }, Y: function(){ return 0; }}; }
-  function matrix(id, M, o){ __need(id, 'V.matrix'); if (!Array.isArray(M) || !M.every(Array.isArray)) { __err("V.matrix('" + id + "'): M is not a 2-D array of numbers. Signature: V.matrix(id, [[...], ...], {rows, cols, digits, title})"); return; }
+  function matrix(id, M, o){ __need(id, 'V.matrix'); __mark(__resolve(id), '\u0001matrix', 1); if (!Array.isArray(M) || !M.every(Array.isArray)) { __err("V.matrix('" + id + "'): M is not a 2-D array of numbers. Signature: V.matrix(id, [[...], ...], {rows, cols, digits, title})"); return; }
     M.forEach(function(r, i){ r.forEach(function(v, j){ if (typeof v === 'number' && !isFinite(v)) __err("V.matrix('" + id + "'): cell [" + i + ',' + j + '] is ' + v); }); }); return __absorb('table'); }
   var __glab = {};
-  function editGrid(id, M, o){ __need(id, 'V.editGrid'); if (!Array.isArray(M)) { __err("V.editGrid('" + id + "'): M must be an array (1-D or 2-D)"); return; }
+  function editGrid(id, M, o){ __need(id, 'V.editGrid'); __mark(__resolve(id), '\u0001editGrid', 1); if (!Array.isArray(M)) { __err("V.editGrid('" + id + "'): M must be an array (1-D or 2-D)"); return; }
     __grids[id] = M.map(function(r){ return Array.isArray(r) ? r.map(Number) : Number(r); }); __glab[id] = (o && Array.isArray(o.rows)) ? o.rows : []; }
   function readGrid(id){ var g = __grids[id] || [], out = g.map(function(r){ return Array.isArray(r) ? r.slice() : r; });
     if (g.length && !g.some(Array.isArray)) return out;
     out.data = out; out.values = out; out.rows = out.map(function(r, i){ return [__glab[id] && __glab[id][i] !== undefined ? __glab[id][i] : i].concat(r); }); return out; }
-  function table(id, head, rows){ var __el = __ids[__resolve(id)]; __need(id, 'V.table'); if (!Array.isArray(rows)) __err('V.table: rows must be an array'); else rows.forEach(function(r){ (r || []).forEach(function(v){ if (typeof v === 'number' && !isFinite(v)) __err("V.table('" + id + "') shows " + v); }); }); return __el || __absorb('table'); }
+  function table(id, head, rows){ var __el = __ids[__resolve(id)]; __need(id, 'V.table'); __mark(__resolve(id), '\u0001table', 1); if (!Array.isArray(rows)) __err('V.table: rows must be an array'); else rows.forEach(function(r){ (r || []).forEach(function(v){ if (typeof v === 'number' && !isFinite(v)) __err("V.table('" + id + "') shows " + v); }); }); return __el || __absorb('table'); }
   function resize(M, rows, cols, fill){ fill = fill === undefined ? 0 : fill; var A = Array.isArray(M) ? M : [], out = [], i, j;
     for (i = 0; i < rows; i++) { if (cols === undefined) out.push(A[i] === undefined || A[i] === null ? fill : A[i]);
       else { var row = []; for (j = 0; j < cols; j++) row.push(Array.isArray(A[i]) && A[i][j] !== undefined && A[i][j] !== null ? A[i][j] : fill); out.push(row); } } return out; }
   function chkNum(f, what, v){ if (typeof v !== 'number' || !isFinite(v)) __err(f + ': ' + what + ' is ' + v + ' (must be a finite number)'); }
   function tryDrag(f, fn, x, y){ if (typeof fn !== 'function') return; try { fn(x, y); } catch (e) { __err(f + ': drag callback threw: ' + (e && e.message)); } }
-  function space(id, o){ __need(id, 'V.space'); o = o || {}; var f = "V.space('" + id + "')";
+  function space(id, o){ __need(id, 'V.space'); __mark(__resolve(id), '\u0001space', 1); o = o || {}; var f = "V.space('" + id + "')";
     (o.vectors || []).forEach(function(v, i){ chkNum(f, 'vectors[' + i + '].x', v && v.x); chkNum(f, 'vectors[' + i + '].y', v && v.y); if (v) tryDrag(f, v.drag, v.x, v.y); });
     (o.points || []).forEach(function(p, i){ chkNum(f, 'points[' + i + '].x', p && p.x); chkNum(f, 'points[' + i + '].y', p && p.y); if (p) tryDrag(f, p.drag, p.x, p.y); });
     (o.lines || []).forEach(function(l, i){ ['x1', 'y1', 'x2', 'y2'].forEach(function(k){ chkNum(f, 'lines[' + i + '].' + k, l && l[k]); }); });
     if (!(o.vectors || []).length && !(o.points || []).length) __warn(f + ' has no vectors or points');
     return {X: function(v){ return v; }, Y: function(v){ return v; }, scale: 1}; }
-  function network(id, o){ __need(id, 'V.network'); o = o || {}; var f = "V.network('" + id + "')";
+  function network(id, o){ __need(id, 'V.network'); __mark(__resolve(id), '\u0001network', 1); o = o || {}; var f = "V.network('" + id + "')";
     if (!Array.isArray(o.layers) || !o.layers.length || o.layers.some(function(n){ return !(n >= 1); })) __err(f + ': layers must be an array of node counts, e.g. [2, 3, 1]');
     (o.values || []).forEach(function(r, l){ (r || []).forEach(function(v, i){ if (typeof v === 'number' && !isFinite(v)) __err(f + ': values[' + l + '][' + i + '] is ' + v); }); });
     (o.weights || []).forEach(function(M, l){ (M || []).forEach(function(r){ (r || []).forEach(function(v){ if (typeof v === 'number' && !isFinite(v)) __err(f + ': weights[' + l + '] has ' + v); }); }); }); return {}; }
-  function graph(id, o){ __need(id, 'V.graph'); o = o || {}; var f = "V.graph('" + id + "')", N = o.nodes || [], ids = {};
+  function graph(id, o){ __need(id, 'V.graph'); __mark(__resolve(id), '\u0001graph', 1); o = o || {}; var f = "V.graph('" + id + "')", N = o.nodes || [], ids = {};
     if (!N.length) __err(f + ': nodes must be a non-empty array of {id, label, value}');
     N.forEach(function(n, i){ ids[n && n.id !== undefined ? n.id : i] = 1; if (n && n.value !== undefined && (typeof n.value !== 'number' || !isFinite(n.value))) __err(f + ': nodes[' + i + '].value is ' + n.value); });
     (o.edges || []).forEach(function(e, k){ if (!e || !(e.from in ids) || !(e.to in ids)) __err(f + ': edges[' + k + '] refers to unknown node (from/to must be node ids or indices)'); if (e && e.w !== undefined && (typeof e.w !== 'number' || !isFinite(e.w))) __err(f + ': edges[' + k + '].w is ' + e.w); });
     return {pos: []}; }
-  function flow(id, o){ __need(id, 'V.flow'); o = o || {}; if (!Array.isArray(o.steps) || !o.steps.length) __err("V.flow('" + id + "'): steps must be a non-empty array of {label, value}");
+  function flow(id, o){ __need(id, 'V.flow'); __mark(__resolve(id), '\u0001flow', 1); o = o || {}; if (!Array.isArray(o.steps) || !o.steps.length) __err("V.flow('" + id + "'): steps must be a non-empty array of {label, value}");
     (o.steps || []).forEach(function(st, i){ if (st && typeof st.value === 'number' && !isFinite(st.value)) __err("V.flow('" + id + "'): steps[" + i + '].value is ' + st.value); if (st && /NaN|undefined/.test(String(st.value))) __err("V.flow('" + id + "'): steps[" + i + '] shows ' + st.value); }); return {}; }
-  function pixels(id, M, o){ __need(id, 'V.pixels'); var f = "V.pixels('" + id + "')";
+  function pixels(id, M, o){ __need(id, 'V.pixels'); __mark(__resolve(id), '\u0001pixels', 1); var f = "V.pixels('" + id + "')";
     if (!Array.isArray(M) || !M.length) { __err(f + ': M must be a 2-D array of numbers'); return {}; }
     M.forEach(function(r, i){ (Array.isArray(r) ? r : [r]).forEach(function(v, j){ if (typeof v !== 'number' || !isFinite(v)) __err(f + ': cell [' + i + ',' + j + '] is ' + v); }); });
     o = o || {}; (o.windows || (o.window ? [o.window] : [])).forEach(function(w){ if (!w || !(w.r >= 0) || !(w.c >= 0) || w.r + (w.h || 1) > M.length || w.c + (w.w || 1) > (M[0] || []).length) __warn(f + ': window outside the grid'); });
     return {cell: 30, x0: 0, y0: 0, X: function(j){ return j * 30; }, Y: function(i){ return i * 30; }}; }
-  function curve(id, o){ __need(id, 'V.curve'); o = o || {}; var f = "V.curve('" + id + "')";
+  function curve(id, o){ __need(id, 'V.curve'); __mark(__resolve(id), '\u0001curve', 1); o = o || {}; var f = "V.curve('" + id + "')";
     if (typeof o.f !== 'function' && !Array.isArray(o.pts)) { __err(f + ': needs f: x => y (with xmin, xmax) or pts: [[x, y], ...]'); return {}; }
     if (typeof o.f === 'function') { var ok = 0, a = o.xmin === undefined ? -5 : o.xmin, b = o.xmax === undefined ? 5 : o.xmax;
       for (var i = 0; i <= 20; i++) { var y; try { y = o.f(a + (b - a) * i / 20); } catch (e) { __err(f + ': f threw: ' + e.message); return {}; } if (typeof y === 'number' && isFinite(y)) ok++; }
       if (!ok) __err(f + ': f gives no finite values on [xmin, xmax]'); }
     if (o.ball) chkNum(f, 'ball.x', o.ball.x); return {X: function(v){ return v; }, Y: function(v){ return v; }}; }
-  function waffle(id, o){ __need(id, 'V.waffle'); o = o || {}; if (!Array.isArray(o.groups) || !o.groups.length) __err("V.waffle('" + id + "'): groups must be a non-empty array of {n, label, color}");
+  function waffle(id, o){ __need(id, 'V.waffle'); __mark(__resolve(id), '\u0001waffle', 1); o = o || {}; if (!Array.isArray(o.groups) || !o.groups.length) __err("V.waffle('" + id + "'): groups must be a non-empty array of {n, label, color}");
     (o.groups || []).forEach(function(g, i){ chkNum("V.waffle('" + id + "')", 'groups[' + i + '].n', g && g.n); }); return {}; }
-  function transform(id, o){ __need(id, 'V.transform'); o = o || {}; var M = o.M;
+  function transform(id, o){ __need(id, 'V.transform'); __mark(__resolve(id), '\u0001transform', 1); o = o || {}; var M = o.M;
     if (!Array.isArray(M) || M.length !== 2 || !M.every(function(r){ return Array.isArray(r) && r.length === 2 && r.every(function(v){ return typeof v === 'number' && isFinite(v); }); })) __err("V.transform('" + id + "'): M must be a finite 2x2 matrix");
     return {X: function(v){ return v; }, Y: function(v){ return v; }, scale: 1}; }
-  function pipeline(id, o){ __need(id, 'V.pipeline'); o = o || {}; var f = "V.pipeline('" + id + "')";
+  function pipeline(id, o){ __need(id, 'V.pipeline'); __mark(__resolve(id), '\u0001pipeline', 1); o = o || {}; var f = "V.pipeline('" + id + "')";
     if (!Array.isArray(o.stages) || !o.stages.length) { __err(f + ': stages must be a non-empty array of {label, M (matrix) or value}'); return {}; }
     o.stages.forEach(function(st, k){ if (!st) return; if (st.M !== undefined) { if (!Array.isArray(st.M)) __err(f + ': stages[' + k + '].M must be an array');
       else st.M.forEach(function(r, i){ (Array.isArray(r) ? r : [r]).forEach(function(v, j){ if (typeof v !== 'number' || !isFinite(v)) __err(f + ': stages[' + k + '].M[' + i + '][' + j + '] is ' + v); }); }); }
@@ -380,6 +385,9 @@ HARNESS = r"""
         var st = full(c.state || P[c.preset]), r;
         try { r = compute(st); sl.draw('slide-viz-' + i, st, r); } catch (e) { __err('SLIDES[' + i + '].choices[' + k + '] ("' + c.label + '") breaks compute/draw: ' + msg(e)); return; }
         var key = JSON.stringify(r); if (outs[key] !== undefined) __warn('SLIDES[' + i + '] choices "' + outs[key] + '" and "' + c.label + '" give the same result; make each scenario show something different'); outs[key] = c.label; });
+      __clearLive('slide-viz-' + i);
+      try { var c0 = full(S0); sl.draw('slide-viz-' + i, c0, compute(c0)); } catch (e) {}
+      if (__visible('slide-viz-' + i) === 0) __err('SLIDES[' + i + '].draw leaves nothing visible in its container (no shapes survive: draw something with V helpers, and call d.end() only once, after drawing)');
       var states = [['DEFAULT_STATE', S0]].concat(Object.keys(P).map(function(k){ return ['PRESETS.' + k, P[k]]; }));
       states.forEach(function(st){ var c = full(st[1]), r; try { r = compute(c); } catch (e) { return; }
         try { sl.draw('slide-viz-' + i, c, r); } catch (e) { __err('SLIDES[' + i + '].draw threw at ' + st[0] + ': ' + msg(e)); } });
